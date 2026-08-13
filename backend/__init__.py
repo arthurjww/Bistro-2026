@@ -26,3 +26,8 @@ app.config['DATABASE'] = DATABASE
 
 login_manager.login_view = 'login'
 login_manager.login_message = 'Somente admins tem autorização para acessar essa página'
+
+
+from .ingressos.auth import auth
+
+app.register_blueprint(auth)
