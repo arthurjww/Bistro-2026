@@ -2,6 +2,9 @@ from .. import app, login_manager, banco_de_dados
 from ..banco_de_dados import get_db
 from flask import Blueprint
 from flask_login import UserMixin
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, SubmitField
+from wtforms.validators import DataRequired, Email
 
 
 class Admin(UserMixin):
@@ -12,12 +15,21 @@ class Admin(UserMixin):
         self.email = email
 
 
+class LoginForm(FlaskForm):
+    nome = StringField('Nome', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired(), Email])
+    senha = PasswordField('Senha', validators=[DataRequired()])
+    submit = SubmitField()
+
+
 @login_manager.user_loader()
 def user_loader(admin_id):
-    cursor = get_db().cursor()
-
-    admin = cursor.execute(
-        'SELECT cod_admin, nome_admin, senha, email FROM Administradores WHERE cod_admin = ?',
+    admin = get_db().execute(
+        '''
+        SELECT cod_admin, nome_admin, senha, email
+        FROM Administradores
+        WHERE cod_admin = ?
+        ''',
         (admin_id,)
     ).fetchone()
 
@@ -32,4 +44,18 @@ auth = Blueprint('auth', __name__)
 
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
-    pass
+    form = LoginForm()
+
+    if form.validate_on_submit():
+        nome_input = form.nome.data
+        email_input = form.email.data
+        senha_input = form.senha.data
+
+        admin = get_db().execute(
+            '''
+            SELECT cod_admin, nome_admin, senha, email
+            FROM Administradores
+            WHERE email = ?
+            ''',
+            (email_input,)
+        ).fetchone()
