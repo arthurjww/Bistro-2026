@@ -1,10 +1,12 @@
-from flask import g, Flask
+from flask import Flask
 from flask_login import LoginManager
-from
+from flask_bcrypt import Bcrypt
 from pathlib import Path
-import sqlite3
+
 
 main_folder = Path(__name__).resolve().parent.parent
+DATABASE = main_folder / 'database' / 'database.db'
+
 
 app = Flask(
     __name__,
@@ -12,20 +14,15 @@ app = Flask(
     template_folder= main_folder / 'frontend' / 'templates',
 )
 
+
+login_manager = LoginManager(app)
+bcrypt = Bcrypt(app)
+
+
 #TODO: Mudar chave secreta no lançamento
 app.config['SECRET_KEY'] = 'CETEC'
 
+app.config['DATABASE'] = DATABASE
 
-DATABASE = main_folder / 'database' / 'database.db'
-
-def get_db():
-    db = getattr(g, '_database', None)
-    if db is None:
-        db = g._database = sqlite3.connect(DATABASE)
-    return db
-
-@app.teardown_appcontext
-def close_connection(exception):
-    db = getattr(g, '_database', None)
-    if db is not None:
-        db.close()
+login_manager.login_view = 'login'
+login_manager.login_message = 'Somente admins tem autorização para acessar essa página'
