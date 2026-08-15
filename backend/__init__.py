@@ -1,6 +1,5 @@
 from flask import Flask
 from flask_login import LoginManager
-from flask_bcrypt import Bcrypt
 from pathlib import Path
 
 
@@ -16,7 +15,6 @@ app = Flask(
 
 
 login_manager = LoginManager(app)
-bcrypt = Bcrypt(app)
 
 
 #TODO: Mudar chave secreta no lançamento
