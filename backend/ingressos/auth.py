@@ -19,7 +19,6 @@ class Admin(UserMixin):
 
 # classe para formulário do html
 class LoginForm(FlaskForm):
-    nome = StringField('Nome', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
     senha = PasswordField('Senha', validators=[DataRequired()])
     submit = SubmitField()
