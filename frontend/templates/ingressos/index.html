@@ -3,9 +3,13 @@
 <head>
 	<meta charset="UTF-8">
 	<title>Title</title>
-	<a href="{{ url_for('auth.login') }}">Teste</a>
 </head>
 <body>
-
+	<a href="{{ url_for('auth.login') }}">Teste</a>
+    {% if logado %}
+        <p>Acesso de admin</p>
+    {% else %}
+        <p>Bistrot 2026</p>
+    {% endif %}
 </body>
 </html>
