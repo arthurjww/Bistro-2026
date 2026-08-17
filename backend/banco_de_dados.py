@@ -36,7 +36,6 @@ def create_all():
             observacoes TEXT CHECK(length(observacoes) <= 255),
             email_envio TEXT NOT NULL CHECK(length(email_envio) <= 50),
             foi_pago BOOL,
-            cronometro_vaga DATETIME,
             token_QR TEXT UNIQUE CHECK(length(token_QR) = 6),
             utilizado BOOL,
             data_utilizado DATETIME,
@@ -63,7 +62,8 @@ def create_all():
             cod_lugar TEXT PRIMARY KEY CHECK(lenght(cod_lugar) <= 3),
             cod_aluno TEXT NOT NULL CHECK(length(cod_aluno) = 6),
             mesa TEXT NOT NUUL CHECK (lengh(mesa) = 1),
-            ocupado BOOL
+            ocupado BOOL,
+            cronometro_reservado DATETIME
         )
     ''')
 

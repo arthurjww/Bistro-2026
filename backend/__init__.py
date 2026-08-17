@@ -3,7 +3,7 @@ from flask_login import LoginManager
 from pathlib import Path
 
 
-main_folder = Path(__name__).resolve().parent.parent
+main_folder = Path(__file__).resolve().parent.parent
 DATABASE = main_folder / 'database' / 'database.db'
 
 
@@ -26,6 +26,15 @@ login_manager.login_view = 'login'
 login_manager.login_message = 'Somente admins tem autorização para acessar essa página'
 
 
+from .ingressos.routes import routes
 from .ingressos.auth import auth
 
+app.register_blueprint(routes)
 app.register_blueprint(auth)
+
+
+# testes para pastas
+print("main_folder:", main_folder)
+print("template_folder:", app.template_folder)
+print("template existe:", (main_folder / 'frontend' / 'templates').exists())
+print("index existe:", (main_folder / 'frontend' / 'templates' / 'ingressos' / 'index.html').exists())
