@@ -29,7 +29,7 @@ class LoginForm(FlaskForm):
 def user_loader(admin_id):
     admin = get_db().execute(
         '''
-        SELECT cod_admin, nome_admin, senha, email
+        SELECT *
         FROM Administradores
         WHERE cod_admin = ?
         ''',
@@ -56,7 +56,7 @@ def login():
 
         admin = get_db().execute(
             '''
-            SELECT cod_admin, nome_admin, senha, email
+            SELECT *
             FROM Administradores
             WHERE email = ?
             ''',

@@ -2,11 +2,6 @@
 __pycache__/
 *.py[cod]
 
-# SQLite
-*.db
-*.sqlite
-*.sqlite3
-
 # IDE
 .idea/
 .vscode/
