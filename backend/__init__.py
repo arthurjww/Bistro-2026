@@ -16,7 +16,7 @@ DATABASE = DATABASE_FOLDER / "teste.db"  #TESTE.DB ALTERAR DEPOIS!
 app = Flask(
     __name__,
     #static_folder= main_folder / 'frontend' / 'static',
-    template_folder=str( 
+    template_folder=( 
         main_folder / "frontend" / "templates"
         )
 )
