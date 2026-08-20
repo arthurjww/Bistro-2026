@@ -13,17 +13,15 @@ DATABASE = DATABASE_FOLDER / "teste.db"  #TESTE.DB ALTERAR DEPOIS!
 
 
 
-app = Flask(
+app = Flask (
     __name__,
-    #static_folder= main_folder / 'frontend' / 'static',
-<<<<<<< HEAD
-    template_folder=( 
-=======
-    template_folder=str(
->>>>>>> 1501ae1480d650ab1691447fc17bf617e6a142c8
+    static_folder= (
+        main_folder / "frontend" / "static"
+    ),
+    template_folder = (
         main_folder / "frontend" / "templates"
         )
-)
+    )
 
 #TODO: Mudar chave secreta no lançamento
 app.config["SECRET_KEY"] = "CETEC"

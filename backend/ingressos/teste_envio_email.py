@@ -1,9 +1,9 @@
 from backend.ingressos.email_envio import enviar_email
 
-print("Iniciando teste de email...") #teste 
+#print("Iniciando teste de email...") #teste 
 
 enviar_email(
-    destinatario="lorenzovceccato@gmail.com",
+    destinatario="guilhermematte2009@icloud.com",
     assunto="Teste - Bistrô 2026",
     mensagem="""
 Olá!
@@ -11,7 +11,7 @@ Olá!
 Este é um teste do sistema de envio de emails
 do projeto Bistrô 2026.
 
-Se você recebeu este email, o SMTP está funcionando.
+Se você recebeu este email, parabéns!
 
 Atenciosamente,
 Bistrô 2026
