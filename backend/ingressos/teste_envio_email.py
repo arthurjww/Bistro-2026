@@ -1,7 +1,5 @@
 from backend.ingressos.email_envio import enviar_email
 
-#print("Iniciando teste de email...") #teste 
-
 enviar_email(
     destinatario="guilhermematte2009@icloud.com",
     assunto="Teste - Bistrô 2026",

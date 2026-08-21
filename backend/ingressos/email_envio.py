@@ -20,7 +20,7 @@ MAIL_DEFAULT_SENDER = os.getenv(
     MAIL_USERNAME
 )
 MAIL_SENDER_NAME = os.getenv(
-    "MEIL_SENDER_NAME",
+    "MAIL_SENDER_NAME",
     "Bistrô 2026"
 )
 
@@ -44,7 +44,13 @@ def enviar_email(
         Texto do email.
 
     anexo:
-        Caminho do arquivo que será anexado.
+        Pode ser:
+        - Caminho (str ou Path) de um arquivo no disco.
+        - Tupla (nome_arquivo, bytes_ou_BytesIO) para anexar
+          conteúdo gerado em memória, sem precisar salvar em disco.
+        - Lista contendo qualquer combinação dos formatos acima,
+          para enviar múltiplos anexos.
+        - None se não houver anexo.
     """
 
     if not MAIL_SERVER:
@@ -71,68 +77,78 @@ def enviar_email(
     msg.set_content(mensagem)
 
     # ========================================================
-    # ANEXO
+    # ANEXO(S)
     # ========================================================
 
     if anexo is not None:
 
-        lista_anexos = anexo if isinstance(anexo, (list, tuple)) else [anexo]
+        # sempre exige uma lista para múltiplos anexos, evitando
+        # ambiguidade entre "uma tupla" e "uma lista de 2 anexos"
+        lista_anexos = anexo if isinstance(anexo, list) else [anexo]
 
         for item in lista_anexos:
 
-            caminho = Path(anexo)
+            if isinstance(item, (str, Path)):
+                caminho = Path(item)
 
-            if not caminho.exists():
-                raise FileNotFoundError(
-                    f"Arquivo não encontrado: {caminho}"
+                if not caminho.exists():
+                    raise FileNotFoundError(
+                        f"Arquivo não encontrado: {caminho}"
+                    )
+
+                with open(caminho, "rb") as arquivo:
+                    dados = arquivo.read()
+
+                filename = caminho.name
+
+            elif isinstance(item, tuple) and len(item) == 2:
+                filename, conteudo = item
+
+                # aceita BytesIO ou bytes puro
+                dados = (
+                    conteudo.getvalue()
+                    if hasattr(conteudo, "getvalue")
+                    else conteudo
                 )
 
-            with open(caminho, "rb") as arquivo:
-                dados = arquivo.read()
+            else:
+                raise TypeError(
+                    "Anexo inválido. Use um caminho de arquivo (str/Path) "
+                    "ou uma tupla (nome_arquivo, bytes/BytesIO)."
+                )
 
             msg.add_attachment(
                 dados,
                 maintype="application",
                 subtype="pdf",
-                filename=caminho.name,
+                filename=filename,
             )
 
     # ========================================================
     # CONEXÃO COM O GMAIL
     # ========================================================
 
-    #print("Conectando ao servidor SMTP...")
 
     try:
-
         with smtplib.SMTP_SSL(
             MAIL_SERVER,
             MAIL_PORT,
-            #timeout=15
+            timeout=15
         ) as servidor:
 
-            #print("Conectado ao servidor SMTP.")
-
-            #print("Fazendo login...")
 
             servidor.login(
                 MAIL_USERNAME,
                 MAIL_PASSWORD
             )
-
-            #print("Login realizado.")
-
-            #print("Enviando email...")
-
+            
             servidor.send_message(msg)
 
-            #print("Email enviado pelo servidor SMTP.")
-
     except smtplib.SMTPAuthenticationError as e:
-            raise RuntimeError(
-                "Falha na autenticação SMTP. Verifique MAIL_USERNAME e "
-                "MAIL_PASSWORD (para Gmail, use uma 'senha de app', não a "
-                "senha normal da conta)."
+        raise RuntimeError(
+            "Falha na autenticação SMTP. Verifique MAIL_USERNAME e "
+            "MAIL_PASSWORD (para Gmail, use uma 'senha de app', não a "
+            "senha normal da conta)."
         ) from e
 
     except smtplib.SMTPConnectError as e:
