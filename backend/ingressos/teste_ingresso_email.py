@@ -3,7 +3,7 @@ Script de teste manual: cria um ingresso fake no banco (já marcado
 como pago) e testa a geração do PDF + envio por email de ponta a ponta.
 
 Rodar a partir da raiz do projeto:
-    python -m backend.ingressos.teste_ingresso_email
+    TODO: python -m backend.ingressos.teste_ingresso_email
 """
 
 from datetime import datetime
@@ -13,7 +13,7 @@ from backend.banco_de_dados import get_db
 from backend.ingressos.gerador_pdf import enviar_ingresso_por_email
 
 
-EMAIL_TESTE = "guilhermematte2009@icloud.com"  # TODO: troque pro seu email de teste
+EMAIL_TESTE = ""  # TODO: troque pro seu email de teste
 TOKEN_TESTE = "TEST01"
 
 
@@ -38,18 +38,25 @@ def preparar_dados_teste(db):
         ("T1", "TESTE1", "A", 1, None)
     )
 
+    # Remove qualquer ingresso de teste anterior com o mesmo token,
+    # já que o id agora é autoincrementado (não dá mais pra usar
+    # INSERT OR REPLACE direto pelo id)
+    db.execute(
+        "DELETE FROM Ingresso WHERE token_QR = ?",
+        (TOKEN_TESTE,)
+    )
+
     # Ingresso de teste, já pago
     db.execute(
         '''
-        INSERT OR IGNORE INTO Ingresso (
-            id, nome, eh_crianca, observacoes, email_envio,
+        INSERT INTO Ingresso (
+            nome, eh_crianca, observacoes, email_envio,
             foi_pago, token_QR, utilizado, data_utilizado,
             cod_aluno, cod_lugar, data_compra, telefone
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''',
         (
-            999999,
             "Convidado de Teste",
             0,
             "Ingresso gerado só para teste de email/pdf",
@@ -69,7 +76,7 @@ def preparar_dados_teste(db):
     print("Dados de teste prontos.")
 
 
-def limpar_dados_teste(db):
+def limpar_dados_teste(db): #TODO : para nao deixar os dados de testes salvos no banco
     print("Limpando dados de teste do banco...")
     db.execute("DELETE FROM Ingresso WHERE token_QR = ?", (TOKEN_TESTE,))
     db.execute("DELETE FROM Lugares WHERE cod_lugar = ?", ("T1",))

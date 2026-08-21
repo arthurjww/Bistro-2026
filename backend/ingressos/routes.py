@@ -25,7 +25,7 @@ def cronometro_expirado():
     ).fetchone()
 
     if lugar_db is not None:
-        cronometro = lugar_db[4]
+        cronometro = lugar_db[0]
 
 
 @routes.get('/')
@@ -47,7 +47,7 @@ def informacoes():
     ).fetchone()
 
     if lugar_db is not None:
-        cronometro = lugar_db[4]
+        cronometro = lugar_db[0]
         return render_template(
             'info_ingressos',
             cronometro=cronometro,
