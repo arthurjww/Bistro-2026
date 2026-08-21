@@ -13,7 +13,7 @@ from backend.banco_de_dados import get_db
 from backend.ingressos.gerador_pdf import enviar_ingresso_por_email
 
 
-EMAIL_TESTE = "danielimedeiros1@ucs.br"  # troque pro seu email de teste
+EMAIL_TESTE = " "  # troque pro seu email de teste
 TOKEN_TESTE = "TEST01"
 
 
