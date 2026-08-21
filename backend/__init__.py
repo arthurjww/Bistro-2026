@@ -9,7 +9,7 @@ main_folder = Path(__file__).resolve().parent.parent
 DATABASE_FOLDER = main_folder / "database"
 DATABASE_FOLDER.mkdir(parents=True, exist_ok=True)
 
-DATABASE = DATABASE_FOLDER / "teste.db"  #TESTE.DB ALTERAR DEPOIS!
+DATABASE = DATABASE_FOLDER / "teste.db"  #TODO: teste.db. alterar depois!
 
 
 
@@ -38,11 +38,6 @@ login_manager.login_view = "auth.login"
 login_manager.login_message = (
     "Somente admins têm autorização para acessar essa página"
 )
-
-#linhas abaixos foram comentadas após tentar arrumar a conexão do __init__ com o bando_de_dados. (20/08 - matte)
-#app.config['DATABASE'] = DATABASE
-#login_manager.login_view = 'login'
-#login_manager.login_message = 'Somente admins tem autorização para acessar essa página'
 
 #BluePrints
 
