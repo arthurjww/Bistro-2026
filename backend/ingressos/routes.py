@@ -104,7 +104,7 @@ def _gerar_token_unico(db):
         )
 
         existe = db.execute(
-            'SELECT 1 FROM Ingresso WHERE toker_QR = ?',
+            'SELECT 1 FROM Ingresso WHERE token_QR = ?',
             (token,)
         ).fetchone()
 
