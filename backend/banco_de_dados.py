@@ -84,7 +84,7 @@ def create_all():
     #ingresso 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS Ingresso (
-            id INTEGER PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
 
             nome TEXT NOT NULL
                 CHECK(length(nome) <= 50),

@@ -111,18 +111,12 @@ def _gerar_token_unico(db):
         if existe is None:
             return token
 
-def _gerar_id_unico(db):
-    """Gera um id numérico aleatório (6 dígitos) único para Ingresso."""
-    while True: 
-        novo_id = secrets.randbelow(900_000) + 100_000
+def _proximo_id_ingresso(db):
+    """Retorna o próximo id sequencial (quantidade de ingressos + 1)"""
 
-        existe = db.execute(
-            'SELECT 1 FROM Ingresso WHERE id = ?',
-            (novo_id,)
-        ).fetchone()
-
-        if existe is None:
-            return novo_id
+    resultado = db.execute('SELECT COUNT(*) FROM Ingresso').fetchone()
+    quantidade = resultado[0]
+    return quantidade + 1
 
 
 @routes.post('/info/ingressos/criar_ingressos')
@@ -167,19 +161,18 @@ def criar_ingressos():
             telefone = item.get('telefone')
 
             token = _gerar_token_unico(db)
-            novo_id = _gerar_id_unico(db)
+            novo_id = _proximo_id_ingresso(db)
 
             db.execute(
                 '''
                 INSERT INTO Ingresso (
-                    id, nome, eh_crianca, observacoes, email_envio,
+                    nome, eh_crianca, observacoes, email_envio,
                     foi_pago, token_QR, utilizado, data_utilizado,
                     cod_aluno, cod_lugar, data_compra, telefone
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ''',
                 (
-                    novo_id,
                     nome,
                     eh_crianca,
                     observacoes,

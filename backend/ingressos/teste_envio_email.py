@@ -1,7 +1,7 @@
 from backend.ingressos.email_envio import enviar_email
 
 enviar_email(
-    destinatario="guilhermematte2009@icloud.com",
+    destinatario="",
     assunto="Teste - Bistrô 2026",
     mensagem="""
 Olá!
