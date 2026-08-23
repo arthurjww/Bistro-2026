@@ -1,7 +1,7 @@
 import sqlite3
 from flask import g, current_app
 
-# método para coinseguir o db
+# method para coinseguir o db
 def get_db(): #retorna conexão com o banco de dados atual 
 
     db = getattr(g, "_database", None)
@@ -10,6 +10,7 @@ def get_db(): #retorna conexão com o banco de dados atual
         db = g._database = sqlite3.connect(
             current_app.config["DATABASE"]
             )
+        db.row_factory = sqlite3.Row
         
     return db
 

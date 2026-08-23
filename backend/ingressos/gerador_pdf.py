@@ -1,4 +1,3 @@
-import sqlite3
 import qrcode
 import io
 import base64
@@ -149,9 +148,6 @@ HTML_INGRESSO = """
 
 def buscar_ingresso_pago(token):
   db = get_db()
-  db.row_factory = (
-    sqlite3.Row
-  )
   cursor = db.cursor()
 
   cursor.execute(
