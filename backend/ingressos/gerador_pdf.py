@@ -292,7 +292,6 @@ def generate_pdf():
     if pdf_buffer is None:
         return "Ingresso não encontrado ou pagamento ainda não aprovado.", 404
 
-
     return send_file(
         pdf_buffer,
         as_attachment=True,
