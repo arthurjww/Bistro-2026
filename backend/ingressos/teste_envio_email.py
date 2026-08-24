@@ -3,7 +3,7 @@ from backend.ingressos.email_envio import enviar_email
 print("Iniciando teste de email...") #teste 
 
 enviar_email(
-    destinatario="lorenzovceccato@gmail.com",
+    destinatario="",
     assunto="Teste - Bistrô 2026",
     mensagem="""
 Olá!

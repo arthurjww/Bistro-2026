@@ -211,7 +211,7 @@ def generate_pdf():
     pdf_buffer.seek(0)
 
     nome_arquivo = f"Ingresso_Sinestesia_{ingresso['nome'].replace(' ', '_')}.pdf"
-
+    print("teste email")
     return send_file(
         pdf_buffer,
         as_attachment=True,
