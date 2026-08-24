@@ -12,21 +12,9 @@ routes = Blueprint('routes', __name__)
 
 
 def cronometro_expirado():
-    lugares = session.get('ingressos', [])
-
-    lugar_db = get_db().execute(
-        '''
-        SELECT cronometro_reservado
-        FROM Lugares
-        WHERE cod_lugar = ?
-        ''', 
-        (lugares[0],)
-    ).fetchone()
-
-    if lugar_db is not None:
-        cronometro = lugar_db['cronometro_reservado']
+    cronometro = session.get('cronometro_reservado')
+    if cronometro is not None:
         return datetime.now() >= cronometro + timedelta(minutes=15)
-
     return False
 
 
@@ -41,18 +29,9 @@ def index():
 @routes.get('/info_ingressos')
 def informacoes():
     lugares = session.get('lugares', [])
+    cronometro = session.get('cronometro')
 
-    lugar_db = get_db().execute(
-        '''
-        SELECT cronometro_reservado
-        FROM Lugares
-        WHERE cod_lugar = ?
-        ''',
-        (lugares[0])
-    ).fetchone()
-
-    if lugar_db is not None:
-        cronometro = lugar_db[0]
+    if not lugares and not cronometro:
         return render_template(
             'info_ingressos',
             cronometro=cronometro,
@@ -89,7 +68,8 @@ def confirmar_codigo():
 
             session['codigo'] = codigo
             return jsonify({
-                'sucesso': 'Código confirmado'
+                'sucesso': 'Código confirmado',
+                'usos_restantes': f'{aluno["usos_restantes"] - quant_ingressos}'
             }), 200
 
         return jsonify({
@@ -120,15 +100,6 @@ def _gerar_token_unico(db):
         if existe is None:
             return token
 
-
-
-#TODO: Acredito não ser necessário, pois o banco de dados automaticamente incrementa
-def _proximo_id_ingresso(db):
-    """Retorna o próximo id sequencial (quantidade de ingressos + 1)"""
-
-    resultado = db.execute('SELECT COUNT(*) FROM Ingresso').fetchone()
-    quantidade = resultado[0]
-    return quantidade + 1
 
 #TODO: Ver preço do ingresso
 PRECO_INGRESSO = 100
@@ -181,8 +152,6 @@ def criar_ingressos():
             telefone = item.get('telefone')
 
             token = _gerar_token_unico(db)
-            # Acredito não ser necessário. Ver TODO para mais detalhes
-            novo_id = _proximo_id_ingresso(db)
 
             db.execute(
                 '''
@@ -198,7 +167,7 @@ def criar_ingressos():
                     eh_crianca,
                     observacoes,
                     email_envio,
-                    1,          # foi_pago -> simulado como aprovado
+                    0,          # foi_pago
                     token,
                     0,          # utilizado
                     None,       # data_utilizado
@@ -238,43 +207,48 @@ def criar_ingressos():
 
     session['tokens_criados'] = tokens_criados
     session['a_pagar'] = a_pagar
-    # ======================================================================
-    # ENVIO DOS EMAILS
-    # feito DEPOIS do commit: se o email falhar, os ingressos já criados
-    # não são perdidos — só registramos a falha pra tratar depois.
-    # ======================================================================
-    falhas_envio = []
 
-    for token in tokens_criados:
-        try:
-            enviar_ingresso_por_email(token)
-        except Exception as e:
-            falhas_envio.append({'token': token, 'erro': str(e)})
-
-
-    # Acredito ser melhor manter para pagamento
-    #session.pop('lugares', None)
-    #session.pop('codigo', None)
-
-    resposta = {
-        'sucesso': 'Ingressos criados com sucesso.',
-        'tokens': tokens_criados,
-    }
-
-    if falhas_envio:
-        resposta['aviso'] = (
-            'Ingressos criados, mas houve falha ao enviar alguns emails.'
-        )
-        resposta['falhas_envio'] = falhas_envio
-
-    return jsonify(resposta), 201
+    return jsonify({'sucesso: Ingressos criados'}), 201
 
 
 @routes.route('/pagamento', methods=['GET', 'POST'])
 def pagamento():
     if request.method == 'POST':
-        #Acredito ser melhor colocar mudanças do código do aluno e envio de email aqui
-        pass
+        # ======================================================================
+        # ENVIO DOS EMAILS
+        # feito DEPOIS do commit: se o email falhar, os ingressos já criados
+        # não são perdidos — só registramos a falha pra tratar depois.
+        # ======================================================================
+        db = get_db()
+        tokens_criados = session.get('tokens_criados', [])
+
+        falhas_envio = []
+
+        for token in tokens_criados:
+            db.execute(
+                'UPDATE Ingressos SET foi_pago = 1 WHERE token_QR = ?',
+                (token,)
+            )
+            try:
+                enviar_ingresso_por_email(token)
+            except Exception as e:
+                falhas_envio.append({'token': token, 'erro': str(e)})
+
+        db.commit()
+
+        if falhas_envio:
+            resposta = {
+                'erro': 'Erro ao mandar email',
+                'aviso': 'Ingressos criados, mas houve falha ao enviar alguns emails.',
+                'falhas_envio': falhas_envio
+            }
+            return jsonify(resposta), 500
+
+        return jsonify({
+            'sucesso': 'Emails enviados com sucesso.',
+            'tokens': tokens_criados
+        }), 200
+
     lugares, a_pagar = session.get('lugares'), session.get('a_pagar')
 
     if not lugares:
