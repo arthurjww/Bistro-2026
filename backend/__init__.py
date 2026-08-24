@@ -9,18 +9,25 @@ main_folder = Path(__file__).resolve().parent.parent
 DATABASE_FOLDER = main_folder / "database"
 DATABASE_FOLDER.mkdir(parents=True, exist_ok=True)
 
-DATABASE = DATABASE_FOLDER / "teste.db"  #TESTE.DB ALTERAR DEPOIS!
+DATABASE = DATABASE_FOLDER / "teste.db"  #TODO: teste.db. alterar depois!
 
 
 
-app = Flask(
+app = Flask (
     __name__,
+<<<<<<< HEAD
     #static_folder= main_folder / 'frontend' / 'static',
 
     template_folder=( 
+=======
+    static_folder= (
+        main_folder / "frontend" / "static"
+    ),
+    template_folder = (
+>>>>>>> fdf8986a4083e4a3934853c246602ceb6203b48b
         main_folder / "frontend" / "templates"
         )
-)
+    )
 
 #TODO: Mudar chave secreta no lançamento
 app.config["SECRET_KEY"] = "CETEC"
@@ -37,11 +44,6 @@ login_manager.login_view = "auth.login"
 login_manager.login_message = (
     "Somente admins têm autorização para acessar essa página"
 )
-
-#linhas abaixos foram comentadas após tentar arrumar a conexão do __init__ com o bando_de_dados. (20/08 - matte)
-#app.config['DATABASE'] = DATABASE
-#login_manager.login_view = 'login'
-#login_manager.login_message = 'Somente admins tem autorização para acessar essa página'
 
 #BluePrints
 

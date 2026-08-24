@@ -10,10 +10,17 @@ from datetime import datetime
 
 from backend import app
 from backend.banco_de_dados import get_db
+<<<<<<< HEAD
 from backend.ingressos.gerador_pdf import enviar_ingresso_por_email 
 
 
 EMAIL_TESTE = "gmatte1@ucs.br"  # TODO: troque pro seu email de teste
+=======
+from backend.ingressos.gerador_pdf import enviar_ingresso_por_email
+
+
+EMAIL_TESTE = ""  # TODO: troque pro seu email de teste
+>>>>>>> fdf8986a4083e4a3934853c246602ceb6203b48b
 TOKEN_TESTE = "TEST01"
 
 
@@ -100,4 +107,9 @@ if __name__ == "__main__":
             print(f"Falha no teste: {e}")
 
         finally:
+<<<<<<< HEAD
             limpar_dados_teste(db)
+=======
+            limpar_dados_teste(db)
+            
+>>>>>>> fdf8986a4083e4a3934853c246602ceb6203b48b

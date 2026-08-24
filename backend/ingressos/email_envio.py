@@ -2,6 +2,7 @@ import os
 import smtplib
 
 from email.message import EmailMessage
+from email.utils import formataddr
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -17,6 +18,10 @@ MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
 MAIL_DEFAULT_SENDER = os.getenv(
     "MAIL_DEFAULT_SENDER",
     MAIL_USERNAME
+)
+MAIL_SENDER_NAME = os.getenv(
+    "MAIL_SENDER_NAME",
+    "Bistrô 2026"
 )
 
 
@@ -39,7 +44,13 @@ def enviar_email(
         Texto do email.
 
     anexo:
-        Caminho do arquivo que será anexado.
+        Pode ser:
+        - Caminho (str ou Path) de um arquivo no disco.
+        - Tupla (nome_arquivo, bytes_ou_BytesIO) para anexar
+          conteúdo gerado em memória, sem precisar salvar em disco.
+        - Lista contendo qualquer combinação dos formatos acima,
+          para enviar múltiplos anexos.
+        - None se não houver anexo.
     """
 
     if not MAIL_SERVER:
@@ -59,60 +70,103 @@ def enviar_email(
 
     msg = EmailMessage()
 
-    msg["From"] = MAIL_DEFAULT_SENDER
+    msg["From"] = formataddr((MAIL_SENDER_NAME, MAIL_DEFAULT_SENDER))
     msg["To"] = destinatario
     msg["Subject"] = assunto
 
     msg.set_content(mensagem)
 
     # ========================================================
-    # ANEXO
+    # ANEXO(S)
     # ========================================================
 
     if anexo is not None:
 
-        caminho = Path(anexo)
+        # sempre exige uma lista para múltiplos anexos, evitando
+        # ambiguidade entre "uma tupla" e "uma lista de 2 anexos"
+        lista_anexos = anexo if isinstance(anexo, list) else [anexo]
 
-        if not caminho.exists():
-            raise FileNotFoundError(
-                f"Arquivo não encontrado: {caminho}"
+        for item in lista_anexos:
+
+            if isinstance(item, (str, Path)):
+                caminho = Path(item)
+
+                if not caminho.exists():
+                    raise FileNotFoundError(
+                        f"Arquivo não encontrado: {caminho}"
+                    )
+
+                with open(caminho, "rb") as arquivo:
+                    dados = arquivo.read()
+
+                filename = caminho.name
+
+            elif isinstance(item, tuple) and len(item) == 2:
+                filename, conteudo = item
+
+                # aceita BytesIO ou bytes puro
+                dados = (
+                    conteudo.getvalue()
+                    if hasattr(conteudo, "getvalue")
+                    else conteudo
+                )
+
+            else:
+                raise TypeError(
+                    "Anexo inválido. Use um caminho de arquivo (str/Path) "
+                    "ou uma tupla (nome_arquivo, bytes/BytesIO)."
+                )
+
+            msg.add_attachment(
+                dados,
+                maintype="application",
+                subtype="pdf",
+                filename=filename,
             )
-
-        with open(caminho, "rb") as arquivo:
-            dados = arquivo.read()
-
-        msg.add_attachment(
-            dados,
-            maintype="application",
-            subtype="pdf",
-            filename=caminho.name,
-        )
 
     # ========================================================
     # CONEXÃO COM O GMAIL
     # ========================================================
 
-    print("Conectando ao servidor SMTP...")
 
-    with smtplib.SMTP_SSL(
-        MAIL_SERVER,
-        MAIL_PORT,
-        timeout=15
-    ) as servidor:
+    try:
+        with smtplib.SMTP_SSL(
+            MAIL_SERVER,
+            MAIL_PORT,
+            timeout=15
+        ) as servidor:
 
-        print("Conectado ao servidor SMTP.")
 
-        print("Fazendo login...")
+            servidor.login(
+                MAIL_USERNAME,
+                MAIL_PASSWORD
+            )
+            
+            servidor.send_message(msg)
 
-        servidor.login(
-            MAIL_USERNAME,
-            MAIL_PASSWORD
-        )
+    except smtplib.SMTPAuthenticationError as e:
+        raise RuntimeError(
+            "Falha na autenticação SMTP. Verifique MAIL_USERNAME e "
+            "MAIL_PASSWORD (para Gmail, use uma 'senha de app', não a "
+            "senha normal da conta)."
+        ) from e
 
-        print("Login realizado.")
+    except smtplib.SMTPConnectError as e:
+        raise RuntimeError(
+            f"Não foi possível conectar ao servidor {MAIL_SERVER}:{MAIL_PORT}."
+        ) from e
 
-        print("Enviando email...")
+    except smtplib.SMTPRecipientsRefused as e:
+        raise RuntimeError(
+            f"O destinatário foi recusado pelo servidor: {destinatario}."
+        ) from e
 
-        servidor.send_message(msg)
+    except TimeoutError as e:
+        raise RuntimeError(
+            "Tempo limite excedido ao conectar/enviar o email."
+        ) from e
 
-        print("Email enviado pelo servidor SMTP.")
+    except smtplib.SMTPException as e:
+        raise RuntimeError(
+            f"Erro ao enviar email: {e}"
+        ) from e

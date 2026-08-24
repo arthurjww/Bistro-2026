@@ -37,11 +37,17 @@ def user_loader(admin_id):
     ).fetchone()
 
     if admin:
-        return Admin(admin[0], admin[1], admin[2], admin[3])
+        return Admin(
+            admin['cod_admin'],
+            admin['nome_admin'],
+            admin['senha'],
+            admin['email']
+        )
 
     return None
 
 
+#TODO: COLOCAR subdomain='admin' caso queira admin.site.com.br
 auth = Blueprint('auth', __name__)
 
 
@@ -63,11 +69,16 @@ def login():
             (email_input,)
         ).fetchone()
 
-        if not admin or not check_password_hash(admin[2], senha_input):
+        if not admin or not check_password_hash(admin['senha'], senha_input):
             flash('Verifique suas informações de login', 'error')
             return redirect(url_for('auth.login'))
 
-        admin_login = Admin(admin[0], admin[1], admin[2], admin[3])
+        admin_login = Admin(
+            admin['cod_admin'],
+            admin['nome_admin'],
+            admin['senha'],
+            admin['email']
+        )
         login_user(admin_login)
         return redirect(url_for('routes.index'))
 
