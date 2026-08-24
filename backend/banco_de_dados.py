@@ -119,6 +119,7 @@ def create_all():
             telefone TEXT
                 CHECK(length(telefone) <= 20),
             
+                
              valor_pago REAL NOT NULL
                 CHECK (valor >= 0), 
 
