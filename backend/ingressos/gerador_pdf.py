@@ -146,6 +146,40 @@ HTML_INGRESSO = """
 </html>
 """
 
+HTML_VALIDACAO = """
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Validação de Ingresso</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; padding: 30px; background-color: #f4f4f9; }
+    .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-width: 400px; margin: 0 auto; }
+    .valido { color: #2e7d32; font-size: 26px; font-weight: bold; margin-bottom: 15px; }
+    .invalido { color: #c62828; font-size: 26px; font-weight: bold; margin-bottom: 15px; }
+    .info { text-align: left; font-size: 16px; line-height: 1.6; border-top: 1px solid #ddd; padding-top: 15px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    {% if status == 'valido' %}
+      <div class="valido">✅ Ingresso Válido!</div>
+      <div class="info">
+        <p><strong>Titular:</strong> {{ nome }}</p>
+        <p><strong>Mesa/Lugar:</strong> {{ lugar }}</p>
+        <p><strong>Tipo:</strong> {{ tipo }}</p>
+        <p><strong>Data da Compra:</strong> {{ data_compra }}</p>
+      </div>
+    {% else %}
+      <div class="invalido">❌ Ingresso Inválido</div>
+      <p>Este ingresso não foi encontrado ou o pagamento não está aprovado.</p>
+    {% endif %}
+  </div>
+</body>
+</html>
+"""
+
 def buscar_ingresso_pago(token):
   db = get_db()
   cursor = db.cursor()
@@ -171,8 +205,9 @@ def buscar_ingresso_pago(token):
 def _gerar_pdf_bytes(ingresso):
     """Gera o PDF do ingresso em memória e retorna um BytesIO."""
 
-    # O QR Code armazena o Token para ser lido na portaria do evento
-    qr_img = qrcode.make(ingresso['token'])
+    # O QR Code abre um site que diz se o ingresso é Válido ou Não.
+    url_validacao = f"{request.host_url}validar?token={ingresso['token']}"
+    qr_img = qrcode.make(url_validacao)
     qr_buffer = io.BytesIO()
     qr_img.save(qr_buffer, format='PNG')
     qr_base64 = base64.b64encode(qr_buffer.getvalue()).decode('utf-8')
@@ -263,3 +298,25 @@ def generate_pdf():
         download_name=nome_arquivo,
         mimetype='application/pdf'
     )
+
+
+@gerador_pdf.rout('validar', methods=['GET'])
+def validar_ingresso():
+  token = request.args.get('token')
+
+  if not token():
+    return render_template_string(HTML_VALIDACAO, status='invalido'), 400
+
+  ingresso = buscar_ingresso_pago(token)
+
+  if not ingresso:
+    return render_template_string(HTML_VALIDACAO, status='invalido'), 404
+
+  return render_template_string(
+    HTML_VALIDACAO,
+    status='valido',
+    nome=ingresso['nome'],
+    lugar=ingresso['cod_lugar'],
+    tipo=ingresso['tipo'],
+    data_compra=ingresso['data_compra'],
+  )
