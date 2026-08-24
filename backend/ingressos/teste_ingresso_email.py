@@ -3,14 +3,14 @@ Script de teste manual: cria um ingresso fake no banco (já marcado
 como pago) e testa a geração do PDF + envio por email de ponta a ponta.
 
 Rodar a partir da raiz do projeto:
-    TODO: python -m backend.ingressos.teste_ingresso_email
+    python -m backend.ingressos.teste_ingresso_email
 """
 
 from datetime import datetime
 
 from backend import app
 from backend.banco_de_dados import get_db
-from backend.ingressos.gerador_pdf import enviar_ingresso_por_email 
+from backend.ingressos.gerador_pdf import enviar_ingresso_por_email
 
 EMAIL_TESTE = "gmatte1@ucs.br"  # TODO: troque pro seu email de teste
 TOKEN_TESTE = "TEST01"
@@ -37,13 +37,14 @@ def preparar_dados_teste(db):
         ("T1", "TESTE1", "A", 1, None)
     )
 
-    # Remove qualquer ingresso de teste anterior com o mesmo token,
-    # já que o id agora é autoincrementado (não dá mais pra usar
-    # INSERT OR REPLACE direto pelo id)
+    # Remove qualquer ingresso de teste anterior com o mesmo token
     db.execute(
         "DELETE FROM Ingresso WHERE token_QR = ?",
         (TOKEN_TESTE,)
     )
+
+    # Formatação da data como String para evitar o DeprecationWarning no Python 3.12+
+    data_atual_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     # Ingresso de teste, já pago
     db.execute(
@@ -66,7 +67,7 @@ def preparar_dados_teste(db):
             None,
             "TESTE1",
             "T1",
-            datetime.now(),
+            data_atual_str,
             "",
         )
     )
@@ -75,7 +76,7 @@ def preparar_dados_teste(db):
     print("Dados de teste prontos.")
 
 
-def limpar_dados_teste(db): #TODO : para nao deixar os dados de testes salvos no banco
+def limpar_dados_teste(db):
     print("Limpando dados de teste do banco...")
     db.execute("DELETE FROM Ingresso WHERE token_QR = ?", (TOKEN_TESTE,))
     db.execute("DELETE FROM Lugares WHERE cod_lugar = ?", ("T1",))
@@ -92,7 +93,11 @@ if __name__ == "__main__":
 
         try:
             print("Testando geração de PDF + envio de email...")
-            enviar_ingresso_por_email(TOKEN_TESTE)
+
+            # Envolva a chamada no test_request_context para simular a requisição Flask necessária
+            with app.test_request_context(f"/generate-pdf?token={TOKEN_TESTE}"):
+                enviar_ingresso_por_email(TOKEN_TESTE)
+
             print("Email com PDF enviado com sucesso!")
 
         except Exception as e:
@@ -100,4 +105,3 @@ if __name__ == "__main__":
 
         finally:
             limpar_dados_teste(db)
-            
