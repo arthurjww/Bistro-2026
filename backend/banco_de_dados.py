@@ -83,6 +83,7 @@ def create_all():
 
 
     #ingresso 
+    #tipo_ingresso é 0 (de graça), 1 (meia) e 2 (inteira)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS Ingresso (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -90,7 +91,7 @@ def create_all():
             nome TEXT NOT NULL
                 CHECK(length(nome) <= 50),
 
-            eh_crianca BOOLEAN,
+            tipo_ingresso INT,
 
             observacoes TEXT 
                 CHECK(length(observacoes) <= 255),
@@ -117,6 +118,9 @@ def create_all():
 
             telefone TEXT
                 CHECK(length(telefone) <= 20),
+            
+             valor_pago REAL NOT NULL
+                CHECK (valor >= 0), 
 
             FOREIGN KEY (cod_aluno)
                 REFERENCES Aluno(cod_aluno),

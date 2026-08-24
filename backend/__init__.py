@@ -1,17 +1,17 @@
+import os 
 from pathlib import Path
-
 from flask import Flask
 from flask_login import LoginManager
+from dotenv import load_dotenv
+
+load_dotenv()
 
 main_folder = Path(__file__).resolve().parent.parent
 
 #se o database não existir cria automaticamente
 DATABASE_FOLDER = main_folder / "database"
 DATABASE_FOLDER.mkdir(parents=True, exist_ok=True)
-
 DATABASE = DATABASE_FOLDER / "teste.db"  #TODO: teste.db. alterar depois!
-
-
 
 app = Flask (
     __name__,
@@ -26,6 +26,17 @@ app = Flask (
 #TODO: Mudar chave secreta no lançamento
 app.config["SECRET_KEY"] = "CETEC"
 app.config["DATABASE"] = str (DATABASE)
+
+# Configurações de Email puxadas do .env
+app.config["MAIL_SERVER"] = os.getenv("MAIL_SERVER")
+app.config["MAIL_PORT"] = int(os.getenv("MAIL_PORT", 465))
+app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME")
+app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
+app.config["MAIL_DEFAULT_SENDER"] = os.getenv("MAIL_DEFAULT_SENDER")
+
+# Ajuste automático de SSL/TLS baseado na porta 465 ou 587
+app.config["MAIL_USE_SSL"] = app.config["MAIL_PORT"] == 465
+app.config["MAIL_USE_TLS"] = app.config["MAIL_PORT"] == 587
 
 
 from .banco_de_dados import create_all, close_connection

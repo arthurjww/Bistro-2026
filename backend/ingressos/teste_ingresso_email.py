@@ -6,14 +6,31 @@ Rodar a partir da raiz do projeto:
     python -m backend.ingressos.teste_ingresso_email
 """
 
-from datetime import datetime
+import os
+from datetime import datetime, timezone
+from dotenv import load_dotenv  # Se estiver usando arquivo .env
 
 from backend import app
 from backend.banco_de_dados import get_db
-from backend.ingressos.gerador_pdf import enviar_ingresso_por_email
+from backend.ingressos.gerador_pdf import enviar_ingresso_por_email 
 
-EMAIL_TESTE = "gmatte1@ucs.br"  # TODO: troque pro seu email de teste
+# Carrega as variáveis do arquivo .env (caso use um)
+load_dotenv()
+
+EMAIL_TESTE = " "  # TODO: troque pro seu email de teste
 TOKEN_TESTE = "TEST01"
+
+
+def configurar_email_teste():
+    """Garante que o app.config possui as credenciais de e-mail necessárias."""
+    app.config.update(
+        MAIL_SERVER=os.getenv("MAIL_SERVER", "smtp.gmail.com"),
+        MAIL_PORT=int(os.getenv("MAIL_PORT", 456)),
+        MAIL_USE_TLS=os.getenv("MAIL_USE_TLS", "True").lower() in ("true", "1", "t"),
+        MAIL_USERNAME=os.getenv("MAIL_USERNAME", "seu_email_remetente@gmail.com"),
+        MAIL_PASSWORD=os.getenv("MAIL_PASSWORD", "sua_senha_de_app"),
+        MAIL_DEFAULT_SENDER=os.getenv("MAIL_DEFAULT_SENDER", "seu_email_remetente@gmail.com")
+    )
 
 
 def preparar_dados_teste(db):
@@ -43,8 +60,7 @@ def preparar_dados_teste(db):
         (TOKEN_TESTE,)
     )
 
-    # Formatação da data como String para evitar o DeprecationWarning no Python 3.12+
-    data_atual_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    data_compra_str = datetime.now(timezone.utc).isoformat()
 
     # Ingresso de teste, já pago
     db.execute(
@@ -67,7 +83,7 @@ def preparar_dados_teste(db):
             None,
             "TESTE1",
             "T1",
-            data_atual_str,
+            data_compra_str,
             "",
         )
     )
@@ -86,18 +102,16 @@ def limpar_dados_teste(db):
 
 
 if __name__ == "__main__":
-    with app.app_context():
-        db = get_db()
+    with app.test_request_context():
+        # Aplica as configurações do servidor de e-mail
+        configurar_email_teste()
 
+        db = get_db()
         preparar_dados_teste(db)
 
         try:
             print("Testando geração de PDF + envio de email...")
-
-            # Envolva a chamada no test_request_context para simular a requisição Flask necessária
-            with app.test_request_context(f"/generate-pdf?token={TOKEN_TESTE}"):
-                enviar_ingresso_por_email(TOKEN_TESTE)
-
+            enviar_ingresso_por_email(TOKEN_TESTE)
             print("Email com PDF enviado com sucesso!")
 
         except Exception as e:
