@@ -17,7 +17,7 @@ from backend.ingressos.gerador_pdf import enviar_ingresso_por_email
 # Carrega as variáveis do arquivo .env (caso use um)
 load_dotenv()
 
-EMAIL_TESTE = "gmatte1@ucs.br"  # TODO: troque pro seu email de teste
+EMAIL_TESTE = " "  # TODO: troque pro seu email de teste
 TOKEN_TESTE = "TOK123"
 
 
