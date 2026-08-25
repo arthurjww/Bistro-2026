@@ -16,7 +16,7 @@ def get_db(): #retorna conexão com o banco de dados atual
 
 #fechar conexão 
 
-#@current_app.teardown_appcontext - linha comentada p/ ser ignorada e ver se arrumamos a conexão do banco e do init 
+#@current_app.teardown_appcontext  - linha comentada p/ ser ignorada e ver se arrumamos a conexão do banco e do init 
 def close_connection(exception = None):
     #fehca a conexão do banco 
     db = getattr(g, "_database", None)
@@ -121,7 +121,7 @@ def create_all():
             
                 
              valor_pago REAL NOT NULL
-                CHECK (valor >= 0), 
+                CHECK (valor_pago >= 0), 
 
             FOREIGN KEY (cod_aluno)
                 REFERENCES Aluno(cod_aluno),

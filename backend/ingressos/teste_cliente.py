@@ -5,19 +5,20 @@ as requisições que o frontend fará no futuro (via Flask test_client):
 1. Simula um lugar já reservado na sessão
    (normalmente isso seria feito pela rota de reserva de mesas)
 2. Confirma o código do aluno
-3. Cria os ingressos -> grava no banco, gera PDF, envia email
+3. Cria os ingressos -> grava no banco
+4. Processa pagamento -> gera PDF, envia email
 
 Rodar a partir da raiz do projeto:
-    TODO: python -m backend.ingressos.teste_cliente
+    python -m backend.ingressos.teste_cliente
 """
 
 from backend import app
 from backend.banco_de_dados import get_db
 
 
-CODIGO_ALUNO_TESTE = "TESTE2"
+CODIGO_ALUNO_TESTE = "TOK123"
 LUGAR_TESTE = "T2"
-EMAIL_TESTE = "guilhermematte2009@icloud.com"  # troque pro seu email de teste
+EMAIL_TESTE = " "  # troque pro seu email de teste
 
 
 def preparar_dados_teste(db):
@@ -76,10 +77,10 @@ if __name__ == "__main__":
         if resposta.status_code != 200:
             raise RuntimeError("Falha ao confirmar código, abortando teste.")
 
-        # 3. Cria os ingressos (gera PDF + envia email)
+        # 3. Cria os ingressos (salva no banco)
         print("\n--- Criando ingressos ---")
         resposta = client.post(
-            '/info/ingressos/criar_ingressos',
+            '/info_ingressos/criar_ingressos',
             json={
                 'ingressos': [
                     {
@@ -92,6 +93,15 @@ if __name__ == "__main__":
                 ]
             }
         )
+        print("Status:", resposta.status_code)
+        print("Body:", resposta.get_json())
+
+        if resposta.status_code != 201:
+            raise RuntimeError("Falha ao criar ingressos, abortando teste.")
+
+        # 4. Simula o pagamento (gera PDF + envia email)
+        print("\n--- Processando pagamento e enviando email ---")
+        resposta = client.post('/pagamento')
         print("Status:", resposta.status_code)
         print("Body:", resposta.get_json())
 

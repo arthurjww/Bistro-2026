@@ -152,19 +152,21 @@ def criar_ingressos():
             telefone = item.get('telefone')
 
             token = _gerar_token_unico(db)
+            tipo_ingresso = 1 if eh_crianca else 2
+            valor_ingresso = PRECO_INGRESSO / 2 if eh_crianca else PRECO_INGRESSO
 
             db.execute(
                 '''
                 INSERT INTO Ingresso (
-                    nome, eh_crianca, observacoes, email_envio,
+                    nome, tipo_ingresso, observacoes, email_envio,
                     foi_pago, token_QR, utilizado, data_utilizado,
-                    cod_aluno, cod_lugar, data_compra, telefone
+                    cod_aluno, cod_lugar, data_compra, telefone, valor_pago
                 )
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ''',
                 (
                     nome,
-                    eh_crianca,
+                    tipo_ingresso,
                     observacoes,
                     email_envio,
                     0,          # foi_pago
@@ -175,6 +177,7 @@ def criar_ingressos():
                     cod_lugar,
                     datetime.now(),
                     telefone,
+                    valor_ingresso
                 )
             )
 
@@ -208,7 +211,7 @@ def criar_ingressos():
     session['tokens_criados'] = tokens_criados
     session['a_pagar'] = a_pagar
 
-    return jsonify({'sucesso: Ingressos criados'}), 201
+    return jsonify({'sucesso': 'Ingressos criados'}), 201
 
 
 @routes.route('/pagamento', methods=['GET', 'POST'])
@@ -226,7 +229,7 @@ def pagamento():
 
         for token in tokens_criados:
             db.execute(
-                'UPDATE Ingressos SET foi_pago = 1 WHERE token_QR = ?',
+                'UPDATE Ingresso SET foi_pago = 1 WHERE token_QR = ?',
                 (token,)
             )
             try:

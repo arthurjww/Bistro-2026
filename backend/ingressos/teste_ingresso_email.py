@@ -17,15 +17,15 @@ from backend.ingressos.gerador_pdf import enviar_ingresso_por_email
 # Carrega as variáveis do arquivo .env (caso use um)
 load_dotenv()
 
-EMAIL_TESTE = "lvceccato@ucs.br"  # TODO: troque pro seu email de teste
-TOKEN_TESTE = "TEST01"
+EMAIL_TESTE = "gmatte1@ucs.br"  # TODO: troque pro seu email de teste
+TOKEN_TESTE = "TOK123"
 
 
 def configurar_email_teste():
     """Garante que o app.config possui as credenciais de e-mail necessárias."""
     app.config.update(
         MAIL_SERVER=os.getenv("MAIL_SERVER", "smtp.gmail.com"),
-        MAIL_PORT=int(os.getenv("MAIL_PORT", 456)),
+        MAIL_PORT=int(os.getenv("MAIL_PORT", 587)),
         MAIL_USE_TLS=os.getenv("MAIL_USE_TLS", "True").lower() in ("true", "1", "t"),
         MAIL_USERNAME=os.getenv("MAIL_USERNAME", "seu_email_remetente@gmail.com"),
         MAIL_PASSWORD=os.getenv("MAIL_PASSWORD", "sua_senha_de_app"),
@@ -66,11 +66,11 @@ def preparar_dados_teste(db):
     db.execute(
         '''
         INSERT INTO Ingresso (
-            nome, eh_crianca, observacoes, email_envio,
+            nome, tipo_ingresso, observacoes, email_envio,
             foi_pago, token_QR, utilizado, data_utilizado,
-            cod_aluno, cod_lugar, data_compra, telefone
+            cod_aluno, cod_lugar, data_compra, telefone, valor_pago
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''',
         (
             "Convidado de Teste",
@@ -85,6 +85,7 @@ def preparar_dados_teste(db):
             "T1",
             data_compra_str,
             "",
+            10.00,  # valor_pago para teste
         )
     )
 
@@ -117,5 +118,5 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"Falha no teste: {e}")
 
-        finally:
-            limpar_dados_teste(db)
+        #finally:
+            #limpar_dados_teste(db)   

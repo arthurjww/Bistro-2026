@@ -1,7 +1,7 @@
 import qrcode
 import io
 import base64
-from flask import Blueprint, request, render_template_string, send_file
+from flask import Blueprint, request, render_template_string, send_file, url_for
 from xhtml2pdf import pisa
 from ..banco_de_dados import get_db
 from .email_envio import enviar_email
@@ -158,7 +158,11 @@ def buscar_ingresso_pago(token):
             data_compra,
             token_QR AS token,
             cod_lugar,
-            CASE WHEN eh_crianca = 1 THEN 'Criança' ELSE 'Adulto' END AS tipo
+            CASE
+                WHEN tipo_ingresso = 0 THEN 'Gratuito'
+                WHEN tipo_ingresso = 1 THEN 'Meia'
+                ELSE 'Inteira'
+            END AS tipo
         FROM Ingresso
         WHERE token_QR = ? AND foi_pago = 1
     """,
@@ -172,8 +176,10 @@ def _gerar_pdf_bytes(ingresso):
     """Gera o PDF do ingresso em memória e retorna um BytesIO."""
 
     # O QR Code abre um site que diz se o ingresso é Válido ou Não.
-    url_validacao = f"{request.host_url}validar?token={ingresso['token']}" #TODO:rever
-    qr_img = qrcode.make(url_validacao)
+    ip_servidor = "192.168.0.116:5000"
+    url_validacao = f"http://{ip_servidor}/validar?token={ingresso['token']}"
+    qr_img = qrcode.make(url_validacao) #TODO:REVER! 
+    
     qr_buffer = io.BytesIO()
     qr_img.save(qr_buffer, format='PNG')
     qr_base64 = base64.b64encode(qr_buffer.getvalue()).decode('utf-8')
