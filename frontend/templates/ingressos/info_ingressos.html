@@ -6,29 +6,71 @@
 </head>
 <body>
 	<div class="cronometro">
-    	<p></p>
+    	<p id="timer"></p>
 	</div>
 
 <div class="codigo-aluno">
     <label>Código do Aluno:</label>
-    <input type="text" name="codigo_aluno" placeholder="Digite o código">
-    <button type="button" class="btn-enviar-codigo">Enviar</button>
+    <input type="text" name="codigo" placeholder="Digite o código:">
+	<span></span>
+    <button class="btn-enviar-codigo" onclick="confirmarCodigoAluno()">Enviar</button>
 </div>
 
-<details class="detalhes-ingressos">
+<details class="detalhes-ingressos" data-podeAbrir="false">
     <summary>Preencher dados de {{ quant }} ingressos</summary>
 
     {% for lugar in ingressos %}
     <form class="form-ingresso">
         <h3>Ingresso {{ loop.index + 1}} - Lugar {{ lugar }}</h3>
 
-        <label>Campo do PDF:</label>
-        <input type="text" name="campo_exemplo">
-        <br><br>
+        <label>
+			Nome:
+			<input type="text" name="nome" required>
+		</label>
+
+		<label>
+			Email para envio do ingresso:
+			<input type="email" name="email_envio" required>
+		</label>
+
+		<p>Idade:</p>
+		<label>
+			0-3 anos
+			<input type="radio" name="tipo_ingresso" value="0" required>
+		</label>
+
+		<label>
+			4-12 anos
+			<input type="radio" name="tipo_ingresso" value="1">
+		</label>
+
+		<label>
+			13 ou mais anos
+			<input type="radio" name="tipo_ingresso" value="2">
+		</label>
+
+		<label>
+			Observações: Informe alergias, intolerâncias ou preferências alimentares.
+			<textarea
+					name="observacoes"
+					rows="4"
+					cols="100"
+					placeholder="Ex.: intolerância à lactose, glúten, não como banana ou camarão"
+			></textarea>
+		</label>
     </form>
     {% endfor %}
-
-    <button type="button" class="btn-prosseguir">Avançar / Prosseguir</button>
 </details>
+
+<button class="btn-prosseguir" onclick="enviarDadosESeguirPagamento()">Avançar / Prosseguir</button>
+
+<script>
+	const urls = {
+		confirmar_codigo: '{{ url_for("routes.confirmar_codigo") }}',
+		criar_ingressos: '{{ url_for("routes.criar_ingressos") }}'
+	};
+</script>
+
+<script src="{{ url_for('static', filename='ingressos/script_info_ingressos.js') }}"></script>
 </body>
 </html>
