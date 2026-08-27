@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Title</title>
+</head>
+<body>
+	<div class="cronometro">
+    	<p></p>
+	</div>
+
+<div class="codigo-aluno">
+    <label>Código do Aluno:</label>
+    <input type="text" name="codigo_aluno" placeholder="Digite o código">
+    <button type="button" class="btn-enviar-codigo">Enviar</button>
+</div>
+
+<details class="detalhes-ingressos">
+    <summary>Preencher dados de {{ quant }} ingressos</summary>
+
+    {% for lugar in ingressos %}
+    <form class="form-ingresso">
+        <h3>Ingresso {{ loop.index + 1}} - Lugar {{ lugar }}</h3>
+
+        <label>Campo do PDF:</label>
+        <input type="text" name="campo_exemplo">
+        <br><br>
+    </form>
+    {% endfor %}
+
+    <button type="button" class="btn-prosseguir">Avançar / Prosseguir</button>
+</details>
+</body>
+</html>
