@@ -11,12 +11,12 @@
 
 <div class="codigo-aluno">
     <label>Código do Aluno:</label>
-    <input type="text" name="codigo" placeholder="Digite o código:">
+    <input id="input_codigo" type="text" name="codigo" placeholder="Digite o código:">
 	<span></span>
     <button class="btn-enviar-codigo" onclick="confirmarCodigoAluno()">Enviar</button>
 </div>
 
-<details class="detalhes-ingressos" data-podeAbrir="false">
+<details id="detailIngressos" class="detalhes-ingressos" data-pode-abrir="false">
     <summary>Preencher dados de {{ quant }} ingressos</summary>
 
     {% for lugar in ingressos %}
@@ -65,10 +65,16 @@
 <button class="btn-prosseguir" onclick="enviarDadosESeguirPagamento()">Avançar / Prosseguir</button>
 
 <script>
-	const urls = {
-		confirmar_codigo: '{{ url_for("routes.confirmar_codigo") }}',
-		criar_ingressos: '{{ url_for("routes.criar_ingressos") }}'
-	};
+    const urls = {
+        confirmar_codigo: {{ url_for("routes.confirmar_codigo") | tojson }},
+        criar_ingressos: {{ url_for("routes.criar_ingressos") | tojson }},
+        pagamento: {{ url_for("routes.pagamento") | tojson }},
+		verificar_cronometro: {{ url_for("routes.verificar_cronometro") | tojson }}
+    };
+
+    const reservado = new Date(
+        {{ cronometro.isoformat() | tojson }}
+    );
 </script>
 
 <script src="{{ url_for('static', filename='ingressos/script_info_ingressos.js') }}"></script>

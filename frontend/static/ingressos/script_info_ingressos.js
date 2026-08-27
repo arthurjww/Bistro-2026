@@ -2,10 +2,6 @@ const inputCodigo = document.getElementById('input_codigo');
 const details = document.getElementById('detailIngressos');
 const forms = details.querySelectorAll('form');
 
-const reservado = new Date(
-    {{ cronometro.isoformat() | tojson }}
-);
-
 
 forms.forEach(form => {
     form.addEventListener('submit', (event) => {
@@ -21,7 +17,7 @@ details.addEventListener('click', (event) => {
 });
 
 
-function cronometroAtualizado() {
+async function cronometroAtualizado() {
     const agora = new Date();
 
     const diff = 15 * 60 * 1000 - (agora - reservado);
@@ -29,6 +25,9 @@ function cronometroAtualizado() {
     if (diff <= 0) {
         document.getElementById('timer').textContent = '00:00';
         clearInterval(intervalo);
+
+        await verificarCronometro();
+
         return;
     }
 
@@ -44,6 +43,39 @@ const intervalo = setInterval(cronometroAtualizado, 1000);
 cronometroAtualizado();
 
 
+async function verificarCronometro() {
+    try {
+        const resposta = await fetch(urls.verificar_cronometro, {
+            method: 'GET'
+        });
+
+        if (resposta.status === 410) {
+            const dados = await resposta.json();
+            alert(dados.mensagem);
+
+            clearInterval(verificarIntervalo);
+            window.location.href = '/lugares';
+
+            return;
+        }
+
+        if (resposta.ok) {
+            const dados = await resposta.json();
+            console.log('Servidor confirmou:', dados);
+
+            if (dados.expirado) {
+                window.location.href = '/lugares';
+            }
+        }
+
+    } catch (erro) {
+        console.error('Erro ao verificar cronômetro:', erro);
+    }
+}
+
+const verificarIntervalo = setInterval(verificarCronometro, 30000);
+
+
 async function confirmarCodigoAluno() {
     const params = new URLSearchParams({
         codigo: inputCodigo.value
@@ -55,13 +87,21 @@ async function confirmarCodigoAluno() {
 
     if (resposta.ok) {
         const dados = await resposta.json();
-        inputCodigo.parentElement.querySelector('span').textContent =
-            `${dados.sucesso}\nApós usar esses ingressos, sobrará ${dados.usos_restantes} usos do código`;
-        details.dataset.podeAbrir = 'true';
+        if (dados.sucesso === 'Código confirmado.') {
+            inputCodigo.parentElement.querySelector('span').textContent =
+                `${dados.sucesso}\nApós usar esses ingressos, sobrará ${dados.usos_restantes} usos do código`;
+            details.dataset.podeAbrir = 'true';
+        }
         // dá para colocar mudanças do css aqui
-    } else if (resposta.status === 409) {
-        window.location.href = '/lugares';
-        return;
+    } else {
+        const dados = await resposta.json()
+        if (dados.erro === 'A reserva expirou.') {
+            window.location.href = '/lugares';
+            return;
+        } else {
+            inputCodigo.parentElement.querySelector('span').textContent = dados.erro;
+        }
+
     }
 }
 
@@ -69,6 +109,7 @@ async function confirmarCodigoAluno() {
 async function enviarDadosESeguirPagamento() {
     if (details.dataset.podeAbrir === 'false') {
         alert('Você não usou um código confirmado');
+        return;
     }
     for (const form of forms) {
         if (!form.checkValidity()) {
@@ -83,6 +124,11 @@ async function enviarDadosESeguirPagamento() {
         const dados = {};
 
         form.querySelectorAll('input, select, textarea').forEach(input => {
+
+            if (input.type === 'radio' && !input.checked) {
+                return;
+            }
+
             dados[input.name] = input.value;
         });
 

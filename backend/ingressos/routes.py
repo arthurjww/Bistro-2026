@@ -1,9 +1,8 @@
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from ..banco_de_dados import get_db
 from flask import Blueprint, request, session, redirect, url_for, render_template, jsonify
-from flask_login import current_user
 
 from .gerador_pdf import enviar_ingresso_por_email
 
@@ -14,28 +13,23 @@ routes = Blueprint('routes', __name__)
 def cronometro_expirado():
     cronometro = session.get('cronometro_reservado')
     if cronometro is not None:
-        return datetime.now() >= cronometro + timedelta(minutes=15)
+        return datetime.now(timezone.utc) >= cronometro + timedelta(minutes=15)
     return False
 
 
 @routes.get('/')
 def index():
-    return render_template(
-        'ingressos/index.html',
-        logado=current_user.is_authenticated
-    )
+    return render_template('ingressos/index.html',)
 
 
 @routes.get('/info_ingressos')
 def informacoes():
-    lugares = session.get('lugares', [])
-    cronometro = session.get('cronometro_reservado')
-
+    lugares, cronometro = session.get('lugares'), session.get('cronometro_reservado')
     if not lugares or not cronometro:
         return redirect(url_for('/lugares'))
 
     return render_template(
-        'info_ingressos',
+        'ingressos/info_ingressos.html',
         cronometro=cronometro,
         quant=len(lugares),
         ingressos=lugares
@@ -67,16 +61,16 @@ def confirmar_codigo():
 
             session['codigo'] = codigo
             return jsonify({
-                'sucesso': 'Código confirmado',
-                'usos_restantes': f'{aluno["usos_restantes"] - quant_ingressos}'
+                'sucesso': 'Código confirmado.',
+                'usos_restantes': f'{aluno["usos_restantes"] - quant_ingressos}.'
             }), 200
 
         return jsonify({
-            'erro': '0 usos restantes'
+            'erro': '0 usos restantes.'
         }), 409
 
     return jsonify({
-        'erro': 'Código não encontrado'
+        'erro': 'Código não encontrado.'
     }), 404
 
 
@@ -207,12 +201,12 @@ def criar_ingressos():
 
     except Exception as e:
         db.rollback()
-        return jsonify({'erro': f'Erro ao criar ingressos: {e}'}), 500
+        return jsonify({'erro': f'Erro ao criar ingressos: {e}.'}), 500
 
     session['tokens_criados'] = tokens_criados
     session['a_pagar'] = a_pagar
 
-    return jsonify({'sucesso': 'Ingressos criados'}), 201
+    return jsonify({'sucesso': 'Ingressos criados.'}), 201
 
 
 @routes.route('/pagamento', methods=['GET', 'POST'])
@@ -258,10 +252,25 @@ def pagamento():
     if not lugares:
         return jsonify({'erro': 'Nenhum lugar reservado na sessão.'}), 400
     if not a_pagar:
-        return jsonify({'erro': 'Sem preço previsto para ser pago'}), 400
+        return jsonify({'erro': 'Sem preço previsto para ser pago.'}), 400
 
     return render_template(
         'ingressos/pagamento.html',
         luagres=lugares,
         a_pagar=a_pagar
     )
+
+
+@routes.get('/verificar_cronometro')
+def verificar_cronometro():
+    expirado = cronometro_expirado()
+
+    if expirado:
+        return jsonify({
+            'expirado': True,
+            'mensagem': 'O tempo da reserva expirou.'
+        }), 410
+
+    return jsonify({
+        'expirado': False
+    }), 200
