@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+</head>
+
+<body>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <h1>Login</h1>
+
+    <form method="POST">
+        {{ form.hidden_tag() }}
+
+        <div>
+            {{ form.email.label }}
+            {{ form.email() }}
+
+            {% for error in form.email.errors %}
+                <div>{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div>
+            {{ form.senha.label }}
+            {{ form.senha() }}
+
+            {% for error in form.senha.errors %}
+                <div>{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        {{ form.submit() }}
+    </form>
+
+</body>
+</html>
