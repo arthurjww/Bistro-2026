@@ -1,5 +1,6 @@
 import secrets
-from datetime import datetime, timedelta, timezone
+from time import time
+from datetime import datetime
 
 from ..banco_de_dados import get_db
 from flask import Blueprint, request, session, redirect, url_for, render_template, jsonify
@@ -13,7 +14,7 @@ routes = Blueprint('routes', __name__)
 def cronometro_expirado():
     cronometro = session.get('cronometro_reservado')
     if cronometro is not None:
-        return datetime.now(timezone.utc) >= cronometro + timedelta(minutes=15)
+        return int(time() * 1000) >= cronometro
     return False
 
 

@@ -72,9 +72,7 @@
 		verificar_cronometro: {{ url_for("routes.verificar_cronometro") | tojson }}
     };
 
-    const reservado = new Date(
-        {{ cronometro.isoformat() | tojson }}
-    );
+    const reservado = {{ cronometro }};
 </script>
 
 <script src="{{ url_for('static', filename='ingressos/script_info_ingressos.js') }}"></script>

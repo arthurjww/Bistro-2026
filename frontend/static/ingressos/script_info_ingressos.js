@@ -20,7 +20,7 @@ details.addEventListener('click', (event) => {
 async function cronometroAtualizado() {
     const agora = new Date();
 
-    const diff = 15 * 60 * 1000 - (agora - reservado);
+    const diff = reservado - agora;
 
     if (diff <= 0) {
         document.getElementById('timer').textContent = '00:00';
@@ -51,9 +51,9 @@ async function verificarCronometro() {
 
         if (resposta.status === 410) {
             const dados = await resposta.json();
-            alert(dados.mensagem);
 
             clearInterval(verificarIntervalo);
+            alert(dados.mensagem);
             window.location.href = '/lugares';
 
             return;
