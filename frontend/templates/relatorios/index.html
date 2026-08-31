@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RELATÓRIOS BISTRO 2026</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+  <header>
+    📊 RELATÓRIOS BISTRO 2026
+  </header>
+
+  <nav>
+    <button class="nav-btn ativo" data-secao="resumo-compradores">Resumo de Compradores</button>
+    <button class="nav-btn" data-secao="visao-geral">Visão Geral</button>
+    <button class="nav-btn" data-secao="financeiro">Financeiro</button>
+    <button class="nav-btn" data-secao="vendas">Vendas</button>
+    <button class="nav-btn" data-secao="restricoes">Restrições Alimentares</button>
+    <button class="nav-btn" data-secao="top5">Top 5 Músicas</button>
+  </nav>
+
+  <main>
+    <!-- n° 24 até 59 é resumo -->
+    <div id="resumo-compradores" class="secao ativa">
+      <h2>👥 Resumo de Compradores</h2>
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Técnico</th>
+              <th>Aluno</th>
+              <th>Comprador</th>
+              <th>Valor Pago</th>
+              <th>Data da Compra</th>
+              <th>Restrição?</th>
+              <th>Nº da Mesa</th> 
+            </tr>
+          </thead>
+          <tbody>
+            {% for resumo in lista_resumo %}
+            <tr>
+              <td>{{ resumo.tecnico }}</td>
+              <td>{{ resumo.aluno }}</td>
+              <td>{{ resumo.comprador }}</td>
+              <td>{{ resumo.valor_pago }}</td>
+              <td>{{ resumo.data_compra }}</td>
+              <td>{{ resumo.restricao }}</td>
+              <td>{{ resumo.n_mesa }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="botoes-acao">
+        <button class="btn-pdf" onclick="gerarPDF('resumo-compradores', 'resumo_compradores.pdf')">📥 Gerar PDF</button>
+      </div>
+    </div>
+
+    <!-- n° 61 até 124 é visão geral -->
+    <div id="visao-geral" class="secao" style="display: none;">
+      <h2>Visão Geral</h2>
+      
+      <div class="filtros" style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+        <div class="filtro-item">
+          <label for="tecnico"><strong>Técnico:</strong></label>
+          <select id="tecnico">
+            <option value="todos" selected>Todos</option>
+            <option value="Administração">Administração</option>
+            <option value="Gastronomia">Gastronomia</option>
+            <option value="Informática">Informática</option>
+          </select>
+        </div>
+        <div class="filtro-item">
+          <label for="aluno"><strong>Alunos:</strong></label>
+          <select id="aluno">
+            <option value="todos" selected>Todos</option>
+            {% for aluno in lista_alunos %}
+            <option value="{{ aluno.nome }}">{{ aluno.nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="filtro-item">
+          <label for="comprador"><strong>Compradores:</strong></label>
+          <select id="comprador">
+            <option value="todos" selected>Todos</option>
+            {% for comprador in lista_compradores %}
+            <option value="{{ comprador.nome }}">{{ comprador.nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <h3>Informações do Cliente</h3>
+      <div class="info-container" id="info-container">
+        <div class="card">
+          <strong>Nome do Aluno</strong>
+          <span class="valor" id="nome_aluno">{{ nome_aluno }}</span>
+        </div>
+        <div class="card">
+          <strong>Nome do Comprador</strong>
+          <span class="valor" id="nome_cliente">{{ nome_cliente }}</span>
+        </div>
+        <div class="card">
+          <strong>Ingressos Comprados</strong>
+          <span class="valor" id="ingressos">{{ qtd_ingressos }}</span>
+        </div>
+        <div class="card">
+          <strong>CPF</strong>
+          <span class="valor" id="cpf">{{ cpf_comprador }}</span>
+        </div>
+        <div class="card">
+          <strong>N° da Compra do Ingresso</strong>
+          <span class="valor" id="n_ingresso">{{ n_ingresso }}</span>
+        </div>
+        <div class="card">
+          <strong>Número de Telefone</strong>
+          <span class="valor" id="telefone">{{ telefone_comprador }}</span>
+        </div>
+        <div class="card">
+          <strong>Restrições Alimentícias</strong>
+          <span class="valor" id="restricoes-texto">{{ restricoes_texto }}</span>
+        </div>
+        <div class="card">
+          <strong>Data e Hora da Compra</strong>
+          <span class="valor" id="data_hora">{{ data_hora_compra }}</span>
+        </div>
+        <div class="card">
+          <strong>Status da Compra</strong>
+          <span class="valor" id="compra">{{ status_compra }}</span>
+        </div>
+      </div>
+
+      <div class="observacoes" style="margin-top: 20px;">
+        <h3>Observações</h3>
+        <textarea id="observacoes" readonly style="width: 100%; height: 100px; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">Relatório gerado com os dados 100% atualizados no sistema.</textarea>
+      </div>
+
+      <div class="botoes-acao">
+        <button class="btn-pdf" onclick="gerarPDF('visao-geral', 'relatorio_visao_geral.pdf')">📥 Gerar PDF</button>
+      </div>
+    </div>
+
+    <!-- n° 126 até 168 é financeiro -->
+    <div id="financeiro" class="secao" style="display: none;">
+      <h2>Relatório Financeiro</h2>
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Aluno Responsável</th>
+              <th>Quantidade de Ingressos Vinculados</th>
+              <th>Número do Ingresso</th>
+              <th>Nome do Comprador</th>
+              <th>CPF</th>
+              <th>Telefone</th>
+              <th>Restrições</th>
+              <th>Data e Horário da Compra</th>
+              <th>Status da Compra</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in lista_financeiro %}
+            <tr>
+              <td>{{ item.aluno }}</td>
+              <td>{{ item.quantidade_ingressos }}</td>
+              <td>{{ item.numero_ingresso }}</td>
+              <td>{{ item.nome_comprador }}</td>
+              <td>{{ item.cpf }}</td>
+              <td>{{ item.telefone }}</td>
+              <td>{{ item.restricoes }}</td>
+              <td>{{ item.horario_e_dia_compra }}</td>
+              <td>
+                <span style class="color: {% if item.status == 'Pago' %}green{% else %}red{% endif %}; font-weight: bold;">
+                  {{ item.status }}
+                </span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="botoes-acao">
+        <button class="btn-pdf" onclick="gerarPDF('financeiro', 'relatorio_financeiro.pdf')">📥 Gerar PDF</button>
+      </div>
+    </div>
+
+    <!-- n° 170 até 218 é vendas -->
+    <div id="vendas" class="secao" style="display: none;">
+      <h2>Relatório de Vendas</h2>
+      
+      <div class="cards-resumo">
+        <div class="card">
+          <strong>Total de Ingressos</strong>
+          <span class="valor">{{ total_ingressos }}</span>
+        </div>
+        <div class="card">
+          <strong>Ingressos Pagos</strong>
+          <span class="valor">{{ ingressos_pagos }}</span>
+        </div>
+        <div class="card">
+          <strong>Ingressos Não Pagos</strong>
+          <span class="valor">{{ ingressos_naopagos }}</span>
+        </div>
+        <div class="card">
+          <strong>Ingressos Restantes</strong>
+          <span class="valor">{{ ingressos_restantes }}</span>
+        </div>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Nome do Aluno</th>
+              <th>Quantidade de Ingressos por Aluno</th>
+              <th>Número dos Ingressos</th>
+              <th>Lugares / Mesas</th>
+              <th>Situação do Pagamento</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for venda in lista_vendas %}
+            <tr>
+              <td>{{ venda.nome_aluno }}</td>
+              <td>{{ venda.quant_por_aluno }}</td>
+              <td>{{ venda.numero_ingresso }}</td>
+              <td>{{ venda.lugare_mesa }}</td>
+              <td>{{ venda.situacao_pagamento }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="botoes-acao">
+        <button class="btn-pdf" onclick="gerarPDF('vendas', 'relatorio_vendas.pdf')">📥 Gerar PDF</button>
+      </div>
+    </div>
+
+    <!-- n° 220 até 250 é restrições -->
+    <div id="restricoes" class="secao" style="display: none;">
+      <h2>Relatório de Restrições Alimentares</h2>
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Participante</th>
+              <th>Ingresso</th>
+              <th>Mesa / Lugar</th>
+              <th>Restrição</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for restricao in lista_restricoes %}
+            <tr>
+              <td>{{ restricao.participante }}</td>
+              <td>{{ restricao.ingresso }}</td>
+              <td>{{ restricao.mesa_lugar }}</td>
+              <td>{{ restricao.restricao }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="botoes-acao">
+        <button class="btn-pdf" onclick="gerarPDF('restricoes', 'relatorio_restricoes.pdf')">📥 Gerar PDF</button>
+      </div>
+    </div>
+
+    <!-- n° 252 até 282 é top 5 musicas -->
+    <div id="top5" class="secao" style="display: none;">
+      <h2> </h2>Relatório Top Músicas 5</h2>
+      <div style="overflow-x: auto;">
+        <table id="tabela-musicas">
+          <thead>
+            <tr>
+              <th>Número da Música</th>
+              <th>Música</th>
+              <th>Artista</th>
+              <th>Votos</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for musica in lista_musicas %}
+            <tr class="{% if loop.index <= 5 %}destaque-musica{% endif %}">
+              <td>{{ musica.posicao }} {% if loop.index <= 5 %}⭐{% endif %}</td>
+              <td>{{ musica.tituloi }}</td>
+              <td>{{ musica.artista }}</td>
+              <td>{{ musica.votos }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="botoes-acao">
+        <button class="btn-pdf" onclick="gerarPDF('top5', 'relatorio_top_musicas.pdf')">📥 Gerar PDF</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- n° 284 até 308 é scripts de navegação e pdf -->
+  <script>
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const secaoId = this.getAttribute('data-secao');
+        
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('ativo'));
+        document.querySelectorAll('.secao').forEach(s => s.style.display = 'none');
+        
+        this.classList.add('ativo');
+        document.getElementById(secaoId).style.display = 'block';
+      });
+    });
+
+    function gerarPDF(idElemento, nomeArquivo) {
+      const elemento = document.getElementById(idElemento);
+      const opt = { 
+        margin: 10, 
+        filename: nomeArquivo,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+      };
+      html2pdf().set(opt).from(elemento).save();
+    }
+  </script>
+</body>
+</html>
