@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bistrô — Reservas</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --ink:#0a0a0a;
+  --ink-2:#161616;
+  --ink-3:#1f1f1f;
+  --paper:#f4ecdb;
+  --brass:#7a1f2b;
+  --brass-soft:#a13343;
+  --terracotta:#7a1f2b;
+  --text-light:#ffffff;
+  --text-muted:#b8b8b8;
+  --available:#3f8f5f;
+  --available-line:#2e6b46;
+  --reserved:#c0483f;
+  --reserved-line:#8f322b;
+  --selected:#e8b93a;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+html,body{
+  margin:0;
+  padding:0;
+}
+
+body{
+  background:
+    radial-gradient(
+      1200px 600px at 15% -10%,
+      rgba(122,31,43,0.14),
+      transparent 60%
+    ),
+    var(--ink);
+  color:var(--text-light);
+  font-family:'Inter',sans-serif;
+  min-height:100vh;
+  padding:32px 20px 60px;
+}
+
+.wrap{
+  max-width:1180px;
+  margin:0 auto;
+}
+
+/* Header */
+
+header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:20px;
+  border-bottom:1px solid rgba(122,31,43,0.45);
+  padding-bottom:22px;
+  margin-bottom:34px;
+  flex-wrap:wrap;
+}
+
+.brand-eyebrow{
+  text-transform:uppercase;
+  letter-spacing:0.28em;
+  font-size:11px;
+  color:var(--brass-soft);
+  margin:0 0 6px;
+  font-weight:600;
+}
+
+h1{
+  font-family:'Fraunces',serif;
+  font-weight:600;
+  font-size:clamp(32px,5vw,46px);
+  margin:0;
+  letter-spacing:0.01em;
+  color:var(--text-light);
+}
+
+header p.sub{
+  margin:8px 0 0;
+  color:var(--text-muted);
+  font-size:14.5px;
+  max-width:440px;
+}
+
+.occ-badge{
+  text-align:right;
+  font-family:'Fraunces',serif;
+}
+
+.occ-badge .num{
+  font-size:38px;
+  color:var(--brass-soft);
+  line-height:1;
+}
+
+.occ-badge .lbl{
+  font-size:12px;
+  color:var(--text-muted);
+  text-transform:uppercase;
+  letter-spacing:0.14em;
+}
+
+/* Layout */
+
+.layout{
+  display:grid;
+  grid-template-columns:280px 1fr;
+  gap:26px;
+  align-items:start;
+}
+
+@media (max-width:860px){
+  .layout{
+    grid-template-columns:1fr;
+  }
+}
+
+.card{
+  background:var(--ink-2);
+  border:1px solid rgba(122,31,43,0.28);
+  border-radius:14px;
+  padding:22px;
+}
+
+.card h2{
+  font-family:'Fraunces',serif;
+  font-weight:600;
+  font-size:18px;
+  margin:0 0 4px;
+  color:var(--text-light);
+}
+
+.card .hint{
+  font-size:12.5px;
+  color:var(--text-muted);
+  margin:0 0 16px;
+}
+
+/* Table picker list */
+
+.table-list{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.table-btn{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  width:100%;
+  text-align:left;
+  background:var(--ink-3);
+  border:1px solid transparent;
+  border-radius:10px;
+  padding:10px 12px;
+  color:var(--text-light);
+  cursor:pointer;
+  font-family:'Inter',sans-serif;
+  font-size:13.5px;
+}
+
+.table-btn:hover{
+  border-color:rgba(122,31,43,0.65);
+}
+
+.table-btn.active{
+  border-color:var(--brass-soft);
+  background:rgba(161,51,67,0.18);
+}
+
+.table-btn .tname{
+  font-weight:600;
+  color:var(--text-light);
+}
+
+.table-btn .tcap{
+  font-size:11.5px;
+  color:var(--text-muted);
+  display:block;
+  margin-top:2px;
+}
+
+.table-btn .tfree{
+  flex:none;
+  font-size:11.5px;
+  font-weight:700;
+  padding:3px 9px;
+  border-radius:20px;
+  background:rgba(63,143,95,0.18);
+  color:var(--available);
+  border:1px solid var(--available-line);
+  white-space:nowrap;
+}
+
+.table-btn .tfree.full{
+  background:rgba(192,72,63,0.18);
+  color:#e8867d;
+  border-color:var(--reserved-line);
+}
+
+.selected-table-box{
+  margin-top:16px;
+  padding:12px 14px;
+  background:var(--ink-3);
+  border-radius:10px;
+  font-size:13px;
+}
+
+.selected-table-box .d{
+  font-family:'Fraunces',serif;
+  font-size:16px;
+  color:var(--brass-soft);
+}
+
+.selected-table-box .muted{
+  color:var(--text-muted);
+  font-size:12.5px;
+  margin-top:2px;
+}
+
+.legend{
+  margin-top:18px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.legend .row{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  font-size:13px;
+  color:var(--text-muted);
+}
+
+.legend .dot{
+  width:13px;
+  height:13px;
+  border-radius:3px;
+  display:inline-block;
+  flex:none;
+}
+
+.dot.available{
+  background:var(--available);
+  border:1px solid var(--available-line);
+}
+
+.dot.reserved{
+  background:var(--reserved);
+  border:1px solid var(--reserved-line);
+}
+
+.dot.selected{
+  background:var(--selected);
+  border:1px solid #8a6a0f;
+}
+
+/* Floor plan */
+
+.plan-card{
+  padding:22px 22px 18px;
+}
+
+.plan-scroll{
+  width:100%;
+  overflow-x:auto;
+}
+
+svg#floorplan{
+  width:100%;
+  min-width:760px;
+  height:auto;
+  display:block;
+}
+
+.table-group{
+  cursor:pointer;
+}
+
+.table-shape{
+  fill:#141414;
+  stroke:var(--brass-soft);
+  stroke-width:1.4;
+  transition:stroke .15s ease, filter .15s ease;
+}
+
+.table-group:hover .table-shape{
+  stroke:var(--brass-soft);
+}
+
+.table-group.active .table-shape{
+  stroke:var(--brass-soft);
+  stroke-width:2.6;
+  filter:drop-shadow(0 0 5px rgba(161,51,67,0.65));
+}
+
+.table-label{
+  font-family:'Fraunces',serif;
+  font-size:11px;
+  fill:var(--text-light);
+  text-anchor:middle;
+  pointer-events:none;
+}
+
+.table-cap{
+  font-family:'Inter',sans-serif;
+  font-size:8px;
+  fill:var(--text-muted);
+  text-anchor:middle;
+  pointer-events:none;
+}
+
+.seat{
+  cursor:pointer;
+  transition:
+    fill .15s ease,
+    opacity .15s ease,
+    transform .15s ease;
+  transform-box:fill-box;
+  transform-origin:center;
+}
+
+.seat:hover{
+  transform:scale(1.14);
+}
+
+.seat.st-reserved{
+  cursor:not-allowed;
+}
+
+.seat.st-dim{
+  opacity:0.55;
+}
+
+.wall{
+  fill:none;
+  stroke:var(--brass-soft);
+  stroke-width:2;
+}
+
+.fixture{
+  fill:var(--ink-3);
+  stroke:rgba(122,31,43,0.6);
+  stroke-width:1;
+}
+
+.fixture-label{
+  font-family:'Inter',sans-serif;
+  font-size:9px;
+  letter-spacing:0.08em;
+  fill:var(--text-muted);
+  text-anchor:middle;
+  text-transform:uppercase;
+}
+
+/* Bottom action bar */
+
+.action-bar{
+  margin-top:18px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  flex-wrap:wrap;
+  padding-top:16px;
+  border-top:1px solid rgba(122,31,43,0.28);
+}
+
+.selection-info{
+  font-size:13.5px;
+  color:var(--text-muted);
+}
+
+.selection-info b{
+  color:var(--brass-soft);
+}
+
+.btns{
+  display:flex;
+  gap:10px;
+}
+
+button.primary{
+  background:var(--brass);
+  color:#ffffff;
+  border:none;
+  padding:10px 20px;
+  border-radius:9px;
+  font-weight:700;
+  font-size:13.5px;
+  cursor:pointer;
+}
+
+button.primary:disabled{
+  background:#3a1a1f;
+  color:#8f7a7d;
+  cursor:not-allowed;
+}
+
+button.ghost{
+  background:none;
+  border:1px solid rgba(122,31,43,0.55);
+  color:var(--text-muted);
+  padding:10px 16px;
+  border-radius:9px;
+  font-size:13.5px;
+  cursor:pointer;
+}
+
+button.ghost:hover{
+  border-color:var(--brass);
+  color:var(--text-light);
+}
+
+.toast{
+  position:fixed;
+  bottom:24px;
+  left:50%;
+  transform:translateX(-50%) translateY(120%);
+  background:var(--brass);
+  color:#ffffff;
+  padding:12px 22px;
+  border-radius:10px;
+  font-weight:600;
+  font-size:13.5px;
+  transition:transform .3s ease;
+  z-index:20;
+  max-width:90vw;
+  text-align:center;
+}
+
+.toast.show{
+  transform:translateX(-50%) translateY(0);
+}
+
+footer{
+  margin-top:30px;
+  text-align:center;
+  font-size:11.5px;
+  color:var(--text-muted);
+  letter-spacing:0.04em;
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+<header>
+  <div>
+    <p class="brand-eyebrow">Bistrô · Salão principal</p>
+
+    <h1>Reserve sua mesa</h1>
+
+    <p class="sub">
+      Escolha a mesa ao lado — ou toque nela direto no mapa —
+      e depois selecione as cadeiras livres (verdes).
+      Cadeiras vermelhas já foram compradas.
+    </p>
+  </div>
+
+  <div class="occ-badge">
+    <div class="num" id="occNum">—</div>
+    <div class="lbl">lugares livres</div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- Table picker column -->
+
+  <div>
+
+    <div class="card">
+
+      <h2>Escolha a mesa</h2>
+
+      <p class="hint">
+        Toque em uma mesa para localizá-la no mapa.
+      </p>
+
+      <div class="table-list" id="tableList"></div>
+
+      <div class="selected-table-box">
+
+        <div>Mesa selecionada</div>
+
+        <div class="d" id="selectedTableLabel">
+          Nenhuma
+        </div>
+
+        <div class="muted" id="selectedTableSub">
+          Escolha uma mesa para começar.
+        </div>
+
+      </div>
+
+      <div class="legend">
+
+        <div class="row">
+          <span class="dot available"></span>
+          Cadeira livre
+        </div>
+
+        <div class="row">
+          <span class="dot reserved"></span>
+          Cadeira já comprada
+        </div>
+
+        <div class="row">
+          <span class="dot selected"></span>
+          Sua seleção atual
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Floor plan column -->
+
+  <div class="card plan-card">
+
+    <h2>Mapa do salão</h2>
+
+    <p class="hint">
+      Mesas A–G · Mesas H–I · Mesas J–K · cozinha · toaletes
+    </p>
+
+    <div class="plan-scroll">
+
+      <svg
+        id="floorplan"
+        viewBox="0 0 870 900"
+        xmlns="http://www.w3.org/2000/svg">
+      </svg>
+
+    </div>
+
+    <div class="action-bar">
+
+      <div class="selection-info" id="selectionInfo">
+        Nenhuma cadeira selecionada
+      </div>
+
+      <div class="btns">
+
+        <button class="ghost" id="clearBtn">
+          Limpar seleção
+        </button>
+
+        <button class="primary" id="confirmBtn" disabled>
+          Confirmar reserva
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<footer>
+  Bistrô — as reservas ficam salvas e visíveis para qualquer pessoa que abrir este mapa.
+</footer>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+
+  "use strict";
+
+  const svg = document.getElementById('floorplan');
+
+  function el(tag, attrs = {}){
+
+    const node = document.createElementNS(
+      'http://www.w3.org/2000/svg',
+      tag
+    );
+
+    Object.entries(attrs).forEach(([key, value]) => {
+      node.setAttribute(key, value);
+    });
+
+    return node;
+  }
+
+  /* ---------- Table & seat geometry ---------- */
+
+  const tables = [
+
+    /* Coluna esquerda */
+
+    {
+      id:'tG',
+      type:'rect',
+      cx:210,
+      cy:115,
+      w:190,
+      h:58,
+      seats:8,
+      label:'Mesa G'
+    },
+
+    {
+      id:'tF',
+      type:'rect',
+      cx:210,
+      cy:270,
+      w:190,
+      h:58,
+      seats:8,
+      label:'Mesa F'
+    },
+
+    {
+      id:'tE',
+      type:'rect',
+      cx:210,
+      cy:425,
+      w:190,
+      h:58,
+      seats:8,
+      label:'Mesa E'
+    },
+
+    {
+      id:'tD',
+      type:'rect',
+      cx:210,
+      cy:580,
+      w:190,
+      h:58,
+      seats:8,
+      label:'Mesa D'
+    },
+
+    /* Mesas inferiores reposicionadas */
+
+  {
+    id:'tC',
+    type:'round',
+    cx:220,
+    cy:760,
+    r:55,
+    seats:8,
+    label:'Mesa C'
+  },
+
+  {
+    id:'tB',
+    type:'round',
+    cx:430,
+    cy:680,
+    r:55,
+    seats:6,
+    label:'Mesa B'
+  },
+
+  {
+    id:'tA',
+    type:'round',
+    cx:640,
+    cy:760,
+    r:55,
+    seats:8,
+    label:'Mesa A'
+  },
+    /* Mesas H e I mais centralizadas */
+
+    {
+      id:'tH',
+      type:'rect',
+      cx:480,
+      cy:115,
+      w:150,
+      h:58,
+      seats:6,
+      label:'Mesa H'
+    },
+
+    {
+      id:'tI',
+      type:'rect',
+      cx:480,
+      cy:270,
+      w:150,
+      h:58,
+      seats:6,
+      label:'Mesa I'
+    },
+
+    /* Mesas J e K deslocadas para ocupar
+       melhor o espaço central */
+
+  {
+    id:'tJ',
+    type:'vert',
+    cx:460,
+    cy:480,
+    w:58,
+    h:155,
+    seats:6,
+    label:'Mesa J'
+  },
+
+  {
+    id:'tK',
+    type:'round',
+    cx:635,
+    cy:480,
+    r:55,
+    seats:6,
+    label:'Mesa K'
+  },
+
+  ];
+
+  const SEAT_SIZE = 16;
+
+  function getSeatPositions(t){
+
+    const seats = [];
+
+    if(t.type === 'round'){
+
+      const start = -Math.PI / 2;
+      const dist = t.r + 16;
+
+      for(let i = 0; i < t.seats; i++){
+
+        const a =
+          start +
+          2 * Math.PI * i / t.seats;
+
+        seats.push({
+          id:`${t.id}-s${i+1}`,
+          x:t.cx + dist * Math.cos(a),
+          y:t.cy + dist * Math.sin(a)
+        });
+
+      }
+
+    }else if(t.type === 'vert'){
+
+      const n = 3;
+      const usable = t.h - 32;
+
+      for(let i = 0; i < n; i++){
+
+        const y =
+          t.cy -
+          t.h / 2 +
+          16 +
+          usable * i / (n - 1);
+
+        seats.push({
+          id:`${t.id}-s${i+1}`,
+          x:t.cx - t.w / 2 - 15,
+          y
+        });
+
+      }
+
+      for(let i = 0; i < n; i++){
+
+        const y =
+          t.cy -
+          t.h / 2 +
+          16 +
+          usable * i / (n - 1);
+
+        seats.push({
+          id:`${t.id}-s${n+i+1}`,
+          x:t.cx + t.w / 2 + 15,
+          y
+        });
+
+      }
+
+    }else{
+
+      const top = Math.ceil(t.seats / 2);
+      const bot = t.seats - top;
+
+      const margin = 18;
+      const usable = t.w - 2 * margin;
+      const off = 15;
+
+      for(let i = 0; i < top; i++){
+
+        const x =
+          t.cx -
+          t.w / 2 +
+          margin +
+          (
+            top > 1
+              ? usable * i / (top - 1)
+              : usable / 2
+          );
+
+        seats.push({
+          id:`${t.id}-s${i+1}`,
+          x,
+          y:t.cy - t.h / 2 - off
+        });
+
+      }
+
+      for(let i = 0; i < bot; i++){
+
+        const x =
+          t.cx -
+          t.w / 2 +
+          margin +
+          (
+            bot > 1
+              ? usable * i / (bot - 1)
+              : usable / 2
+          );
+
+        seats.push({
+          id:`${t.id}-s${top+i+1}`,
+          x,
+          y:t.cy + t.h / 2 + off
+        });
+
+      }
+
+    }
+
+    return seats;
+  }
+
+  const seatToTable = {};
+
+  tables.forEach(t => {
+
+    getSeatPositions(t).forEach(s => {
+      seatToTable[s.id] = t.id;
+    });
+
+  });
+
+  const allSeatIds = Object.keys(seatToTable);
+
+  const TOTAL_SEATS = allSeatIds.length;
+
+  /* ---------- Build static floor plan ---------- */
+
+  /* Parede externa */
+
+  svg.appendChild(
+    el('rect',{
+      x:35,
+      y:35,
+      width:800,
+      height:830,
+      rx:4,
+      class:'wall'
+    })
+  );
+
+  /*
+    A antiga linha central foi removida.
+    O espaço central agora fica totalmente aberto.
+  */
+
+  /* ---------- TOALETES ---------- */
+
+  svg.appendChild(
+    el('rect',{
+      x:625,
+      y:55,
+      width:180,
+      height:135,
+      rx:8,
+      class:'fixture'
+    })
+  );
+
+  {
+    const t = el('text',{
+      x:715,
+      y:125,
+      class:'fixture-label'
+    });
+
+    t.textContent = 'TOALETES';
+
+    svg.appendChild(t);
+  }
+  /* ---------- ÁREA ABAIXO DA MESA B ---------- */
+
+svg.appendChild(
+  el('rect',{
+    x:350,
+    y:795,
+    width:160,
+    height:70,
+    rx:8,
+    class:'fixture'
+  })
+);
+
+{
+  const t = el('text',{
+    x:430,
+    y:835,
+    class:'fixture-label'
+  });
+
+  t.textContent = 'PALCO';
+
+  svg.appendChild(t);
+}
+
+  /* ---------- COZINHA ---------- */
+
+  svg.appendChild(
+    el('rect',{
+      x:790,
+      y:385,
+      width:45,
+      height:420,
+      rx:5,
+      class:'fixture'
+    })
+  );
+
+  {
+    const t = el('text',{
+      x:812,
+      y:595,
+      class:'fixture-label',
+      transform:'rotate(-90 812 595)'
+    });
+
+    t.textContent = 'COZINHA';
+
+    svg.appendChild(t);
+  }
+
+  /* ---------- Palco ---------- */ 
+
+  svg.appendChild(
+    el('rect',{
+      x:790,
+      y:385,
+      width:45,
+      height:420,
+      rx:5,
+      class:'fixture'
+    })
+  );
+
+  {
+    const t = el('text',{
+      x:812,
+      y:595,
+      class:'fixture-label',
+      transform:'rotate(-90 812 595)'
+    });
+
+    t.textContent = 'COZINHA';
+
+    svg.appendChild(t);
+  }
+
+  /* ---------- Draw tables & seats ---------- */
+
+  const seatEls = {};
+  const tableGroupEls = {};
+
+  tables.forEach(t => {
+
+    const tg = el('g',{
+      class:'table-group',
+      'data-table':t.id
+    });
+
+    if(t.type === 'round'){
+
+      tg.appendChild(
+        el('circle',{
+          cx:t.cx,
+          cy:t.cy,
+          r:t.r,
+          class:'table-shape'
+        })
+      );
+
+    }else{
+
+      tg.appendChild(
+        el('rect',{
+          x:t.cx - t.w / 2,
+          y:t.cy - t.h / 2,
+          width:t.w,
+          height:t.h,
+          rx:8,
+          class:'table-shape'
+        })
+      );
+
+    }
+
+    const lbl = el('text',{
+      x:t.cx,
+      y:t.cy - 3,
+      class:'table-label'
+    });
+
+    lbl.textContent = t.label;
+
+    tg.appendChild(lbl);
+
+    const cap = el('text',{
+      x:t.cx,
+      y:t.cy + 10,
+      class:'table-cap'
+    });
+
+    cap.textContent = t.seats + ' lugares';
+
+    tg.appendChild(cap);
+
+    tg.addEventListener('click',() => selectTable(t.id));
+
+    svg.appendChild(tg);
+
+    tableGroupEls[t.id] = tg;
+
+    getSeatPositions(t).forEach(s => {
+
+      const r = el('rect',{
+        x:s.x - SEAT_SIZE / 2,
+        y:s.y - SEAT_SIZE / 2,
+        width:SEAT_SIZE,
+        height:SEAT_SIZE,
+        rx:3,
+        class:'seat st-available',
+        'data-id':s.id
+      });
+
+      const title = el('title',{});
+
+      title.textContent =
+        `${t.label} — cadeira ${s.id.split('-s')[1]}`;
+
+      r.appendChild(title);
+
+      svg.appendChild(r);
+
+      seatEls[s.id] = r;
+
+      r.addEventListener('click',(e) => {
+
+        e.stopPropagation();
+
+        onSeatClick(s.id);
+
+      });
+
+    });
+
+  });
+
+  /* ---------- State ---------- */
+
+  let reservedSet = new Set();
+  let pendingSet = new Set();
+  let activeTableId = null;
+
+  function tableFreeCount(tableId){
+
+    const seats =
+      allSeatIds.filter(
+        id => seatToTable[id] === tableId
+      );
+
+    return seats.filter(
+      id => !reservedSet.has(id)
+    ).length;
+  }
+
+  function repaintSeats(){
+
+    allSeatIds.forEach(id => {
+
+      const r = seatEls[id];
+
+      const isPending = pendingSet.has(id);
+      const isReserved = reservedSet.has(id);
+
+      r.setAttribute(
+        'class',
+        'seat ' +
+        (
+          isPending
+            ? 'st-selected'
+            : isReserved
+              ? 'st-reserved'
+              : 'st-available'
+        )
+      );
+
+      r.style.fill =
+        isPending
+          ? 'var(--selected)'
+          : isReserved
+            ? 'var(--reserved)'
+            : 'var(--available)';
+
+      r.style.stroke =
+        isPending
+          ? '#8a6a0f'
+          : isReserved
+            ? 'var(--reserved-line)'
+            : 'var(--available-line)';
+
+      r.style.strokeWidth = '1.3';
+
+      r.style.opacity =
+        (
+          activeTableId &&
+          seatToTable[id] !== activeTableId
+        )
+          ? '0.55'
+          : '1';
+
+    });
+
+    document.getElementById('occNum').textContent =
+      TOTAL_SEATS - reservedSet.size;
+
+    const info =
+      document.getElementById('selectionInfo');
+
+    info.innerHTML =
+      pendingSet.size === 0
+        ? 'Nenhuma cadeira selecionada'
+        : `<b>${pendingSet.size}</b> cadeira(s) selecionada(s)`;
+
+    document.getElementById('confirmBtn').disabled =
+      pendingSet.size === 0;
+
+    renderTableList();
+  }
+
+  function onSeatClick(id){
+
+    if(reservedSet.has(id)){
+
+      showToast(
+        'Essa cadeira já foi comprada.'
+      );
+
+      return;
+    }
+
+    activeTableId = seatToTable[id];
+
+    if(pendingSet.has(id)){
+      pendingSet.delete(id);
+    }else{
+      pendingSet.add(id);
+    }
+
+    repaintSeats();
+
+    highlightActiveTable();
+  }
+
+  function selectTable(id){
+
+    activeTableId = id;
+
+    repaintSeats();
+
+    highlightActiveTable();
+  }
+
+  function highlightActiveTable(){
+
+    Object.keys(tableGroupEls).forEach(id => {
+
+      tableGroupEls[id].classList.toggle(
+        'active',
+        id === activeTableId
+      );
+
+    });
+
+    const box =
+      document.getElementById(
+        'selectedTableLabel'
+      );
+
+    const sub =
+      document.getElementById(
+        'selectedTableSub'
+      );
+
+    if(!activeTableId){
+
+      box.textContent = 'Nenhuma';
+
+      sub.textContent =
+        'Escolha uma mesa para começar.';
+
+      return;
+    }
+
+    const t =
+      tables.find(
+        x => x.id === activeTableId
+      );
+
+    const free =
+      tableFreeCount(activeTableId);
+
+    box.textContent = t.label;
+
+    sub.textContent =
+      `${free} de ${t.seats} lugares livres`;
+  }
+
+  function renderTableList(){
+
+    const list =
+      document.getElementById(
+        'tableList'
+      );
+
+    list.innerHTML = '';
+
+    const sortedTables =
+      [...tables].sort(
+        (a,b) =>
+          a.label.localeCompare(
+            b.label,
+            'pt-BR'
+          )
+      );
+
+    sortedTables.forEach(t => {
+
+      const free =
+        tableFreeCount(t.id);
+
+      const btn =
+        document.createElement('button');
+
+      btn.className =
+        'table-btn' +
+        (
+          t.id === activeTableId
+            ? ' active'
+            : ''
+        );
+
+      btn.innerHTML = `
+        <span>
+          <span class="tname">
+            ${t.label}
+          </span>
+
+          <span class="tcap">
+            ${t.seats} lugares
+          </span>
+        </span>
+
+        <span class="tfree${free === 0 ? ' full' : ''}">
+          ${
+            free === 0
+              ? 'lotada'
+              : free +
+                ' livre' +
+                (free === 1 ? '' : 's')
+          }
+        </span>
+      `;
+
+      btn.addEventListener(
+        'click',
+        () => selectTable(t.id)
+      );
+
+      list.appendChild(btn);
+
+    });
+  }
+
+  /* ---------- Clear selection ---------- */
+
+  document
+    .getElementById('clearBtn')
+    .addEventListener('click',() => {
+
+      pendingSet.clear();
+
+      repaintSeats();
+
+    });
+
+  /* ---------- Confirm reservation ---------- */
+
+  document
+    .getElementById('confirmBtn')
+    .addEventListener(
+      'click',
+      async () => {
+
+        if(pendingSet.size === 0) return;
+
+        pendingSet.forEach(
+          id => reservedSet.add(id)
+        );
+
+        const toSave =
+          Array.from(reservedSet);
+
+        pendingSet.clear();
+
+        repaintSeats();
+
+        highlightActiveTable();
+
+        try{
+
+          await window.storage.set(
+            'reservas-atuais',
+            JSON.stringify(toSave),
+            true
+          );
+
+          showToast(
+            'Reserva confirmada com sucesso.'
+          );
+
+        }catch(e){
+
+          showToast(
+            'Não foi possível salvar a reserva agora. Tente novamente.'
+          );
+
+        }
+
+      }
+    );
+
+  /* ---------- Toast ---------- */
+
+  let toastTimer;
+
+  function showToast(msg){
+
+    const t =
+      document.getElementById('toast');
+
+    t.textContent = msg;
+
+    t.classList.add('show');
+
+    clearTimeout(toastTimer);
+
+    toastTimer =
+      setTimeout(
+        () => t.classList.remove('show'),
+        3200
+      );
+  }
+
+  /* ---------- Init ---------- */
+
+  async function init(){
+
+    try{
+
+      const res =
+        await window.storage.get(
+          'reservas-atuais',
+          true
+        );
+
+      if(res && res.value){
+
+        JSON.parse(res.value).forEach(id => {
+
+          if(seatEls[id]){
+            reservedSet.add(id);
+          }
+
+        });
+
+      }
+
+    }catch(e){
+
+      // Nenhuma reserva salva ainda.
+
+    }
+
+    repaintSeats();
+
+    highlightActiveTable();
+
+  }
+
+  init();
+
+})();
+</script>
+
+</body>
+</html>
