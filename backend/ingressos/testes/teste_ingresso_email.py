@@ -12,12 +12,12 @@ from dotenv import load_dotenv  # Se estiver usando arquivo .env
 
 from backend import app
 from backend.banco_de_dados import get_db
-from backend.ingressos.gerador_pdf import enviar_ingresso_por_email 
+from backend.ingressos.gerador_pdf import enviar_ingresso_por_email
 
 # Carrega as variáveis do arquivo .env (caso use um)
 load_dotenv()
 
-EMAIL_TESTE = ""  # TODO: troque pro seu email de teste
+EMAIL_TESTE = "gmatte1@ucs.br"  # TODO: troque pro seu email de teste
 TOKEN_TESTE = "TOK123"
 
 
@@ -119,4 +119,4 @@ if __name__ == "__main__":
             print(f"Falha no teste: {e}")
 
         #finally:
-            #limpar_dados_teste(db)   
+            #limpar_dados_teste(db)
