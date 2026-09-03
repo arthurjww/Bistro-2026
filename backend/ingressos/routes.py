@@ -11,8 +11,7 @@ from .gerador_pdf import enviar_ingresso_por_email
 routes = Blueprint('routes', __name__)
 
 
-def cronometro_expirado():
-    cronometro = session.get('cronometro_reservado')
+def cronometro_expirado(cronometro):
     if cronometro is not None:
         return int(time() * 1000) >= cronometro
     return False
@@ -25,28 +24,31 @@ def index():
 
 @routes.get('/info_ingressos')
 def informacoes():
-    lugares, cronometro = session.get('lugares'), session.get('cronometro_reservado')
-    if not lugares or not cronometro:
-        return redirect(url_for('/lugares'))
 
     return render_template(
         'ingressos/info_ingressos.html',
-        cronometro=cronometro,
-        quant=len(lugares),
-        ingressos=lugares
+        cronometro='11111111111',
+        quant=len([2,2]),
+        ingressos=[2,2]
     )
 
 
 @routes.get('/info_ingressos/confirmar_codigo')
 def confirmar_codigo():
-    if cronometro_expirado():
+    if cronometro_expirado(session.get('cronometro_reservado')):
         return jsonify({
             'erro': 'A reserva expirou.'
         }), 409
 
-    codigo = request.args.get('codigo')
+    lugares = session.get('lugares', [])
 
-    aluno = get_db().execute(
+    if not lugares:
+        return jsonify({'erro': 'Nenhum lugar reservado na sessão.'}), 400
+
+    codigo = request.args.get('codigo')
+    db = get_db()
+
+    aluno = db.execute(
         '''
         SELECT *
         FROM Aluno
@@ -56,11 +58,19 @@ def confirmar_codigo():
     ).fetchone()
 
     if aluno is not None:
-        quant_ingressos = len(session.get('lugares', []))
+        quant_ingressos = len(lugares)
 
         if aluno['usos_restantes'] >= quant_ingressos:
+            for lugar in lugares:
+                db.execute(
+                    'UPDATE Lugares SET cod_aluno = ? WHERE cod_lugar = ?',
+                    (codigo, lugar)
+                )
+
+            db.commit()
 
             session['codigo'] = codigo
+
             return jsonify({
                 'sucesso': 'Código confirmado.',
                 'usos_restantes': f'{aluno["usos_restantes"] - quant_ingressos}.'
@@ -100,7 +110,7 @@ PRECO_INGRESSO = 100
 
 @routes.post('/info_ingressos/criar_ingressos')
 def criar_ingressos():
-    if cronometro_expirado():
+    if cronometro_expirado(session.get('cronometro_reservado')):
         return jsonify({
             'erro': 'A reserva expirou.'
         }), 409
