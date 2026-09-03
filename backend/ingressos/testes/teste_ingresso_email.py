@@ -3,7 +3,7 @@ Script de teste manual: cria um ingresso fake no banco (já marcado
 como pago) e testa a geração do PDF + envio por email de ponta a ponta.
 
 Rodar a partir da raiz do projeto:
-    python -m backend.ingressos.teste_ingresso_email
+    python -m backend.ingressos.testes.teste_ingresso_email
 """
 
 import os
@@ -17,7 +17,7 @@ from backend.ingressos.gerador_pdf import enviar_ingresso_por_email
 # Carrega as variáveis do arquivo .env (caso use um)
 load_dotenv()
 
-EMAIL_TESTE = " "  # TODO: troque pro seu email de teste
+EMAIL_TESTE = ""  # TODO: troque pro seu email de teste
 TOKEN_TESTE = "TOK123"
 
 
@@ -25,7 +25,7 @@ def configurar_email_teste():
     """Garante que o app.config possui as credenciais de e-mail necessárias."""
     app.config.update(
         MAIL_SERVER=os.getenv("MAIL_SERVER", "smtp.gmail.com"),
-        MAIL_PORT=int(os.getenv("MAIL_PORT", 587)),
+        MAIL_PORT=int(os.getenv("MAIL_PORT", 465)),
         MAIL_USE_TLS=os.getenv("MAIL_USE_TLS", "True").lower() in ("true", "1", "t"),
         MAIL_USERNAME=os.getenv("MAIL_USERNAME", "seu_email_remetente@gmail.com"),
         MAIL_PASSWORD=os.getenv("MAIL_PASSWORD", "sua_senha_de_app"),

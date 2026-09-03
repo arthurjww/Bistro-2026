@@ -1,19 +1,24 @@
 const inputCodigo = document.getElementById('input_codigo');
 const details = document.getElementById('detailIngressos');
+const forms = details.querySelectorAll('form');
 
 const reservado = new Date(
     {{ cronometro.isoformat() | tojson }}
 );
 
 
-cronometroAtualizado();
+forms.forEach(form => {
+    form.addEventListener('submit', (event) => {
+        event.preventDefault();
+    });
+});
 
 
-details.addEventListener('click', function (event) {
+details.addEventListener('click', (event) => {
     if (details.dataset.podeAbrir === 'false') {
         event.preventDefault();
     }
-})
+});
 
 
 function cronometroAtualizado() {
@@ -36,18 +41,16 @@ function cronometroAtualizado() {
 }
 
 const intervalo = setInterval(cronometroAtualizado, 1000);
-
+cronometroAtualizado();
 
 
 async function confirmarCodigoAluno() {
-    const payload = {
+    const params = new URLSearchParams({
         codigo: inputCodigo.value
-    };
+    });
 
-    const resposta = await fetch('/info_ingressos/confirmar_codigo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json'},
-        body: JSON.stringify(payload)
+    const resposta = await fetch(`${urls.confirmar_codigo}?${params}`, {
+        method: 'GET',
     });
 
     if (resposta.ok) {
@@ -56,11 +59,24 @@ async function confirmarCodigoAluno() {
             `${dados.sucesso}\nApós usar esses ingressos, sobrará ${dados.usos_restantes} usos do código`;
         details.dataset.podeAbrir = 'true';
         // dá para colocar mudanças do css aqui
+    } else if (resposta.status === 409) {
+        window.location.href = '/lugares';
+        return;
     }
 }
 
 
 async function enviarDadosESeguirPagamento() {
+    if (details.dataset.podeAbrir === 'false') {
+        alert('Você não usou um código confirmado');
+    }
+    for (const form of forms) {
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+    }
+
     const ingressos = [];
 
     details.querySelectorAll('form').forEach(form => {
@@ -76,4 +92,15 @@ async function enviarDadosESeguirPagamento() {
     const payload = {
         ingressos: ingressos
     };
+
+    const resposta = await fetch(urls.criar_ingressos, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+
+    if (resposta.ok) {
+        window.location.href = '/pagamento';
+        return;
+    }
 }

@@ -9,7 +9,7 @@ as requisições que o frontend fará no futuro (via Flask test_client):
 4. Processa pagamento -> gera PDF, envia email
 
 Rodar a partir da raiz do projeto:
-    python -m backend.ingressos.teste_cliente
+    python -m backend.ingressos.testes.teste_cliente
 """
 
 from backend import app
@@ -18,7 +18,7 @@ from backend.mapa_mesas.banco_de_dados import get_db
 
 CODIGO_ALUNO_TESTE = "TOK123"
 LUGAR_TESTE = "T2"
-EMAIL_TESTE = " "  # troque pro seu email de teste
+EMAIL_TESTE = ""  # troque pro seu email de teste
 
 
 def preparar_dados_teste(db):

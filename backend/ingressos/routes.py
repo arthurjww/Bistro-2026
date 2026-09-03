@@ -29,28 +29,27 @@ def index():
 @routes.get('/info_ingressos')
 def informacoes():
     lugares = session.get('lugares', [])
-    cronometro = session.get('cronometro')
+    cronometro = session.get('cronometro_reservado')
 
-    if not lugares and not cronometro:
-        return render_template(
-            'info_ingressos',
-            cronometro=cronometro,
-            quant=len(lugares),
-            ingressos=lugares
-        )
+    if not lugares or not cronometro:
+        return redirect(url_for('/lugares'))
 
-    return redirect(url_for('/lugares'))
+    return render_template(
+        'info_ingressos',
+        cronometro=cronometro,
+        quant=len(lugares),
+        ingressos=lugares
+    )
 
 
-@routes.post('/info_ingressos/confirmar_codigo')
+@routes.get('/info_ingressos/confirmar_codigo')
 def confirmar_codigo():
     if cronometro_expirado():
         return jsonify({
             'erro': 'A reserva expirou.'
         }), 409
 
-    dados = request.get_json()
-    codigo = dados['codigo']
+    codigo = request.args.get('codigo')
 
     aluno = get_db().execute(
         '''
@@ -147,13 +146,18 @@ def criar_ingressos():
                      'erro': 'Nome e email são obrigatórios para todos os ingressos.'
                 }), 400
 
-            eh_crianca = bool(item.get('eh_crianca', False))
+            tipo_ingresso = int(item.get('tipo_ingresso'))
             observacoes = item.get('observacoes')
             telefone = item.get('telefone')
 
+            if tipo_ingresso == 0:
+                valor_ingresso = 0
+            elif tipo_ingresso == 1:
+                valor_ingresso = PRECO_INGRESSO / 2
+            else:
+                valor_ingresso = PRECO_INGRESSO
+
             token = _gerar_token_unico(db)
-            tipo_ingresso = 1 if eh_crianca else 2
-            valor_ingresso = PRECO_INGRESSO / 2 if eh_crianca else PRECO_INGRESSO
 
             db.execute(
                 '''
@@ -188,10 +192,7 @@ def criar_ingressos():
 
             tokens_criados.append(token)
 
-            if eh_crianca:
-                a_pagar += PRECO_INGRESSO/2
-            else:
-                a_pagar += PRECO_INGRESSO
+            a_pagar += valor_ingresso
 
         db.execute(
             '''
