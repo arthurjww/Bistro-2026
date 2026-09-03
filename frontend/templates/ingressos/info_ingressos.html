@@ -9,72 +9,78 @@
     	<p id="timer"></p>
 	</div>
 
-<div class="codigo-aluno">
-    <label>Código do Aluno:</label>
-    <input id="input_codigo" type="text" name="codigo" placeholder="Digite o código:">
-	<span></span>
-    <button class="btn-enviar-codigo" onclick="confirmarCodigoAluno()">Enviar</button>
-</div>
+	<div class="codigo-aluno">
+		<label>Código do Aluno:</label>
+		<input id="input_codigo" type="text" name="codigo" placeholder="Digite o código:">
+		<span></span>
+		<button class="btn-enviar-codigo" onclick="confirmarCodigoAluno()">Enviar</button>
+	</div>
 
-<details id="detailIngressos" class="detalhes-ingressos" data-pode-abrir="false">
-    <summary>Preencher dados de {{ quant }} ingressos</summary>
+	<details id="detailIngressos" class="detalhes-ingressos" data-pode-abrir="false">
+		<summary>Preencher dados de {{ quant }} ingressos</summary>
 
-    {% for lugar in ingressos %}
-    <form class="form-ingresso">
-        <h3>Ingresso {{ loop.index + 1}} - Lugar {{ lugar }}</h3>
+		{% for lugar in ingressos %}
+		<form class="form-ingresso">
+			<h3>Ingresso {{ loop.index + 1}} - Lugar {{ lugar }}</h3>
 
-        <label>
-			Nome:
-			<input type="text" name="nome" required>
-		</label>
+			<label>
+				Nome:
+				<input type="text" name="nome" required>
+			</label>
 
-		<label>
-			Email para envio do ingresso:
-			<input type="email" name="email_envio" required>
-		</label>
+			<label>
+				Telefone para entrarmos em contato, caso necessário
+				<input type="tel" id="telefone" required>
+			</label>
 
-		<p>Idade:</p>
-		<label>
-			0-3 anos
-			<input type="radio" name="tipo_ingresso" value="0" required>
-		</label>
+			<label>
+				Email para envio do ingresso:
+				<input type="email" name="email_envio" required>
+			</label>
 
-		<label>
-			4-12 anos
-			<input type="radio" name="tipo_ingresso" value="1">
-		</label>
+			<p>Idade:</p>
+			<label>
+				0-3 anos
+				<input type="radio" name="tipo_ingresso" value="0" required>
+			</label>
 
-		<label>
-			13 ou mais anos
-			<input type="radio" name="tipo_ingresso" value="2">
-		</label>
+			<label>
+				4-12 anos
+				<input type="radio" name="tipo_ingresso" value="1">
+			</label>
 
-		<label>
-			Observações: Informe alergias, intolerâncias ou preferências alimentares.
-			<textarea
-					name="observacoes"
-					rows="4"
-					cols="100"
-					placeholder="Ex.: intolerância à lactose, glúten, não como banana ou camarão"
-			></textarea>
-		</label>
-    </form>
-    {% endfor %}
-</details>
+			<label>
+				13 ou mais anos
+				<input type="radio" name="tipo_ingresso" value="2">
+			</label>
 
-<button class="btn-prosseguir" onclick="enviarDadosESeguirPagamento()">Avançar / Prosseguir</button>
+			<label>
+				<b>(Opcional)</b> Observações: Informe alergias, intolerâncias ou preferências alimentares.
+				<textarea
+						name="observacoes"
+						rows="4"
+						cols="100"
+						placeholder="Ex.: intolerância à lactose, glúten, não como banana ou camarão"
+				></textarea>
+			</label>
+		</form>
+		{% endfor %}
+	</details>
 
-<script>
-    const urls = {
-        confirmar_codigo: {{ url_for("routes.confirmar_codigo") | tojson }},
-        criar_ingressos: {{ url_for("routes.criar_ingressos") | tojson }},
-        pagamento: {{ url_for("routes.pagamento") | tojson }},
-		verificar_cronometro: {{ url_for("routes.verificar_cronometro") | tojson }}
-    };
+	<button class="btn-prosseguir" onclick="enviarDadosESeguirPagamento()">Avançar / Prosseguir</button>
 
-    const reservado = {{ cronometro }};
-</script>
+	<script>
+		const urls = {
+			confirmar_codigo: {{ url_for('routes.confirmar_codigo') | tojson }},
+			criar_ingressos: {{ url_for('routes.criar_ingressos') | tojson }},
+			pagamento: {{ url_for('routes.pagamento') | tojson }},
+			verificar_cronometro: {{ url_for('routes.verificar_cronometro') | tojson }}
+		};
 
-<script src="{{ url_for('static', filename='ingressos/script_info_ingressos.js') }}"></script>
+		const reservado = {{ cronometro }};
+	</script>
+	<script src="https://unpkg.com/imask"></script>
+	<script src="{{ url_for('static', filename='ingressos/script_cronometro.js') }}"></script>
+	<script src="{{ url_for('static', filename='ingressos/script_info_ingressos.js') }}"></script>
 </body>
 </html>
