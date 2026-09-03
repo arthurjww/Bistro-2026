@@ -1,7 +1,7 @@
 import secrets
 from datetime import datetime, timedelta
 
-from ..banco_de_dados import get_db
+from ..mapa_mesas.banco_de_dados import get_db
 from flask import Blueprint, request, session, redirect, url_for, render_template, jsonify
 from flask_login import current_user
 

@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, session
-import lugares as lug
+import mapa_mesas.lugares as lug
 
 bp_lugares = Blueprint("lugares", __name__)
 

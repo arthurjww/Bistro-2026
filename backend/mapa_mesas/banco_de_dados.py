@@ -63,7 +63,7 @@ def create_all():
                 CHECK(ocupado IN(0, 1, 2)),
             0 = livre; 1 = reservado/pago; 2 = em pagamento
 
-            cronometro_reservado DATETIME,
+            cronometro_reservado INTEGER,
 
             FOREIGN KEY(cod_aluno)
                 REFERENCES Aluno(cod_aluno)

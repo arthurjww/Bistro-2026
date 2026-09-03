@@ -1,5 +1,5 @@
 from .. import login_manager
-from ..banco_de_dados import get_db
+from ..mapa_mesas.banco_de_dados import get_db
 from flask import Blueprint, flash, redirect, url_for, render_template
 from flask_login import UserMixin, login_user, logout_user, login_required
 from flask_wtf import FlaskForm

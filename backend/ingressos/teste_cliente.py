@@ -13,7 +13,7 @@ Rodar a partir da raiz do projeto:
 """
 
 from backend import app
-from backend.banco_de_dados import get_db
+from backend.mapa_mesas.banco_de_dados import get_db
 
 
 CODIGO_ALUNO_TESTE = "TOK123"

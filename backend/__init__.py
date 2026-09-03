@@ -39,7 +39,7 @@ app.config["MAIL_USE_SSL"] = app.config["MAIL_PORT"] == 465
 app.config["MAIL_USE_TLS"] = app.config["MAIL_PORT"] == 587
 
 
-from .banco_de_dados import create_all, close_connection
+from .mapa_mesas.banco_de_dados import create_all, close_connection
 
 app.teardown_appcontext(close_connection)
 

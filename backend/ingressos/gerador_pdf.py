@@ -3,7 +3,7 @@ import io
 import base64
 from flask import Blueprint, request, render_template_string, send_file, url_for
 from xhtml2pdf import pisa
-from ..banco_de_dados import get_db
+from ..mapa_mesas.banco_de_dados import get_db
 from .email_envio import enviar_email
 
 gerador_pdf = Blueprint('gerador_pdf', __name__)
