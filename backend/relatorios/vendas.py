@@ -5,7 +5,8 @@ def obter_total_ingressos():
 
     cursor = db.execute(
         '''SELECT COUNT(id) AS quantidade_total
-           FROM Ingresso;'''
+           FROM Ingresso;
+        '''
     )
 
     resultado = cursor.fetchone()
@@ -19,7 +20,8 @@ def obter_ingressos_pagos():
     cursor = db.execute(
         '''SELECT COUNT(id) as quantidade_paga
            FROM Ingresso
-           WHERE foi_pago=1;'''
+           WHERE foi_pago=1;
+        '''
     )
 
     resultado = cursor.fetchone()
@@ -34,7 +36,8 @@ def obter_ingressos_nao_pagos():
         '''SELECT COUNT(id) as quantidade_nao_paga
            FROM Ingresso
            WHERE foi_pago=0
-           or foi_pago IS NULL;'''
+           or foi_pago IS NULL;
+        '''
     )
 
     resultado = cursor.fetchone()
@@ -66,6 +69,30 @@ def obter_ingressos_restantes_por_aluno():
            FROM Aluno
            WHERE usos_restantes > 0
            ORDER BY usos_restantes DESC, nome_aluno;
+        '''
+    )
+
+    resultado = cursor.fetchall()
+
+    return resultado
+
+def obter_lista_vendas():
+    db = get_db()
+
+    cursor = db.execute(
+        '''SELECT a.nome_aluno,
+                  i.id as numero_ingresso,
+                  i.cod_lugar,
+                  l.mesa,
+                  i.foi_pago
+           FROM Ingresso i
+           INNER JOIN Aluno a
+                  ON i.cod_aluno = a.cod_aluno
+           INNER JOIN Lugares l
+                  ON i.cod_lugar = l.cod_lugar
+           ORDER BY a.nome_aluno,
+                    l.mesa,
+                    i.cod_lugar;
         '''
     )
 
