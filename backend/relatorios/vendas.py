@@ -80,19 +80,26 @@ def obter_lista_vendas():
     db = get_db()
 
     cursor = db.execute(
-        '''SELECT a.nome_aluno,
-                  i.id as numero_ingresso,
-                  i.cod_lugar,
-                  l.mesa,
-                  i.foi_pago
-           FROM Ingresso i
-           INNER JOIN Aluno a
-                  ON i.cod_aluno = a.cod_aluno
-           INNER JOIN Lugares l
-                  ON i.cod_lugar = l.cod_lugar
-           ORDER BY a.nome_aluno,
-                    l.mesa,
-                    i.cod_lugar;
+        '''SELECT
+            a.nome_aluno,
+            COUNT(i.id) OVER (
+                PARTITION BY i.cod_aluno
+            ) AS quant_por_aluno,
+            i.id AS numero_ingresso,
+            i.cod_lugar || ' / Mesa ' || l.mesa AS lugare_mesa,
+            CASE
+                WHEN i.foi_pago = 1 THEN 'Pago'
+                ELSE 'Não pago'
+            END AS situacao_pagamento
+        FROM Ingresso AS i
+        INNER JOIN Aluno AS a
+            ON i.cod_aluno = a.cod_aluno
+        INNER JOIN Lugares AS l
+            ON i.cod_lugar = l.cod_lugar
+        ORDER BY
+            a.nome_aluno,
+            l.mesa,
+            i.cod_lugar;
         '''
     )
 
