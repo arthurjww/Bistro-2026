@@ -19,17 +19,20 @@ def cronometro_expirado(cronometro):
 
 @routes.get('/')
 def index():
-    return render_template('ingressos/index.html',)
+    return render_template('ingressos/index.html')
 
 
 @routes.get('/info_ingressos')
 def informacoes():
+    lugares, cronometro = session.get('lugares', []), session.get('cronometro_reservado')
+    if not lugares or not cronometro:
+        return redirect(url_for('/lugares'))
 
     return render_template(
         'ingressos/info_ingressos.html',
-        cronometro='11111111111',
-        quant=len([2,2]),
-        ingressos=[2,2]
+        cronometro=cronometro,
+        quant=len(lugares),
+        ingressos=lugares
     )
 
 
@@ -274,7 +277,7 @@ def pagamento():
 
 @routes.get('/verificar_cronometro')
 def verificar_cronometro():
-    expirado = cronometro_expirado()
+    expirado = cronometro_expirado(session.get('cronometro_expirado'))
 
     if expirado:
         return jsonify({
