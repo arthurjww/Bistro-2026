@@ -55,7 +55,9 @@ login_manager.login_message = (
 from .ingressos.routes import routes
 from .ingressos.auth import auth
 from .ingressos.gerador_pdf import gerador_pdf
+from .mapa_mesas.routes import bp_lugares
 app.register_blueprint(gerador_pdf)
+app.register_blueprint(bp_lugares)
 
 app.register_blueprint(routes)
 app.register_blueprint(auth)

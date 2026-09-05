@@ -1,4 +1,4 @@
-from backend.mapa_mesas.banco_de_dados import get_db
+from banco_de_dados import get_db
 
 LIVRE = 0
 OCUPADO = 1
@@ -43,7 +43,7 @@ def seed_lugares():
         for cadeira in range(1, qtd_cadeiras + 1):
             cod_lugar = f"{mesa}{cadeira}"
             cursor.execute("""
-                INSERT OR IGNORE INTO Lugares (cod_lugar, mesa, cadeira, status) VALUES (?, ?, ?, ?)
+                INSERT OR IGNORE INTO Lugares (cod_lugar, mesa, cadeira, ocupado) VALUES (?, ?, ?, ?)
             """, (cod_lugar, mesa, cadeira, LIVRE))
     db.commit()
 
@@ -51,7 +51,7 @@ def listar_mapa():
     db = get_db()
     cursor = db.cursor()
     cursor.execute("""
-        SELECT cod_lugar, mesa, cadeira, status
+        SELECT cod_lugar, mesa, cadeira, ocupado
         FROM Lugares
         ORDER BY mesa, cadeira
     """)
@@ -61,7 +61,7 @@ def listar_mapa():
         mapa.setdefault(linha["mesa"], []).append({
             "cod_lugar": linha["cod_lugar"],
             "cadeira": linha["cadeira"],
-            "status": linha["status"]
+            "ocupado": linha["ocupado"]
         })
     return mapa
 
@@ -73,14 +73,14 @@ def escolher_lugar(cod_lugar, cod_aluno):
 
     cursor.execute("""
         UPDATE Lugares
-        SET status = ?, cod_aluno = ?, cronometro_reservado = CURRENT_TIMESTAMP
-        WHERE cod_lugar = ? AND status = ?
-    """,(EM_PAGAMENTO, cod_aluno, cod_lugar, LIVRE))
+        SET ocupado = ?, cod_aluno = ?, cronometro_reservado = CURRENT_TIMESTAMP
+        WHERE cod_lugar = ? AND ocupado = ?
+    """, (EM_PAGAMENTO, cod_aluno, cod_lugar, LIVRE))
 
     db.commit()
 
     if cursor.rowcount == 0:
-        return False
+        return False, "Lugar indisponível"
 
     return True, None
 
@@ -90,13 +90,13 @@ def confirmar_pagamento(cod_lugar, cod_aluno):
 
     cursor.execute("""
         UPDATE Lugares
-        SET status = ?
-        WHERE cod_lugar = ? AND cod_aluno = ? AND status = ?
-    """,(OCUPADO, cod_lugar, cod_aluno, EM_PAGAMENTO))
+        SET ocupado = ?
+        WHERE cod_lugar = ? AND cod_aluno = ? AND ocupado = ?
+    """, (OCUPADO, cod_lugar, cod_aluno, EM_PAGAMENTO))
 
     db.commit()
 
     if cursor.rowcount == 0:
-        return False
+        return False, "Reserva não encontrada ou já expirada"
 
     return True, None
