@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bistrô — Reservas</title>
+    <link rel="stylesheet" href="../../static/mapa-mesas/mapa-mesas.css">
+</head>
+
+<body>
+
+    <div class="wrap">
+
+        <header>
+            <div>
+                <p class="brand-eyebrow">Bistrô · Salão principal</p>
+
+                <h1>Reserve sua mesa</h1>
+
+                <p class="sub">
+                    Escolha a mesa ao lado — ou toque nela direto no mapa —
+                    e depois selecione as cadeiras livres (verdes).
+                    Cadeiras vermelhas já foram compradas.
+                </p>
+            </div>
+
+            <div class="occ-badge">
+                <div class="num" id="occNum">—</div>
+                <div class="lbl">lugares livres</div>
+            </div>
+        </header>
+
+        <div class="layout">
+
+            <!-- Coluna de seleção das mesas -->
+
+            <div>
+
+                <div class="card">
+
+                    <h2>Escolha a mesa</h2>
+
+                    <p class="hint">
+                        Toque em uma mesa para localizá-la no mapa.
+                    </p>
+
+                    <div class="table-list" id="tableList">
+                    </div>
+
+                    <div class="selected-table-box">
+
+                        <div>Mesa selecionada</div>
+
+                        <div class="d" id="selectedTableLabel">
+                            Nenhuma
+                        </div>
+
+                        <div class="muted" id="selectedTableSub">
+                            Escolha uma mesa para começar.
+                        </div>
+
+                    </div>
+
+                    <div class="legend">
+
+                        <div class="row">
+                            <span class="dot available"></span>
+                            Cadeira livre
+                        </div>
+
+                        <div class="row">
+                            <span class="dot reserved"></span>
+                            Cadeira já comprada
+                        </div>
+
+                        <div class="row">
+                            <span class="dot selected"></span>
+                            Sua seleção atual
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Coluna do mapa -->
+
+            <div class="card plan-card">
+
+                <h2>Mapa do salão</h2>
+
+                <p class="hint">
+                    Mesas A–G · Mesas H–I · Mesas J–K · cozinha · toaletes
+                </p>
+
+                <div class="plan-scroll">
+
+                    <svg
+                        id="floorplan"
+                        viewBox="0 0 870 900"
+                        xmlns="http://www.w3.org/2000/svg">
+                    </svg>
+
+                </div>
+
+                <div class="action-bar">
+
+                    <div class="selection-info" id="selectionInfo">
+                        Nenhuma cadeira selecionada
+                    </div>
+
+                    <div class="btns">
+
+                        <button class="ghost" id="clearBtn">
+                            Limpar seleção
+                        </button>
+
+                        <button class="primary" id="confirmBtn" disabled>
+                            Confirmar reserva
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <footer>
+            Bistrô — as reservas ficam salvas e visíveis para qualquer pessoa que abrir este mapa.
+        </footer>
+
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>

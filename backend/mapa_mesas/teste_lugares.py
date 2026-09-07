@@ -1,4 +1,4 @@
-from app import app
+from mapa_mesas.app import app
 
 with app.test_client() as client:
     with client.session_transaction() as sess:
