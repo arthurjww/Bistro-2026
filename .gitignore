@@ -1,3 +1,6 @@
+# Banco local do SQLite
+*.db
+**/*.db
 # Python
 __pycache__/
 *.py[cod]
