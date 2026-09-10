@@ -160,7 +160,7 @@ Relatório gerado com os dados atualizados no sistema.
               <td>{{ item.telefone }}</td>
               <td>{{ item.restricoes }}</td>
               <td>{{ item.horario_e_dia_compra }}</td>
-              <td>{{ item.valor_pago }}</td>
+              <td>{{ "R$ %.2f"|format(item.valor_pago)|replace(".", ",") }}</td>
               <td>
                 <span class="{% if item.status == 'Pago' %}green{% else %}red{% endif %}" style="font-weight: bold;">
                   {{ item.status }}
