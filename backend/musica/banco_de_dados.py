@@ -139,7 +139,8 @@ def create_all():
                     artista TEXT NOT NULL,
                     link TEXT,
                     capa TEXT,
-                    estilo TEXT NOT NULL
+                    estilo TEXT NOT NULL,
+                    votos INT DEFAULT 0
                 )
             """)
 

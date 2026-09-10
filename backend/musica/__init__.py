@@ -52,9 +52,9 @@ login_manager.login_message = (
 
 #BluePrints
 
-from .ingressos.routes import routes
-from .ingressos.auth import auth
-from .ingressos.gerador_pdf import gerador_pdf
+from ..ingressos.routes import routes
+from ..ingressos.auth import auth
+from ..ingressos.gerador_pdf import gerador_pdf
 app.register_blueprint(gerador_pdf)
 
 app.register_blueprint(routes)

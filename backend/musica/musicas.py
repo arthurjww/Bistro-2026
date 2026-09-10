@@ -4,12 +4,24 @@ import urllib.parse
 import urllib.request
 import time
 
-from backend.banco_de_dados import get_db
-from backend import app
+from banco_de_dados import get_db
+
+
+def remover_duplicatas_por_nome(itens):
+    vistos = set()
+    filtrado = []
+    for item in itens:
+        nome, artista, estilo = item
+        chave = (nome.strip().lower(), estilo.strip().lower())
+        if chave in vistos:
+            continue
+        vistos.add(chave)
+        filtrado.append(item)
+    return filtrado
 
 
 # Lista original de músicas
-lista_musicas = [
+lista_musicas_list = remover_duplicatas_por_nome([
     # ========== JAZZ ==========
     ("Can't Take My Eyes off You", "Frankie Valli", "Jazz"),
     ("The World We Knew", "Frank Sinatra", "Jazz"),
@@ -167,7 +179,14 @@ lista_musicas = [
     ("Toxic", "Britney Spears", "Pop"),
     ("Shape of My Heart", "Backstreet Boys", "Pop"),
     ("The Call", "Backstreet Boys", "Pop"),
-]
+])
+
+def lista_musicas():
+    return lista_musicas_list
+
+def teste():
+    print("teste")
+    return "teste"
 
 def buscar_info_itunes(nome, artista):
     """Busca o link do preview de áudio e a URL da capa no iTunes."""
@@ -190,33 +209,49 @@ def buscar_info_itunes(nome, artista):
     return "", ""
 
 
-def cadastrar_musicas(lista):
+def cadastrar_musicas():
     lista_processada = []
-    
+    vistos = set()
     print("Buscando links de preview e capas no iTunes...")
-    for idx, item in enumerate(lista, 1):
+    for idx, item in enumerate(lista_musicas_list, 1):
         nome, artista, estilo = item
-        link_preview, link_capa = buscar_info_itunes(nome, artista)
-        
-        lista_processada.append((nome, artista, link_preview, link_capa, estilo))
-        print(f"[{idx}/{len(lista)}] Processado: {nome} - {artista}")
+        chave = (nome.strip().lower(), estilo.strip().lower())
+        if chave in vistos:
+            continue
+        vistos.add(chave)
+        try:
+            link_preview, link_capa = buscar_info_itunes(nome, artista)
+            lista_processada.append((nome, artista, link_preview, link_capa, estilo))
+            print(f"[{idx}/{len(lista_musicas_list)}] Processado: {nome} - {artista}")
+        except Exception as e:
+            print(f"[{idx}/{len(lista_musicas_list)}] Erro ao processar '{nome} - {artista}': {e}")
+            lista_processada.append((nome, artista, "", "", estilo))
         
         # Pausa para respeitar os limites de requisição da API
-        time.sleep(0.5)
+        time.sleep(1.3)
 
     try:
-        cursor = get_db().cursor()
+        db = get_db()
+        cursor = db.cursor()
+
+        cursor.execute("""
+            DELETE FROM musicas
+            WHERE num NOT IN (
+                SELECT MIN(num)
+                FROM musicas
+                GROUP BY LOWER(TRIM(nome)), LOWER(TRIM(estilo))
+            )
+        """)
+
         cursor.executemany("""
             INSERT INTO musicas (nome, artista, link, capa, estilo)
             VALUES (?, ?, ?, ?, ?)
         """, lista_processada)
-        
+
+        db.commit()
         print(f"\n{len(lista_processada)} músicas cadastradas com sucesso!")
             
     except sqlite3.IntegrityError as e:
         print("Erro de integridade:", e)
     except sqlite3.Error as e:
         print("Erro no banco de dados:", e)
-
-with app.app_context():
-    cadastrar_musicas(lista_musicas)

@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enquete de Músicas</title>
+    <style>
+        :root {
+            --bg: #0f0f13;
+            --card: #1a1a24;
+            --card-hover: #222233;
+            --accent: #7c5cff;
+            --accent-hover: #9b82ff;
+            --text: #f0f0f5;
+            --muted: #a0a0b0;
+            --success: #2ecc71;
+            --error: #e74c3c;
+            --border: #2a2a3a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem 1.25rem 4rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 0.4rem;
+            background: linear-gradient(135deg, #fff 0%, #b8b0ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        header p {
+            color: var(--muted);
+            font-size: 1.05rem;
+        }
+
+        .mensagem {
+            text-align: center;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            font-weight: 500;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .mensagem.sucesso {
+            background: rgba(46, 204, 113, 0.15);
+            border: 1px solid rgba(46, 204, 113, 0.4);
+            color: var(--success);
+        }
+
+        .mensagem.erro {
+            background: rgba(231, 76, 60, 0.15);
+            border: 1px solid rgba(231, 76, 60, 0.4);
+            color: var(--error);
+        }
+
+        .estilo-section {
+            margin-bottom: 3rem;
+        }
+
+        .estilo-titulo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.6rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .estilo-titulo h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .estilo-badge {
+            background: var(--accent);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.7rem;
+            border-radius: 999px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .musicas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .musica-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+            position: relative;
+        }
+
+        .musica-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent);
+            background: var(--card-hover);
+        }
+
+        .musica-card.selecionada {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent);
+        }
+
+        .capa-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1;
+            background: #12121a;
+            overflow: hidden;
+        }
+
+        .capa-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .capa-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: var(--muted);
+            font-size: 3rem;
+        }
+
+        .votos-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.75);
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 0.3rem 0.65rem;
+            border-radius: 999px;
+            backdrop-filter: blur(4px);
+        }
+
+        .musica-info {
+            padding: 1rem 1.1rem 1.15rem;
+        }
+
+        .musica-nome {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 0.2rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .musica-artista {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-bottom: 0.85rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .preview-audio {
+            width: 100%;
+            height: 36px;
+            margin-bottom: 0.9rem;
+            border-radius: 8px;
+        }
+
+        .preview-audio::-webkit-media-controls-panel {
+            background: #2a2a3a;
+        }
+
+        .voto-label {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            cursor: pointer;
+            user-select: none;
+            padding: 0.55rem 0.75rem;
+            background: rgba(124, 92, 255, 0.1);
+            border: 1px solid rgba(124, 92, 255, 0.25);
+            border-radius: 10px;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .voto-label:hover {
+            background: rgba(124, 92, 255, 0.2);
+            border-color: var(--accent);
+        }
+
+        .voto-label input[type="radio"] {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--muted);
+            border-radius: 50%;
+            position: relative;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: border-color 0.2s;
+        }
+
+        .voto-label input[type="radio"]:checked {
+            border-color: var(--accent);
+            background: var(--accent);
+        }
+
+        .voto-label input[type="radio"]:checked::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+        }
+
+        .voto-texto {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .enviar-wrapper {
+            position: sticky;
+            bottom: 0;
+            background: linear-gradient(to top, var(--bg) 70%, transparent);
+            padding: 1.5rem 0 1rem;
+            margin-top: 1rem;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .btn-enviar {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.95rem 2.8rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+            box-shadow: 0 4px 20px rgba(124, 92, 255, 0.35);
+        }
+
+        .btn-enviar:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(124, 92, 255, 0.45);
+        }
+
+        .btn-enviar:active {
+            transform: translateY(0);
+        }
+
+        .resultados-info {
+            text-align: center;
+            color: var(--muted);
+            margin-top: 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        .sem-musicas {
+            text-align: center;
+            color: var(--muted);
+            padding: 3rem 1rem;
+            font-size: 1.1rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 600px) {
+            header h1 {
+                font-size: 1.7rem;
+            }
+
+            .musicas-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎵 Enquete de Músicas</h1>
+            <p>Escolha <strong>uma música de cada estilo</strong> e envie seu voto</p>
+        </header>
+
+        {% if mensagem %}
+            <div class="mensagem {% if 'sucesso' in mensagem|lower %}sucesso{% else %}erro{% endif %}">
+                {{ mensagem }}
+            </div>
+        {% endif %}
+
+        {% if enquetes %}
+        <form method="POST" action="/" id="form-votacao">
+            {% for estilo, musicas in enquetes.items() %}
+            <section class="estilo-section">
+                <div class="estilo-titulo">
+                    <h2>{{ estilo }}</h2>
+                    <span class="estilo-badge">{{ musicas|length }} opções</span>
+                </div>
+
+                <div class="musicas-grid">
+                    {% for musica in musicas %}
+                    <div class="musica-card" data-estilo="{{ estilo }}" data-id="{{ musica['num'] }}">
+                        <div class="capa-wrapper">
+                            {% if musica['capa'] %}
+                                <img src="{{ musica['capa'] }}" alt="Capa de {{ musica['nome'] }}" loading="lazy">
+                            {% else %}
+                                <div class="capa-placeholder">🎵</div>
+                            {% endif %}
+                            <span class="votos-badge">{{ musica['votos'] or 0 }} votos</span>
+                        </div>
+
+                        <div class="musica-info">
+                            <div class="musica-nome" title="{{ musica['nome'] }}">{{ musica['nome'] }}</div>
+                            <div class="musica-artista" title="{{ musica['artista'] }}">{{ musica['artista'] }}</div>
+
+                            {% if musica['link'] %}
+                                <audio class="preview-audio" controls preload="none">
+                                    <source src="{{ musica['link'] }}" type="audio/mpeg">
+                                    Seu navegador não suporta o player de áudio.
+                                </audio>
+                            {% else %}
+                                <div style="height:36px; margin-bottom:0.9rem; display:flex; align-items:center; color:var(--muted); font-size:0.85rem;">
+                                    Preview indisponível
+                                </div>
+                            {% endif %}
+
+                            <label class="voto-label">
+                                <input type="radio" name="{{ estilo }}" value="{{ musica['num'] }}" required>
+                                <span class="voto-texto">Votar nesta</span>
+                            </label>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endfor %}
+
+            <div class="enviar-wrapper">
+                <button type="submit" class="btn-enviar">Enviar votos</button>
+                {% if mostrar_resultados %}
+                    <p class="resultados-info">Os resultados acima já refletem os votos mais recentes.</p>
+                {% endif %}
+            </div>
+        </form>
+        {% else %}
+            <div class="sem-musicas">
+                Nenhuma música cadastrada ainda. Rode o cadastro no backend.
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Destaca o card quando o radio é selecionado
+        document.querySelectorAll('.voto-label input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', function () {
+                const estilo = this.name;
+                // Remove seleção visual dos outros cards do mesmo estilo
+                document.querySelectorAll(`.musica-card[data-estilo="${estilo}"]`).forEach(card => {
+                    card.classList.remove('selecionada');
+                });
+                // Marca o card atual
+                this.closest('.musica-card').classList.add('selecionada');
+            });
+        });
+
+        // Impede que o áudio de um card continue tocando quando outro começa
+        document.querySelectorAll('audio').forEach(audio => {
+            audio.addEventListener('play', function () {
+                document.querySelectorAll('audio').forEach(other => {
+                    if (other !== this) other.pause();
+                });
+            });
+        });
+    </script>
+</body>
+</html>
