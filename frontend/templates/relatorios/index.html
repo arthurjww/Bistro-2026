@@ -1,15 +1,32 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>RELATÓRIOS BISTRO 2026</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    /* Estilos mínimos para visualização */
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    header { font-size: 1.4rem; margin-bottom: 10px; }
+    nav { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+    .nav-btn { padding:8px 12px; cursor:pointer; border:1px solid #ccc; background:#f7f7f7; border-radius:4px; }
+    .nav-btn.ativo { background:#2b7cff; color:#fff; border-color:#1f5fcc; }
+    .secao { display:none; }
+    .secao.ativa { display:block; }
+    table { border-collapse: collapse; width:100%; }
+    th, td { border:1px solid #ddd; padding:8px; text-align:left; }
+    .botoes-acao { margin-top:12px; }
+    .btn-pdf { padding:8px 12px; border-radius:4px; cursor:pointer; }
+    .card { display:inline-block; padding:10px; border:1px solid #ddd; border-radius:6px; margin:6px; min-width:160px; vertical-align:top; }
+    .valor { display:block; margin-top:6px; font-weight:600; }
+    .green { color: #0a8a0a; }
+    .red { color: #c62828; }
+    .destaque-musica { background:#fff8e1; }
+  </style>
 </head>
 <body>
-  <header>
-    📊 RELATÓRIOS BISTRO 2026
-  </header>
+  <header>📊 RELATÓRIOS BISTRO 2026</header>
 
   <nav>
     <button class="nav-btn ativo" data-secao="resumo-compradores">Resumo de Participantes</button>
@@ -21,7 +38,7 @@
   </nav>
 
   <main>
-    <!-- n° 24 até 59 é resumo -->
+    <!-- Resumo de Participantes -->
     <div id="resumo-compradores" class="secao ativa">
       <h2>👥 Resumo de Participantes</h2>
       <div style="overflow-x: auto;">
@@ -34,7 +51,7 @@
               <th>Valor Pago</th>
               <th>Data da Compra</th>
               <th>Restrição?</th>
-              <th>Nº da Mesa</th> 
+              <th>Nº da Mesa</th>
             </tr>
           </thead>
           <tbody>
@@ -56,11 +73,9 @@
         <button class="btn-pdf" onclick="gerarPDF('resumo-compradores', 'resumo_compradores.pdf')">📥 Gerar PDF</button>
       </div>
     </div>
-
-    <!-- n° 61 até 124 é visão geral -->
+    <!-- Visão Geral -->
     <div id="visao-geral" class="secao" style="display: none;">
       <h2>Visão Geral</h2>
-      
       <div class="filtros" style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
         <div class="filtro-item">
           <label for="tecnico"><strong>Técnico:</strong></label>
@@ -90,7 +105,6 @@
           </select>
         </div>
       </div>
-
       <h3>Informações do Cliente</h3>
       <div class="info-container" id="info-container">
         <div class="card">
@@ -126,18 +140,18 @@
           <span class="valor" id="compra">{{ status_compra }}</span>
         </div>
       </div>
-
       <div class="observacoes" style="margin-top: 20px;">
         <h3>Observações</h3>
-        <textarea id="observacoes" readonly style="width: 100%; height: 100px; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">Relatório gerado com os dados 100% atualizados no sistema.</textarea>
+        <textarea id="observacoes" readonly style="width: 100%; height: 100px; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+Relatório gerado com os dados atualizados no sistema.
+        </textarea>
       </div>
 
       <div class="botoes-acao">
         <button class="btn-pdf" onclick="gerarPDF('visao-geral', 'relatorio_visao_geral.pdf')">📥 Gerar PDF</button>
       </div>
     </div>
-
-    <!-- n° 126 até 168 é financeiro -->
+    <!-- Financeiro -->
     <div id="financeiro" class="secao" style="display: none;">
       <h2>Relatório Financeiro</h2>
       <div style="overflow-x: auto;">
@@ -167,7 +181,7 @@
               <td>{{ item.horario_e_dia_compra }}</td>
               <td>{{ item.valor_pago }}</td>
               <td>
-                <span style class="color: {% if item.status == 'Pago' %}green{% else %}red{% endif %}; font-weight: bold;">
+                <span class="{% if item.status == 'Pago' %}green{% else %}red{% endif %}" style="font-weight: bold;">
                   {{ item.status }}
                 </span>
               </td>
@@ -180,11 +194,9 @@
         <button class="btn-pdf" onclick="gerarPDF('financeiro', 'relatorio_financeiro.pdf')">📥 Gerar PDF</button>
       </div>
     </div>
-
-    <!-- n° 170 até 218 é vendas -->
+    <!-- Vendas -->
     <div id="vendas" class="secao" style="display: none;">
       <h2>Relatório de Vendas</h2>
-      
       <div class="cards-resumo">
         <div class="card">
           <strong>Total de Ingressos</strong>
@@ -203,7 +215,6 @@
           <span class="valor">{{ ingressos_restantes }}</span>
         </div>
       </div>
-
       <div style="overflow-x: auto;">
         <table>
           <thead>
@@ -221,7 +232,7 @@
               <td>{{ venda.nome_aluno }}</td>
               <td>{{ venda.quant_por_aluno }}</td>
               <td>{{ venda.numero_ingresso }}</td>
-              <td>{{ venda.lugare_mesa }}</td>
+              <td>{{ venda.lugar_e_mesa }}</td>
               <td>{{ venda.situacao_pagamento }}</td>
             </tr>
             {% endfor %}
@@ -232,8 +243,7 @@
         <button class="btn-pdf" onclick="gerarPDF('vendas', 'relatorio_vendas.pdf')">📥 Gerar PDF</button>
       </div>
     </div>
-
-    <!-- n° 220 até 250 é restrições -->
+    <!-- Restrições Alimentares -->
     <div id="restricoes" class="secao" style="display: none;">
       <h2>Relatório de Restrições Alimentares</h2>
       <div style="overflow-x: auto;">
@@ -262,10 +272,9 @@
         <button class="btn-pdf" onclick="gerarPDF('restricoes', 'relatorio_restricoes.pdf')">📥 Gerar PDF</button>
       </div>
     </div>
-
-    <!-- n° 252 até 282 é top 5 musicas -->
+    <!-- Top 5 Músicas -->
     <div id="top5" class="secao" style="display: none;">
-      <h2> </h2>Relatório Top Músicas 5</h2>
+      <h2>Relatório Top Músicas 5</h2>
       <div style="overflow-x: auto;">
         <table id="tabela-musicas">
           <thead>
@@ -280,7 +289,7 @@
             {% for musica in lista_musicas %}
             <tr class="{% if loop.index <= 5 %}destaque-musica{% endif %}">
               <td>{{ musica.posicao }} {% if loop.index <= 5 %}⭐{% endif %}</td>
-              <td>{{ musica.tituloi }}</td>
+              <td>{{ musica.titulo }}</td>
               <td>{{ musica.artista }}</td>
               <td>{{ musica.votos }}</td>
             </tr>
@@ -293,49 +302,60 @@
       </div>
     </div>
   </main>
-
-  <!-- n° 284 até 308 é scripts de navegação e pdf -->
+  <!-- Scripts de navegação e geração de PDF -->
   <script>
+    // Navegação entre seções
     document.querySelectorAll('.nav-btn').forEach(btn => {
       btn.addEventListener('click', function() {
         const secaoId = this.getAttribute('data-secao');
-        
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('ativo'));
-        document.querySelectorAll('.secao').forEach(s => s.style.display = 'none');
-        
+        document.querySelectorAll('.secao').forEach(s => {
+          s.classList.remove('ativa');
+          s.style.display = 'none';
+        });
+
         this.classList.add('ativo');
-        document.getElementById(secaoId).style.display = 'block';
+        const sec = document.getElementById(secaoId);
+        if (sec) {
+          sec.classList.add('ativa');
+          sec.style.display = 'block';
+        }
       });
     });
 
+    // Geração de PDF com html2pdf
     async function gerarPDF(idElemento, nomeArquivo) {
       const elemento = document.getElementById(idElemento);
       if (!elemento) return;
-        const botoes = Array.from(document.querySelectorAll('.btn-pdf'));
-        const normal = botoes.map(b => ({
-        opacity: b.style.opacity,
-        pointer: b.style.pointerEvents
+      const botoes = Array.from(document.querySelectorAll('.btn-pdf'));
+      // salvar estado atual dos botões
+      const estados = botoes.map(b => ({
+        opacity: b.style.opacity || '',
+        pointerEvents: b.style.pointerEvents || ''
       }));
+      // esconder/desabilitar botões durante a geração
       botoes.forEach(b => {
-      b.style.opacity = '0.0';           
-      b.style.pointerEvents = 'none';    
-    });
-    const opt = {
-      margin: 10,
-      filename: nomeArquivo,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
-    };
-    try {
-      await html2pdf().set(opt).from(elemento).save();
-    } catch (error) {
-      console.error('Erro ao gerar PDF:', error);
-    } finally {
-      botoes.forEach((b, i) => {
-        b.style.opacity = normal[i].opacity || '';
-        b.style.pointerEvents = normal[i].pointer || '';
+        b.style.opacity = '0';
+        b.style.pointerEvents = 'none';
       });
+      const opt = {
+        margin: 10,
+        filename: nomeArquivo,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+      };
+      try {
+        await html2pdf().set(opt).from(elemento).save();
+      } catch (error) {
+        console.error('Erro ao gerar PDF:', error);
+      } finally {
+        // restaurar estado dos botões
+        botoes.forEach((b, i) => {
+          b.style.opacity = estados[i].opacity;
+          b.style.pointerEvents = estados[i].pointerEvents;
+        });
+      }
     }
   </script>
 </body>
