@@ -14,16 +14,18 @@ def obter_lista_restricoes():
 # Executa um comando SQL no banco de dados. O resultado da consulta será armazenado na variável cursor.
 
         '''SELECT
-            nome_cliente AS participante,
-            codigo_ingresso AS ingresso,
-            numero_mesa AS mesa_lugar,
-            descricao_restricao AS restricao
-        FROM tabela_reservas
-        WHERE descricao_restricao IS NOT NULL
-          AND descricao_restricao != ''
+            i.nome AS participante,
+            i.id AS ingresso,
+            l.mesa || ' / Lugar ' || i.cod_lugar AS mesa_lugar,
+            i.observacoes AS restricao
+        FROM Ingresso AS i
+        INNER JOIN Lugares AS l
+            ON i.cod_lugar = l.cod_lugar
+        WHERE i.observacoes IS NOT NULL
+          AND i.observacoes != ''
         ORDER BY
-            numero_mesa,
-            codigo_ingresso;
+            l.mesa,
+            i.cod_lugar;
         '''
     )
 
