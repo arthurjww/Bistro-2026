@@ -5,6 +5,8 @@ from .vendas import obter_ingressos_nao_pagos
 from .vendas import obter_ingressos_restantes
 from .vendas import obter_ingressos_restantes_por_aluno
 from .vendas import obter_lista_vendas
+from .restricoes import obter_lista_restricoes
+from .financeiro import obter_lista_financeiro
 
 # se quiser usar subdomain adicionar: subdomain='admin'
 relatorios=Blueprint('relatorios', __name__)
@@ -17,6 +19,8 @@ def painel_relatorios():
     ingressos_restantes = obter_ingressos_restantes()
     lista_ingressos_restantes = obter_ingressos_restantes_por_aluno()
     lista_vendas = obter_lista_vendas()
+    lista_restricoes = obter_lista_restricoes()
+    lista_financeiro = obter_lista_financeiro()
 
     return render_template(
         'relatorios/index.html',
@@ -25,6 +29,8 @@ def painel_relatorios():
         ingressos_naopagos = ingressos_nao_pagos,
         ingressos_restantes = ingressos_restantes,
         lista_ingressos_restantes = lista_ingressos_restantes,
-        lista_vendas = lista_vendas
+        lista_vendas = lista_vendas,
+        lista_restricoes = lista_restricoes,
+        lista_financeiro = lista_financeiro
     )
 
