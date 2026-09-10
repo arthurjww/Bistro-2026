@@ -308,17 +308,35 @@
       });
     });
 
-    function gerarPDF(idElemento, nomeArquivo) {
-      const elemento = document.getElementById(idElemento);
-      const opt = { 
-        margin: 10, 
-        filename: nomeArquivo,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
-      };
-      html2pdf().set(opt).from(elemento).save();
-    }
+async function gerarPDF(idElemento, nomeArquivo) {
+  const elemento = document.getElementById(idElemento);
+  if (!elemento) return;
+  const botoes = Array.from(document.querySelectorAll('.btn-pdf'));
+  const normal = botoes.map(b => ({
+    opacity: b.style.opacity,
+    pointer: b.style.pointerEvents
+  }));
+  botoes.forEach(b => {
+    b.style.opacity = '0.0';           
+    b.style.pointerEvents = 'none';    
+  });
+  const opt = {
+    margin: 10,
+    filename: nomeArquivo,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+  };
+  try {
+    await html2pdf().set(opt).from(elemento).save();
+  } catch (error) {
+    console.error('Erro ao gerar PDF:', error);
+  } finally {
+    botoes.forEach((b, i) => {
+      b.style.opacity = normal[i].opacity || '';
+      b.style.pointerEvents = normal[i].pointer || '';
+    });
+  }
   </script>
 </body>
 </html>
