@@ -131,19 +131,6 @@ def create_all():
         )
     """)
 
-    #Músicas
-    cursor.execute("""
-                CREATE TABLE IF NOT EXISTS musicas(
-                    num INTEGER PRIMARY KEY AUTOINCREMENT,
-                    nome TEXT NOT NULL,
-                    artista TEXT NOT NULL,
-                    link TEXT,
-                    capa TEXT,
-                    estilo TEXT NOT NULL
-                )
-            """)
-
-
     #commit - salva aterações 
     db.commit()
 
