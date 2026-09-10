@@ -4,7 +4,9 @@ import urllib.parse
 import urllib.request
 import time
 
-arquivo = # Nome do arquivo do banco de dados
+from backend.banco_de_dados import get_db
+from backend import app
+
 
 # Lista original de músicas
 lista_musicas = [
@@ -187,21 +189,8 @@ def buscar_info_itunes(nome, artista):
     
     return "", ""
 
-def criar_tabela(arquivo):
-    with sqlite3.connect(arquivo) as conexao:
-        cursor = conexao.cursor()
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS musicas(
-                num INTEGER PRIMARY KEY AUTOINCREMENT,
-                nome TEXT NOT NULL,
-                artista TEXT NOT NULL,
-                link TEXT,
-                capa TEXT,
-                estilo TEXT NOT NULL
-            )
-        """)
 
-def cadastrar_musicas(lista, arquivo):
+def cadastrar_musicas(lista):
     lista_processada = []
     
     print("Buscando links de preview e capas no iTunes...")
@@ -213,22 +202,21 @@ def cadastrar_musicas(lista, arquivo):
         print(f"[{idx}/{len(lista)}] Processado: {nome} - {artista}")
         
         # Pausa para respeitar os limites de requisição da API
-        time.sleep(0.1)
+        time.sleep(0.5)
 
     try:
-        with sqlite3.connect(arquivo) as conexao:
-            cursor = conexao.cursor()
-            cursor.executemany("""
-                INSERT INTO musicas (nome, artista, link, capa, estilo)
-                VALUES (?, ?, ?, ?, ?)
-            """, lista_processada)
-            
-            print(f"\n{len(lista_processada)} músicas cadastradas com sucesso!")
+        cursor = get_db().cursor()
+        cursor.executemany("""
+            INSERT INTO musicas (nome, artista, link, capa, estilo)
+            VALUES (?, ?, ?, ?, ?)
+        """, lista_processada)
+        
+        print(f"\n{len(lista_processada)} músicas cadastradas com sucesso!")
             
     except sqlite3.IntegrityError as e:
         print("Erro de integridade:", e)
     except sqlite3.Error as e:
         print("Erro no banco de dados:", e)
 
-criar_tabela(arquivo)
-cadastrar_musicas(lista_musicas, arquivo)
+with app.app_context():
+    cadastrar_musicas(lista_musicas)
