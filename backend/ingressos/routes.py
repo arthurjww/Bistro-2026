@@ -203,7 +203,7 @@ def criar_ingressos():
     return jsonify({'sucesso': 'Ingressos criados.'}), 201
 
 
-@routes.route('/pagamento', methods=['GET', 'POST'])
+@routes.get('/pagamento')
 def pagamento():
     codigo_aluno, lugares, a_pagar = session.get('codigo'), session.get('lugares'), session.get('a_pagar')
 
@@ -257,7 +257,7 @@ def pagamento():
 
     return render_template(
         'ingressos/pagamento.html',
-        luagres=lugares,
+        lugares=lugares,
         a_pagar=a_pagar,
         mp_public_key=MP_PUBLIC_KEY
     )

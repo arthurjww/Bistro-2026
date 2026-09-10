@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pagamento por PIX - Ingressos</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f6f9;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .card {
+      background-color: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      max-width: 480px;
+      width: 100%;
+      padding: 25px;
+      box-sizing: border-box;
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #333;
+      text-align: center;
+    }
+
+    .resumo-pedido {
+      background-color: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+
+    .resumo-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      color: #555;
+    }
+
+    .resumo-total {
+      font-weight: bold;
+      font-size: 1.2em;
+      color: #2b8a3e;
+      border-top: 1px solid #ddd;
+      padding-top: 8px;
+      margin-top: 8px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+      color: #444;
+    }
+
+    input[type="text"],
+    input[type="email"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+      font-size: 14px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #009ee3;
+      /* Cor do Mercado Pago */
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background-color: #0081ba;
+    }
+
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+
+    /* ÁREA DO PIX GERADO */
+    #area-pix {
+      display: none;
+      text-align: center;
+      margin-top: 15px;
+    }
+
+    .qr-code-img {
+      width: 220px;
+      height: 220px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 10px;
+      background: #fff;
+      margin: 15px 0;
+    }
+
+    .copia-cola-box {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+
+    .copia-cola-box input {
+      flex: 1;
+      font-size: 12px;
+      color: #666;
+    }
+
+    .copia-cola-box button {
+      width: auto;
+      padding: 10px 15px;
+      background-color: #4db8ff;
+    }
+
+    .status-container {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 6px;
+      background-color: #e7f5ff;
+      color: #1864ab;
+      font-weight: 600;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid #1864ab;
+      border-radius: 50%;
+      border-top-color: transparent;
+      animation: spin 1s linear infinite;
+      margin-right: 5px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .alerta-erro {
+      background-color: #ffe3e3;
+      color: #c92a2a;
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="card">
+    <h2>Pagamento via PIX</h2>
+
+    <!-- Resumo do Pedido enviado pelo Flask -->
+    <div class="resumo-pedido">
+      <div class="resumo-item">
+        <span>Lugares Reservados:</span>
+        <span>{{ lugares|length }} lugar(es)</span>
+      </div>
+      <div class="resumo-item resumo-total">
+        <span>Total a Pagar:</span>
+        <span>R$ {{ "%.2f"|format(a_pagar) }}</span>
+      </div>
+    </div>
+
+    <div id="alerta-erro" class="alerta-erro"></div>
+
+    <!-- FORMULÁRIO DO PAGADOR -->
+    <form id="form-pagamento">
+      <div class="form-group">
+        <label for="nome">Nome Completo</label>
+        <input type="text" id="nome" required placeholder="Digite seu nome">
+      </div>
+
+      <div class="form-group">
+        <label for="email">E-mail (para recebimento dos ingressos)</label>
+        <input type="email" id="email" required placeholder="seu@email.com">
+      </div>
+
+      <div class="form-group">
+        <label for="cpf">CPF</label>
+        <input type="text" id="cpf" maxlength="14" required placeholder="000.000.000-00">
+      </div>
+
+      <button type="submit" id="btn-submit">Gerar QR Code PIX</button>
+    </form>
+
+    <!-- ÁREA DE EXIBIÇÃO DO PIX (Exibida após o envio do form) -->
+    <div id="area-pix">
+      <p style="margin: 0; font-size: 14px; color: #666;">Escaneie o QR Code abaixo com o app do seu banco:</p>
+
+      <img id="qr-code-img" class="qr-code-img" src="" alt="QR Code Pix">
+
+      <p style="font-size: 13px; color: #666; margin-bottom: 5px;">Ou copie a chave Pix Copia e Cola:</p>
+      <div class="copia-cola-box">
+        <input type="text" id="qr-code-text" readonly>
+        <button type="button" id="btn-copiar">Copiar</button>
+      </div>
+
+      <div id="ticket-link-container" style="display:none; margin-bottom: 10px;">
+        <a id="ticket-url" href="#" target="_blank" style="font-size: 13px; color: #009ee3;">Ver comprovante no Mercado
+          Pago</a>
+      </div>
+
+      <div class="status-container">
+        <span class="spinner" id="spinner"></span>
+        <span id="texto-status">Aguardando confirmação do pagamento...</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let intervalPolling = null;
+
+    // Formatação simples de CPF
+    document.getElementById('cpf').addEventListener('input', function (e) {
+      let v = e.target.value.replace(/\D/g, '');
+      if (v.length > 11) v = v.slice(0, 11);
+      e.target.value = v.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+    });
+
+    // Envio do Formulário para a Rota POST /pagamento
+    document.getElementById('form-pagamento').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const btn = document.getElementById('btn-submit');
+      const erroDiv = document.getElementById('alerta-erro');
+
+      btn.disabled = true;
+      btn.innerText = "Gerando PIX...";
+      erroDiv.style.display = 'none';
+
+      // Monta o payload conforme a função processar_pagamento() do Python espera
+      const payload = {
+        payer: {
+          email: document.getElementById('email').value.trim(),
+          first_name: document.getElementById('nome').value.trim(),
+          identification: {
+            type: "CPF",
+            number: document.getElementById('cpf').value.replace(/\D/g, '')
+          }
+        }
+      };
+
+      try {
+        const response = await fetch("{{ url_for('routes.processar_pagamento') }}", {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.sucesso) {
+
+          // Caso o pagamento tenha sido aprovado imediatamente (ex: R$ 0,00 ou grátis)
+          if (data.status === 'approved') {
+            window.location.href = "{{ url_for('routes.pagamento_sucesso') }}";
+            return;
+          }
+
+          // Preenche a imagem do QR Code em Base64
+          document.getElementById('qr-code-img').src = `data:image/png;base64,${data.qr_code_base64}`;
+
+          // Preenche a chave Copia e Cola
+          document.getElementById('qr-code-text').value = data.qr_code;
+
+          // Link do ticket caso exista
+          if (data.ticket_url) {
+            const linkTicket = document.getElementById('ticket-url');
+            linkTicket.href = data.ticket_url;
+            document.getElementById('ticket-link-container').style.display = 'block';
+          }
+
+          // Alterna visibilidade da tela
+          document.getElementById('form-pagamento').style.display = 'none';
+          document.getElementById('area-pix').style.display = 'block';
+
+          // Inicia o Polling para checar se o pagamento foi confirmado
+          iniciarPollingStatus();
+
+        } else {
+          mostrarErro(data.erro || 'Falha ao gerar o pagamento.');
+          btn.disabled = false;
+          btn.innerText = "Gerar QR Code PIX";
+        }
+
+      } catch (err) {
+        console.error(err);
+        mostrarErro('Erro de conexão com o servidor. Tente novamente.');
+        btn.disabled = false;
+        btn.innerText = "Gerar QR Code PIX";
+      }
+    });
+
+    // Botão de Copiar Chave PIX
+    document.getElementById('btn-copiar').addEventListener('click', function () {
+      const inputChave = document.getElementById('qr-code-text');
+      inputChave.select();
+      navigator.clipboard.writeText(inputChave.value);
+
+      const originalText = this.innerText;
+      this.innerText = "Copiado!";
+      this.style.backgroundColor = "#2b8a3e";
+
+      setTimeout(() => {
+        this.innerText = originalText;
+        this.style.backgroundColor = "#4db8ff";
+      }, 2000);
+    });
+
+    // Consulta a rota /pagamento/status a cada 3 segundos
+    function iniciarPollingStatus() {
+      intervalPolling = setInterval(async () => {
+        try {
+          const response = await fetch("{{ url_for('routes.pagamento_status') }}");
+          const data = await response.json();
+
+          if (data.pago) {
+            clearInterval(intervalPolling);
+
+            document.getElementById('spinner').style.display = 'none';
+            const statusTexto = document.getElementById('texto-status');
+            statusTexto.innerText = "Pagamento Aprovado! Redirecionando...";
+            statusTexto.parentElement.style.backgroundColor = "#d3f9d8";
+            statusTexto.parentElement.style.color = "#2b8a3e";
+
+            setTimeout(() => {
+              window.location.href = "{{ url_for('routes.pagamento_sucesso') }}";
+            }, 1500);
+          }
+        } catch (err) {
+          console.error("Erro na verificação de status:", err);
+        }
+      }, 3000); // 3 segundos
+    }
+
+    function mostrarErro(mensagem) {
+      const erroDiv = document.getElementById('alerta-erro');
+      erroDiv.innerText = mensagem;
+      erroDiv.style.display = 'block';
+    }
+  </script>
+</body>
+
+</html>
