@@ -16,7 +16,7 @@ from .gerador_pdf import enviar_ingresso_por_email
 
 routes = Blueprint('routes', __name__)
 
-#Configuração do mercado pago
+# Configuração do Mercado Pago
 
 MP_ACCESS_TOKEN = os.environ["MP_ACCESS_TOKEN"]  # privado, só no backend
 MP_PUBLIC_KEY = os.environ["MP_PUBLIC_KEY"]  # público, vai pro template/JS
@@ -25,7 +25,7 @@ MP_WEBHOOK_SECRET = os.environ["MP_WEBHOOK_SECRET"]
 sdk = mercadopago.SDK(MP_ACCESS_TOKEN)
 
 # TODO: preço definido — R$130, crianças de 0 a 3 anos (tipo_ingresso == 0) não pagam
-PRECO_INGRESSO = 130  #tipo_ingresso == 2
+PRECO_INGRESSO = 130  # tipo_ingresso == 2
 
 
 def cronometro_expirado(cronometro):
@@ -88,11 +88,11 @@ def confirmar_codigo():
 # Chars que não são confudíveis, caso a adm precise digitar manualmente na hora
 CHARS_TOKEN = 'ACDEFGHJKLMNPQRTUVWXYZabcdefghjkmnpqrstuvwxyz234679'
 
-def _gerar_token_unico(db): 
+def _gerar_token_unico(db):
     """Gera um token de 6 caracteres alfanuméricos único na tabela Ingresso."""
-    while True: 
+    while True:
         token = ''.join(
-            secrets.choice(CHARS_TOKEN) #string.ascii_uppercase + string.digits)
+            secrets.choice(CHARS_TOKEN)
             for _ in range(6)
         )
 
@@ -105,7 +105,6 @@ def _gerar_token_unico(db):
             return token
 
 
-
 @routes.post('/info_ingressos/criar_ingressos')
 def criar_ingressos():
     if cronometro_expirado(session.get('cronometro_reservado')):
@@ -115,7 +114,7 @@ def criar_ingressos():
 
     dados = request.get_json()
 
-    if not dados or 'ingressos' not in dados: 
+    if not dados or 'ingressos' not in dados:
         return jsonify ({'erro': 'Dados de ingressos ausentes.'}), 400
 
     lugares_sessao = session.get('lugares', [])
@@ -138,7 +137,7 @@ def criar_ingressos():
     tokens_criados = []
     a_pagar = 0
 
-    try: 
+    try:
         for item, cod_lugar in zip (ingressos_enviados, lugares_sessao):
 
             nome = item.get('nome')
@@ -154,7 +153,7 @@ def criar_ingressos():
             telefone = item.get('telefone')
 
             if tipo_ingresso == 0:
-                valor_ingresso = 0 #não pagantes
+                valor_ingresso = 0 # não pagantes
             elif tipo_ingresso == 1:
                 valor_ingresso = PRECO_INGRESSO / 2
             else:
@@ -216,11 +215,6 @@ def pagamento():
         return jsonify({'erro': 'Sem preço previsto para ser pago.'}), 400
 
     if request.method == 'POST':
-        # ======================================================================
-        # ENVIO DOS EMAILS
-        # feito DEPOIS do commit: se o email falhar, os ingressos já criados
-        # não são perdidos — só registramos a falha pra tratar depois.
-        # ======================================================================
         db = get_db()
 
         db.execute(
@@ -261,7 +255,6 @@ def pagamento():
             'tokens': tokens_criados
         }), 200
 
-    # Exibe a tela de pagamento. Envia a chave pública do Mercado Pago para inicialização do SDK no front-end.
     return render_template(
         'ingressos/pagamento.html',
         luagres=lugares,
@@ -273,16 +266,13 @@ def pagamento():
 @routes.post('/pagamento')
 def processar_pagamento():
     """
-    Recebe do Card Payment Brick (frontend) o token do cartão já tokenizado.
-    Body esperado (é basicamente o que o Brick devolve no onSubmit):
+    Gera cobrança PIX no Mercado Pago.
+    Body esperado:
     {
-        "token": "...",
-        "issuer_id": "...",
-        "payment_method_id": "master",
-        "installments": 1,
         "payer": {
-            "email": "...",
-            "identification": {"type": "CPF", "number": "..."}
+            "email": "exemplo@email.com",
+            "first_name": "Nome",
+            "identification": {"type": "CPF", "number": "12345678900"}
         }
     }
     """
@@ -297,15 +287,31 @@ def processar_pagamento():
         return jsonify({'erro': 'Nenhum ingresso pendente de pagamento nesta sessão.'}), 400
 
     if a_pagar <= 0:
-        # nada a cobrar (ex: só ingressos gratuitos) — confirma direto, sem Mercado Pago
+        # Nada a cobrar (ex: só ingressos gratuitos) — confirma direto
         _confirmar_ingressos_pagos(tokens_criados)
-        return jsonify({'sucesso': True, 'status': 'processed'}), 200
+        return jsonify({'sucesso': True, 'status': 'approved'}), 200
 
-    dados_brick = request.get_json(force=True) or {}
+    dados = request.get_json(force=True) or {}
+    payer_input = dados.get('payer', {}) if isinstance(dados.get('payer'), dict) else {}
 
-    campos_obrigatorios = ('token', 'payment_method_id', 'installments', 'payer')
-    if not all(c in dados_brick for c in campos_obrigatorios):
-        return jsonify({'erro': 'Dados de pagamento incompletos.'}), 400
+    email = payer_input.get('email') or dados.get('email')
+    if not email:
+        return jsonify({'erro': 'Dados de pagamento incompletos. O e-mail do pagador é obrigatório.'}), 400
+
+    payer_data = {'email': email}
+
+    if 'first_name' in payer_input:
+        payer_data['first_name'] = payer_input['first_name']
+    elif 'nome' in dados:
+        payer_data['first_name'] = dados['nome']
+
+    if 'last_name' in payer_input:
+        payer_data['last_name'] = payer_input['last_name']
+
+    if 'identification' in payer_input:
+        payer_data['identification'] = payer_input['identification']
+    elif 'cpf' in dados:
+        payer_data['identification'] = {'type': 'CPF', 'number': dados['cpf']}
 
     referencia_externa = f"pedido_{uuid.uuid4().hex}"
 
@@ -324,34 +330,20 @@ def processar_pagamento():
         'x-idempotency-key': str(uuid.uuid4()),
     }
 
-    order_data = {
-        "type": "online",
-        "total_amount": f"{a_pagar:.2f}",
+    payment_data = {
+        "transaction_amount": float(a_pagar),
+        "description": "Compra de ingressos",
+        "payment_method_id": "pix",
         "external_reference": referencia_externa,
-        "transactions": {
-            "payments": [
-                {
-                    "amount": f"{a_pagar:.2f}",
-                    "payment_method": {
-                        "id": dados_brick['payment_method_id'],
-                        "type": "credit_card",
-                        "token": dados_brick['token'],
-                        "installments": dados_brick['installments'],
-                    },
-                }
-            ]
-        },
-        "payer": {
-            "email": dados_brick['payer']['email'],
-        },
+        "payer": payer_data
     }
 
     try:
-        resultado = sdk.order().create(order_data, request_options)
+        resultado = sdk.payment().create(payment_data, request_options)
     except Exception as e:
         return jsonify({'erro': f'Falha ao comunicar com o Mercado Pago: {e}'}), 502
 
-    order = resultado.get('response', {})
+    payment = resultado.get('response', {})
 
     if resultado.get('status') not in (200, 201):
         db.execute(
@@ -359,23 +351,22 @@ def processar_pagamento():
             ('error', referencia_externa)
         )
         db.commit()
-        return jsonify({'erro': 'Pagamento recusado ou inválido.', 'detalhes': order}), 400
+        return jsonify({'erro': 'Pagamento recusado ou inválido.', 'detalhes': payment}), 400
+
+    payment_id = str(payment.get('id'))
+    status = payment.get('status')
 
     db.execute(
         'UPDATE Pedido SET order_id = ? WHERE referencia_externa = ?',
-        (order.get('id'), referencia_externa)
+        (payment_id, referencia_externa)
     )
     db.commit()
 
-    status = order.get('status')
-
-    # Resposta síncrona: a maioria dos pagamentos com cartão retorna o status na hora.
-    # A confirmação definitiva/autoritativa continua sendo o webhook (idempotente).
-    if status == 'processed':
+    if status in ('approved', 'processed'):
         _confirmar_ingressos_pagos(tokens_criados)
         db.execute(
             'UPDATE Pedido SET status = ? WHERE referencia_externa = ?',
-            ('processed', referencia_externa)
+            (status, referencia_externa)
         )
         db.commit()
         return jsonify({'sucesso': True, 'status': status}), 200
@@ -383,8 +374,18 @@ def processar_pagamento():
     if status in ('expired', 'canceled', 'rejected'):
         return jsonify({'erro': 'Pagamento não aprovado.', 'status': status}), 400
 
-    # status intermediário (ex: análise) — frontend deve aguardar o webhook confirmar
-    return jsonify({'sucesso': True, 'status': status, 'pendente': True}), 202
+    # Extrai dados do PIX (QR Code e Copia e Cola)
+    point_of_interaction = payment.get('point_of_interaction', {}) or {}
+    transaction_data = point_of_interaction.get('transaction_data', {}) or {}
+
+    return jsonify({
+        'sucesso': True,
+        'status': status,
+        'id': payment.get('id'),
+        'qr_code': transaction_data.get('qr_code'),
+        'qr_code_base64': transaction_data.get('qr_code_base64'),
+        'ticket_url': transaction_data.get('ticket_url')
+    }), 200
 
 
 def _confirmar_ingressos_pagos(tokens):
@@ -436,7 +437,7 @@ def _liberar_ingressos_nao_pagos(tokens, cod_aluno):
     db.commit()
 
 
-# Webhook — fonte de verdade sobre aprovação/recusa
+# Webhook — fonte de verdade sobre aprovação/recusa do PIX
 def _validar_assinatura_webhook(req) -> bool:
     signature_header = req.headers.get('x-signature', '')
     request_id = req.headers.get('x-request-id', '')
@@ -446,7 +447,8 @@ def _validar_assinatura_webhook(req) -> bool:
     if not ts or not v1:
         return False
 
-    data_id = req.args.get('data.id', '')
+    corpo = req.get_json(silent=True) or {}
+    data_id = req.args.get('data.id') or str(corpo.get('data', {}).get('id') or corpo.get('id') or '')
     manifest = f"id:{data_id};request-id:{request_id};ts:{ts};"
 
     hmac_calculado = hmac.new(
@@ -462,42 +464,53 @@ def webhook_mercadopago():
         return jsonify({'erro': 'assinatura inválida'}), 401
 
     corpo = request.get_json(silent=True) or {}
-    topico = request.args.get('topic') or corpo.get('type')
+    topico = request.args.get('topic') or request.args.get('type') or corpo.get('type') or corpo.get('action')
 
-    if topico not in ('payment', 'order'):
-        return '', 200  # confirma recebimento, senão a Mercado Pago reenvia
+    if topico and topico not in ('payment', 'payment.created', 'payment.updated', 'order'):
+        return '', 200  # confirma recebimento para tópicos não gerenciados
 
-    recurso_id = corpo.get('data', {}).get('id')
+    recurso_id = request.args.get('id') or request.args.get('data.id') or corpo.get('data', {}).get('id') or corpo.get('id')
     if not recurso_id:
         return '', 200
 
-    resultado = sdk.order().get(recurso_id)
-    order = resultado.get('response', {})
+    try:
+        resultado = sdk.payment().get(recurso_id)
+    except Exception:
+        return '', 200
 
-    status = order.get('status')
-    referencia_externa = order.get('external_reference')
+    payment = resultado.get('response', {})
+
+    status = payment.get('status')
+    referencia_externa = payment.get('external_reference')
 
     db = get_db()
-    pedido = db.execute(
-        'SELECT * FROM Pedido WHERE referencia_externa = ?', (referencia_externa,)
-    ).fetchone()
+    pedido = None
+    if referencia_externa:
+        pedido = db.execute(
+            'SELECT * FROM Pedido WHERE referencia_externa = ?', (referencia_externa,)
+        ).fetchone()
+
+    if pedido is None:
+        pedido = db.execute(
+            'SELECT * FROM Pedido WHERE order_id = ?', (str(recurso_id),)
+        ).fetchone()
 
     if pedido is None:
         return '', 200  # não é um pedido nosso ou já foi limpo
 
     if pedido['status'] == status:
-        return '', 200  # já processamos essa mudança de status — idempotente
+        return '', 200  # idempotência: já processamos essa mudança de status
 
     tokens = json.loads(pedido['tokens'])
 
-    if status == 'processed':
+    if status in ('approved', 'processed'):
         _confirmar_ingressos_pagos(tokens)
-    elif status in ('expired', 'canceled', 'rejected'):
+    elif status in ('expired', 'canceled', 'cancelled', 'rejected', 'refunded', 'charged_back'):
         _liberar_ingressos_nao_pagos(tokens, pedido['cod_aluno'])
 
     db.execute(
         'UPDATE Pedido SET status = ? WHERE referencia_externa = ?',
-        (status, referencia_externa)
+        (status, pedido['referencia_externa'])
     )
     db.commit()
 
@@ -524,7 +537,6 @@ def pagamento_sucesso():
     todos_pagos = all(i['foi_pago'] == 1 for i in ingressos)
 
     if todos_pagos:
-        # limpa a sessão só depois de confirmado — evita reprocessar o mesmo pedido
         for chave in ('tokens_criados', 'a_pagar', 'lugares', 'cronometro_reservado', 'codigo'):
             session.pop(chave, None)
 
@@ -553,9 +565,10 @@ def pagamento_status():
 
     return jsonify({'pago': todos_pagos}), 200
 
+
 @routes.get('/verificar_cronometro')
 def verificar_cronometro():
-    expirado = cronometro_expirado(session.get('cronometro_expirado'))
+    expirado = cronometro_expirado(session.get('cronometro_reservado'))
 
     if expirado:
         return jsonify({
