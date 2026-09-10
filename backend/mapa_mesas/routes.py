@@ -40,7 +40,6 @@ def verificar_db():
 @bp_lugares.route("/lugares", methods=["GET"])
 def rota_mapa():
     verificar_db()
-    mapa = listar_mapa()
     return render_template('mapa-mesas/bistrot.html')
 
 @bp_lugares.route("/lugares/confirmar_codigo", methods=['GET'])
@@ -80,7 +79,7 @@ def rota_escolher(cod_lugar):
         return jsonify({"erro": "Aluno não autenticado"}), 401
 
     try:
-        sucesso, motivo = escolher_lugar(cod_lugar, cod_aluno)
+        sucesso, motivo = Salao().escolher_lugar(cod_lugar, cod_aluno)
     except LugarInvalidoError as e:
         return jsonify({"erro": str(e)}), 400
 
