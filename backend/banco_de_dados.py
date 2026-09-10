@@ -48,22 +48,17 @@ def create_all():
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS Lugares (
             cod_lugar TEXT PRIMARY KEY 
-                CHECK(length(cod_lugar) <= 2),
+                CHECK(length(cod_lugar) <= 3),
 
-            cod_aluno TEXT 
-                CHECK(cod_aluno IS NULL OR length(cod_aluno) = 6),
+            cod_aluno TEXT NOT NULL 
+                CHECK(length(cod_aluno) = 6),
 
             mesa TEXT NOT NULL 
                 CHECK(length(mesa) = 1),
-            
-            cadeira INTEGER NOT NULL
-                CHECK(cadeira > 0),
 
-            ocupado INTEGER NOT NULL DEFAULT 0
-                CHECK(ocupado IN(0, 1, 2)),
-            -- 0 = livre; 1 = reservado/pago; 2 = em pagamento
+            ocupado BOOLEAN,
 
-            cronometro_reservado TEXT,
+            cronometro_reservado DATETIME,
 
             FOREIGN KEY(cod_aluno)
                 REFERENCES Aluno(cod_aluno)
@@ -135,6 +130,19 @@ def create_all():
                 REFERENCES Lugares(cod_lugar)
         )
     """)
+
+    #Músicas
+    cursor.execute("""
+                CREATE TABLE IF NOT EXISTS musicas(
+                    num INTEGER PRIMARY KEY AUTOINCREMENT,
+                    nome TEXT NOT NULL,
+                    artista TEXT NOT NULL,
+                    link TEXT,
+                    capa TEXT,
+                    estilo TEXT NOT NULL
+                )
+            """)
+
 
     #commit - salva aterações 
     db.commit()
