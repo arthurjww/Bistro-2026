@@ -205,11 +205,14 @@ def cadastrar_musicas(lista):
         time.sleep(0.5)
 
     try:
-        cursor = get_db().cursor()
+        db = get_db()
+        cursor = db.cursor()
         cursor.executemany("""
             INSERT INTO musicas (nome, artista, link, capa, estilo)
             VALUES (?, ?, ?, ?, ?)
         """, lista_processada)
+
+        db.commit()
         
         print(f"\n{len(lista_processada)} músicas cadastradas com sucesso!")
             
