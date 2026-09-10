@@ -1,5 +1,6 @@
 import os 
 from pathlib import Path
+from datetime import timedelta
 from flask import Flask
 from flask_login import LoginManager
 from dotenv import load_dotenv
@@ -23,6 +24,7 @@ app = Flask (
     )
 )
 
+app.permanent_session_lifetime = timedelta(minutes=15, seconds=30)
 #TODO: Mudar chave secreta no lançamento
 app.config["SECRET_KEY"] = "CETEC"
 app.config["DATABASE"] = str (DATABASE)
@@ -39,7 +41,7 @@ app.config["MAIL_USE_SSL"] = app.config["MAIL_PORT"] == 465
 app.config["MAIL_USE_TLS"] = app.config["MAIL_PORT"] == 587
 
 
-from .mapa_mesas.banco_de_dados import create_all, close_connection
+from .banco_de_dados import create_all, close_connection
 
 app.teardown_appcontext(close_connection)
 

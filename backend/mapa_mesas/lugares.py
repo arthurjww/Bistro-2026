@@ -1,4 +1,4 @@
-from banco_de_dados import get_db
+from backend.banco_de_dados import get_db
 
 LIVRE = 0
 OCUPADO = 1
@@ -73,7 +73,7 @@ def escolher_lugar(cod_lugar, cod_aluno):
 
     cursor.execute("""
         UPDATE Lugares
-        SET ocupado = ?, cod_aluno = ?, cronometro_reservado = CURRENT_TIMESTAMP
+        SET ocupado = ?, cod_aluno = ?
         WHERE cod_lugar = ? AND ocupado = ?
     """, (EM_PAGAMENTO, cod_aluno, cod_lugar, LIVRE))
 
@@ -81,22 +81,5 @@ def escolher_lugar(cod_lugar, cod_aluno):
 
     if cursor.rowcount == 0:
         return False, "Lugar indisponível"
-
-    return True, None
-
-def confirmar_pagamento(cod_lugar, cod_aluno):
-    db = get_db()
-    cursor = db.cursor()
-
-    cursor.execute("""
-        UPDATE Lugares
-        SET ocupado = ?
-        WHERE cod_lugar = ? AND cod_aluno = ? AND ocupado = ?
-    """, (OCUPADO, cod_lugar, cod_aluno, EM_PAGAMENTO))
-
-    db.commit()
-
-    if cursor.rowcount == 0:
-        return False, "Reserva não encontrada ou já expirada"
 
     return True, None
