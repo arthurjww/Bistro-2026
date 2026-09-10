@@ -5,25 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>RELATÓRIOS BISTRO 2026</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <style>
-    /* Estilos mínimos para visualização */
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    header { font-size: 1.4rem; margin-bottom: 10px; }
-    nav { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
-    .nav-btn { padding:8px 12px; cursor:pointer; border:1px solid #ccc; background:#f7f7f7; border-radius:4px; }
-    .nav-btn.ativo { background:#2b7cff; color:#fff; border-color:#1f5fcc; }
-    .secao { display:none; }
-    .secao.ativa { display:block; }
-    table { border-collapse: collapse; width:100%; }
-    th, td { border:1px solid #ddd; padding:8px; text-align:left; }
-    .botoes-acao { margin-top:12px; }
-    .btn-pdf { padding:8px 12px; border-radius:4px; cursor:pointer; }
-    .card { display:inline-block; padding:10px; border:1px solid #ddd; border-radius:6px; margin:6px; min-width:160px; vertical-align:top; }
-    .valor { display:block; margin-top:6px; font-weight:600; }
-    .green { color: #0a8a0a; }
-    .red { color: #c62828; }
-    .destaque-musica { background:#fff8e1; }
-  </style>
 </head>
 <body>
   <header>📊 RELATÓRIOS BISTRO 2026</header>
@@ -313,7 +294,6 @@ Relatório gerado com os dados atualizados no sistema.
           s.classList.remove('ativa');
           s.style.display = 'none';
         });
-
         this.classList.add('ativo');
         const sec = document.getElementById(secaoId);
         if (sec) {
@@ -322,7 +302,6 @@ Relatório gerado com os dados atualizados no sistema.
         }
       });
     });
-
     // Geração de PDF com html2pdf
     async function gerarPDF(idElemento, nomeArquivo) {
       const elemento = document.getElementById(idElemento);
