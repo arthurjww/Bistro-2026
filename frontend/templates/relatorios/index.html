@@ -12,7 +12,7 @@
   </header>
 
   <nav>
-    <button class="nav-btn ativo" data-secao="resumo-compradores">Resumo de Compradores</button>
+    <button class="nav-btn ativo" data-secao="resumo-compradores">Resumo de Participantes</button>
     <button class="nav-btn" data-secao="visao-geral">Visão Geral</button>
     <button class="nav-btn" data-secao="financeiro">Financeiro</button>
     <button class="nav-btn" data-secao="vendas">Vendas</button>
@@ -23,14 +23,14 @@
   <main>
     <!-- n° 24 até 59 é resumo -->
     <div id="resumo-compradores" class="secao ativa">
-      <h2>👥 Resumo de Compradores</h2>
+      <h2>👥 Resumo de Participantes</h2>
       <div style="overflow-x: auto;">
         <table>
           <thead>
             <tr>
               <th>Técnico</th>
               <th>Aluno</th>
-              <th>Comprador</th>
+              <th>Participante</th>
               <th>Valor Pago</th>
               <th>Data da Compra</th>
               <th>Restrição?</th>
@@ -81,7 +81,7 @@
           </select>
         </div>
         <div class="filtro-item">
-          <label for="comprador"><strong>Compradores:</strong></label>
+          <label for="comprador"><strong>Participantes:</strong></label>
           <select id="comprador">
             <option value="todos" selected>Todos</option>
             {% for comprador in lista_compradores %}
@@ -94,27 +94,23 @@
       <h3>Informações do Cliente</h3>
       <div class="info-container" id="info-container">
         <div class="card">
-          <strong>Nome do Aluno</strong>
+          <strong>Aluno Responsável</strong>
           <span class="valor" id="nome_aluno">{{ nome_aluno }}</span>
         </div>
         <div class="card">
-          <strong>Nome do Comprador</strong>
+          <strong>Nome do Participante</strong>
           <span class="valor" id="nome_cliente">{{ nome_cliente }}</span>
         </div>
         <div class="card">
-          <strong>Ingressos Comprados</strong>
+          <strong>Quantidade de Ingressos</strong>
           <span class="valor" id="ingressos">{{ qtd_ingressos }}</span>
         </div>
         <div class="card">
-          <strong>CPF</strong>
-          <span class="valor" id="cpf">{{ cpf_comprador }}</span>
-        </div>
-        <div class="card">
-          <strong>N° da Compra do Ingresso</strong>
+          <strong>Número do Ingresso</strong>
           <span class="valor" id="n_ingresso">{{ n_ingresso }}</span>
         </div>
         <div class="card">
-          <strong>Número de Telefone</strong>
+          <strong>Telefone do Participante</strong>
           <span class="valor" id="telefone">{{ telefone_comprador }}</span>
         </div>
         <div class="card">
@@ -126,7 +122,7 @@
           <span class="valor" id="data_hora">{{ data_hora_compra }}</span>
         </div>
         <div class="card">
-          <strong>Status da Compra</strong>
+          <strong>Status do Pagamento</strong>
           <span class="valor" id="compra">{{ status_compra }}</span>
         </div>
       </div>
@@ -151,12 +147,12 @@
               <th>Aluno Responsável</th>
               <th>Quantidade de Ingressos Vinculados</th>
               <th>Número do Ingresso</th>
-              <th>Nome do Comprador</th>
-              <th>CPF</th>
+              <th>Nome do Participante</th>
               <th>Telefone</th>
               <th>Restrições</th>
               <th>Data e Horário da Compra</th>
-              <th>Status da Compra</th>
+              <th>Valor Pago</th>
+              <th>Status do Pagamento</th>
             </tr>
           </thead>
           <tbody>
@@ -166,10 +162,10 @@
               <td>{{ item.quantidade_ingressos }}</td>
               <td>{{ item.numero_ingresso }}</td>
               <td>{{ item.nome_comprador }}</td>
-              <td>{{ item.cpf }}</td>
               <td>{{ item.telefone }}</td>
               <td>{{ item.restricoes }}</td>
               <td>{{ item.horario_e_dia_compra }}</td>
+              <td>{{ item.valor_pago }}</td>
               <td>
                 <span style class="color: {% if item.status == 'Pago' %}green{% else %}red{% endif %}; font-weight: bold;">
                   {{ item.status }}
@@ -212,9 +208,9 @@
         <table>
           <thead>
             <tr>
-              <th>Nome do Aluno</th>
+              <th>Aluno Responsável</th>
               <th>Quantidade de Ingressos por Aluno</th>
-              <th>Número dos Ingressos</th>
+              <th>Número do Ingresso</th>
               <th>Lugares / Mesas</th>
               <th>Situação do Pagamento</th>
             </tr>
@@ -312,17 +308,35 @@
       });
     });
 
-    function gerarPDF(idElemento, nomeArquivo) {
-      const elemento = document.getElementById(idElemento);
-      const opt = { 
-        margin: 10, 
-        filename: nomeArquivo,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
-      };
-      html2pdf().set(opt).from(elemento).save();
-    }
+async function gerarPDF(idElemento, nomeArquivo) {
+  const elemento = document.getElementById(idElemento);
+  if (!elemento) return;
+  const botoes = Array.from(document.querySelectorAll('.btn-pdf'));
+  const normal = botoes.map(b => ({
+    opacity: b.style.opacity,
+    pointer: b.style.pointerEvents
+  }));
+  botoes.forEach(b => {
+    b.style.opacity = '0.0';           
+    b.style.pointerEvents = 'none';    
+  });
+  const opt = {
+    margin: 10,
+    filename: nomeArquivo,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+  };
+  try {
+    await html2pdf().set(opt).from(elemento).save();
+  } catch (error) {
+    console.error('Erro ao gerar PDF:', error);
+  } finally {
+    botoes.forEach((b, i) => {
+      b.style.opacity = normal[i].opacity || '';
+      b.style.pointerEvents = normal[i].pointer || '';
+    });
+  }
   </script>
 </body>
 </html>
