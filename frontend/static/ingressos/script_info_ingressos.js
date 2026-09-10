@@ -1,7 +1,6 @@
 const inputCodigo = document.getElementById('input_codigo');
-const details = document.getElementById('detailIngressos');
-const forms = details.querySelectorAll('form');
-const telefones = document.querySelectorAll('#telefone');
+const div = document.getElementById('divIngressos');
+const forms = div.querySelectorAll('form');
 
 
 // Aplica máscara para pessoa só digitar números
@@ -20,14 +19,6 @@ forms.forEach(form => {
 });
 
 
-// Prevenir abertura do details sem ter posto o código do aluno
-details.addEventListener('click', (event) => {
-    if (details.dataset.podeAbrir === 'false') {
-        event.preventDefault();
-    }
-});
-
-
 // Manda fetch para confirmar código do aluno. Se confirmado, permite details ser aberto
 async function confirmarCodigoAluno() {
     const params = new URLSearchParams({
@@ -41,29 +32,18 @@ async function confirmarCodigoAluno() {
     if (resposta.ok) {
         const dados = await resposta.json();
         if (dados.sucesso === 'Código confirmado.') {
-            inputCodigo.parentElement.querySelector('span').textContent =
-                `${dados.sucesso}\nApós usar esses ingressos, sobrará ${dados.usos_restantes} usos do código`;
-            details.dataset.podeAbrir = 'true';
+            // se vira Davi
         }
         // dá para colocar mudanças do css aqui
     } else {
         const dados = await resposta.json()
-        if (dados.erro === 'A reserva expirou.') {
-            window.location.href = '/lugares';
-            return;
-        } else {
-            inputCodigo.parentElement.querySelector('span').textContent = dados.erro;
-        }
-
+        inputCodigo.parentElement.querySelector('span').textContent = dados.erro;
     }
 }
 
+
 // Envia os dados do ingresso. Se sucesso, avança para o pagamento
 async function enviarDadosESeguirPagamento() {
-    if (details.dataset.podeAbrir === 'false') {
-        alert('Você não usou um código confirmado');
-        return;
-    }
     for (const form of forms) {
         if (!form.checkValidity()) {
             form.reportValidity();
@@ -73,7 +53,7 @@ async function enviarDadosESeguirPagamento() {
 
     const ingressos = [];
 
-    details.querySelectorAll('form').forEach(form => {
+    forms.forEach(form => {
         const dados = {};
 
         form.querySelectorAll('input, select, textarea').forEach(input => {

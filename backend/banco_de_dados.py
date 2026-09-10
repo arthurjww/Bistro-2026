@@ -96,9 +96,6 @@ def create_all():
             observacoes TEXT 
                 CHECK(length(observacoes) <= 255),
             
-            nro_telefone TEXT NOT NULL
-                CHECK(length(nro_telefone) = 11),
-            
             email_envio TEXT NOT NULL
                 CHECK(length(email_envio) <= 50),
 
@@ -119,9 +116,8 @@ def create_all():
 
             data_compra DATETIME,
 
-            telefone TEXT
-                CHECK(length(telefone) <= 20),
-            
+            telefone TEXT NOT NULL
+                CHECK(length(telefone) <= 11),
                 
              valor_pago REAL NOT NULL
                 CHECK (valor_pago >= 0), 

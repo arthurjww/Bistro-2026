@@ -16,7 +16,7 @@
 		<button class="btn-enviar-codigo" onclick="confirmarCodigoAluno()">Enviar</button>
 	</div>
 
-	<details id="detailIngressos" class="detalhes-ingressos" data-pode-abrir="false">
+	<div id="divIngressos" class="detalhes-ingressos">
 		<summary>Preencher dados de {{ quant }} ingressos</summary>
 
 		{% for lugar in ingressos %}
@@ -65,7 +65,7 @@
 			</label>
 		</form>
 		{% endfor %}
-	</details>
+	</div>
 
 	<button class="btn-prosseguir" onclick="enviarDadosESeguirPagamento()">Avançar / Prosseguir</button>
 

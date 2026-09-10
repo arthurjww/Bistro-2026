@@ -36,18 +36,8 @@ def informacoes():
     )
 
 
-@routes.get('/info_ingressos/confirmar_codigo')
+@routes.get('/lugares/confirmar_codigo')
 def confirmar_codigo():
-    if cronometro_expirado(session.get('cronometro_reservado')):
-        return jsonify({
-            'erro': 'A reserva expirou.'
-        }), 409
-
-    lugares = session.get('lugares', [])
-
-    if not lugares:
-        return jsonify({'erro': 'Nenhum lugar reservado na sessão.'}), 400
-
     codigo = request.args.get('codigo')
     db = get_db()
 
@@ -61,26 +51,16 @@ def confirmar_codigo():
     ).fetchone()
 
     if aluno is not None:
-        quant_ingressos = len(lugares)
-
-        if aluno['usos_restantes'] >= quant_ingressos:
-            for lugar in lugares:
-                db.execute(
-                    'UPDATE Lugares SET cod_aluno = ? WHERE cod_lugar = ?',
-                    (codigo, lugar)
-                )
-
-            db.commit()
-
-            session['codigo'] = codigo
+        if aluno['usos_restantes'] > 0:
+            session['codigo'] = aluno['codigo']
 
             return jsonify({
                 'sucesso': 'Código confirmado.',
-                'usos_restantes': f'{aluno["usos_restantes"] - quant_ingressos}.'
+                'usos': aluno["usos_restantes"]
             }), 200
 
         return jsonify({
-            'erro': '0 usos restantes.'
+            'erro': 'Não há usos restantes.'
         }), 409
 
     return jsonify({
@@ -193,23 +173,9 @@ def criar_ingressos():
                 )
             )
 
-            db.execute(
-                'UPDATE Lugares SET ocupado = 1 WHERE cod_lugar = ?',
-                (cod_lugar,)
-            )
-
             tokens_criados.append(token)
 
             a_pagar += valor_ingresso
-
-        db.execute(
-            '''
-            UPDATE Aluno
-            SET usos_restantes = usos_restantes - ?
-            WHERE cod_aluno = ?
-            ''',
-            (len(tokens_criados), codigo_aluno)
-        )
 
         db.commit()
 
@@ -225,6 +191,15 @@ def criar_ingressos():
 
 @routes.route('/pagamento', methods=['GET', 'POST'])
 def pagamento():
+    codigo_aluno, lugares, a_pagar = session.get('codigo'), session.get('lugares'), session.get('a_pagar')
+
+    if codigo_aluno is not None:
+        return jsonify({'erro': 'Nenhum código salvo.'}), 400
+    if lugares is not None:
+        return jsonify({'erro': 'Nenhum lugar reservado na sessão.'}), 400
+    if a_pagar is not None:
+        return jsonify({'erro': 'Sem preço previsto para ser pago.'}), 400
+
     if request.method == 'POST':
         # ======================================================================
         # ENVIO DOS EMAILS
@@ -232,6 +207,16 @@ def pagamento():
         # não são perdidos — só registramos a falha pra tratar depois.
         # ======================================================================
         db = get_db()
+
+        db.execute(
+            '''
+            UPDATE Aluno
+            SET usos_restantes = usos_restantes - ?
+            WHERE cod_aluno = ?
+            ''',
+            (len(lugares), codigo_aluno)
+        )
+
         tokens_criados = session.get('tokens_criados', [])
 
         falhas_envio = []
@@ -260,13 +245,6 @@ def pagamento():
             'sucesso': 'Emails enviados com sucesso.',
             'tokens': tokens_criados
         }), 200
-
-    lugares, a_pagar = session.get('lugares'), session.get('a_pagar')
-
-    if not lugares:
-        return jsonify({'erro': 'Nenhum lugar reservado na sessão.'}), 400
-    if not a_pagar:
-        return jsonify({'erro': 'Sem preço previsto para ser pago.'}), 400
 
     return render_template(
         'ingressos/pagamento.html',
