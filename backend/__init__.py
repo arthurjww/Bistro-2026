@@ -25,6 +25,7 @@ app = Flask (
 )
 
 app.permanent_session_lifetime = timedelta(minutes=15, seconds=30)
+app.config['SESSION_REFRESH_EACH_REQUEST'] = True 
 #TODO: Mudar chave secreta no lançamento
 app.config["SECRET_KEY"] = "CETEC"
 app.config["DATABASE"] = str (DATABASE)

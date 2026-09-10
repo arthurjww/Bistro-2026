@@ -96,4 +96,5 @@ def seguir():
         'UPDATE Lugares SET cronometro_reservado = ?', (cronometro,)
     )
     session['cronometro_reservado'] = cronometro
+    session.permanent = True
     return redirect(url_for('routes.info_ingressos'))

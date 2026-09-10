@@ -50,23 +50,39 @@ def create_all():
             cod_lugar TEXT PRIMARY KEY 
                 CHECK(length(cod_lugar) <= 2),
 
-            cod_aluno TEXT 
-                CHECK(cod_aluno IS NULL OR length(cod_aluno) = 6),
-
             mesa TEXT NOT NULL 
                 CHECK(length(mesa) = 1),
             
             cadeira INTEGER NOT NULL
                 CHECK(cadeira > 0),
 
+            salao INTEGER NOT NULL
+                CHECK(salao IN (1,2))
+
+        )
+    """)
+
+    #reserva
+    #ocupado 0 = livre 1 = ocupado 2 = em pagamento / reservado
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS Reserva (
+            cod_reserva INTEGER PRIMARY KEY AUTOINCREMENT,
+            
+            cod_lugar TEXT NOT NULL
+                REFERENCES Lugares(cod_lugar),
+            
+            dia_bistro TEXT NOT NULL,
+            
             ocupado INTEGER NOT NULL DEFAULT 0
-                CHECK(ocupado IN(0, 1, 2)),
-            -- 0 = livre; 1 = reservado/pago; 2 = em pagamento
-
+                CHECK(ocupado IN(0,1,2)),
+            
+            cod_aluno TEXT 
+                REFERENCES Aluno(cod_aluno),
+            
             cronometro_reservado TEXT,
+            
+            UNIQUE(cod_lugar, dia_bistro)
 
-            FOREIGN KEY(cod_aluno)
-                REFERENCES Aluno(cod_aluno)
         )
     """)
 
