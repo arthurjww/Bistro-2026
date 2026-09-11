@@ -155,5 +155,16 @@ def create_all():
     #commit - salva aterações 
     db.commit()
 
+    #quantidade de dias
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS Config (
+            id INTEGER PRIMARY KEY CHECK(id = 1),
+            qtd_dias INTEGER NOT NULL DEFAULT 1
+                CHECK(qtd_dias IN (1, 2))
+        )
+    """)
 
+    cursor.execute("""
+        INSERT OR IGNORE INTO Config (id, qtd_dias) VALUES (1, 1)
+    """)
 

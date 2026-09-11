@@ -97,3 +97,27 @@ def seguir():
     session['cronometro_reservado'] = cronometro
     session.permanent = True
     return redirect(url_for('routes.info_ingressos'))
+
+@bp_lugares.route("lugares/<cod_lugar>/escolher", methods=["POST"])
+def rota_escolher(cod_lugar):
+    cod_aluno = session.get("cod_aluno")
+    if not cod_aluno:
+        return jsonify({"erro": "Aluno não autenticado"}), 401
+
+    try:
+        salao = qual_salao(cod_lugar)
+    except LugarInvalidoError as e:
+        return jsonify({"erro": str(e)}), 400
+
+    if salao is Salao2 and salao2_esta_oculto():
+        return jsonify({"erro": "Salão 2 não disponível para este evento"}), 403
+
+    try:
+        sucesso, motivo = salao().escolher_lugar(cod_lugar, cod_aluno)
+    except LugarInvalidoError as e:
+        return jsonify({"erro": str(e)}), 400
+
+    if not sucesso:
+        return jsonify({"erro": motivo}), 409
+
+    return jsonify({"ok": True, "ocupado": "em_pagamento"})

@@ -101,3 +101,35 @@ class Salao1(Salao):
 
 class Salao2(Salao):
     LAYOUT = LAYOUT_MESAS_GALPAO2
+
+def qual_salao(cod_lugar):
+    if not cod_lugar:
+        raise LugarInvalidoError(f'Código de lugar errado: {cod_lugar}')
+
+    mesa = cod_lugar[0].upper()
+
+    if mesa in LAYOUT_MESAS_GALPAO1:
+        return Salao1
+    if mesa in LAYOUT_MESAS_GALPAO2:
+        return Salao2
+
+    raise LugarInvalidoError(f'Mesa {mesa} não existe')
+
+
+def obter_qtd_dias():
+    db = get_db()
+    linha = db.execute('SELECT qtd_dias FROM Config WHERE id = 1').fetchone()
+
+    if not linha:
+        return 1
+
+    return linha['qtd_dias']
+
+def salao2_esta_oculto():
+    return obter_qtd_dias() == 2
+
+def listar_saloes_disponiveis():
+    if salao2_esta_oculto():
+        return [Salao1]
+    else:
+        return [Salao1, Salao2]
