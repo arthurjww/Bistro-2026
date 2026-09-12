@@ -72,35 +72,9 @@ def confirmar_codigo():
         'erro': 'Código não encontrado'
     }), 404
 
-@bp_lugares.route("lugares/<cod_lugar>/escolher", methods=["POST"])
+@bp_lugares.route("/lugares/<cod_lugar>/escolher", methods=["POST"])
 def rota_escolher(cod_lugar):
-    cod_aluno = session.get("cod_aluno")
-    if not cod_aluno:
-        return jsonify({"erro": "Aluno não autenticado"}), 401
-
-    try:
-        sucesso, motivo = Salao().escolher_lugar(cod_lugar, cod_aluno)
-    except LugarInvalidoError as e:
-        return jsonify({"erro": str(e)}), 400
-
-    if not sucesso:
-        return jsonify({"erro": motivo}), 409
-
-    return jsonify({"ok": True, "ocupado": "em_pagamento"})
-
-@bp_lugares.route("lugares/seguir", methods=['GET'])
-def seguir():
-    cronometro = int(time() * 1000) + 15 * 60_000
-    get_db().execute(
-        'UPDATE Lugares SET cronometro_reservado = ?', (cronometro,)
-    )
-    session['cronometro_reservado'] = cronometro
-    session.permanent = True
-    return redirect(url_for('routes.info_ingressos'))
-
-@bp_lugares.route("lugares/<cod_lugar>/escolher", methods=["POST"])
-def rota_escolher(cod_lugar):
-    cod_aluno = session.get("cod_aluno")
+    cod_aluno = session.get("codigo")
     if not cod_aluno:
         return jsonify({"erro": "Aluno não autenticado"}), 401
 
@@ -120,4 +94,34 @@ def rota_escolher(cod_lugar):
     if not sucesso:
         return jsonify({"erro": motivo}), 409
 
-    return jsonify({"ok": True, "ocupado": "em_pagamento"})
+    lugares = session.get('lugares', [])
+    if cod_lugar not in lugares:
+        lugares.append(cod_lugar)
+
+    session['lugares'] = lugares
+
+    return jsonify({"ok": True, 'lugares': lugares})
+
+@bp_lugares.route("/lugares/seguir", methods=['GET'])
+def seguir():
+    cronometro = int(time() * 1000) + 15 * 60_000
+    lugares = session.get("lugares", [])
+    cod_aluno = session.get("codigo")
+    ocupado = EM_PAGAMENTO
+    if not lugares:
+        return jsonify({"erro": "Nenhum lugar selecionado"}), 400
+    if not cod_aluno:
+        return jsonify({"erro": "Aluno não identificado"}), 401
+    for cod_lugar in lugares:
+        get_db().execute(
+            '''UPDATE Lugares 
+                SET cronometro_reservado = ?
+                WHERE cod_lugar = ?
+                AND cod_aluno = ?
+                AND ocupado = ?''', (cronometro, cod_lugar, cod_aluno, ocupado)
+        )
+    db = get_db()
+    db.commit()
+    session['cronometro_reservado'] = cronometro
+    session.permanent = True
+    return redirect(url_for('routes.informacoes'))

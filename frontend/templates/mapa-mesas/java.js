@@ -1,8 +1,5 @@
-
-const API_BASE = "/api";
-
 async function carregarMapa() {
-    const resposta = await fetch(`${API_BASE}/mapa`);
+    const resposta = await fetch(`/mapa`);
     const mapa = await resposta.json();
     renderizarMapa(mapa);
 }
