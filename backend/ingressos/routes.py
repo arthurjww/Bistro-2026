@@ -46,7 +46,11 @@ def index():
 def informacoes():
     lugares, cronometro = session.get('lugares', []), session.get('cronometro_reservado')
     if not lugares or not cronometro:
-        return redirect(url_for('/lugares'))
+        #url_for alterado para receber o endpoint do mapa de mesas, 
+        # assim consegue redirecionar direto pra lá. 
+        # OBS: o endpoint não é o '/lugares' - como estava anteriormente, o endpoint correto é: 'lugares.rota_mapa'. 
+        # PORTANTO NÃO DEVE SER ALTERADO. - para mais detalhes ver o commit do dia 13/09 - matté.
+        return redirect(url_for('lugares.rota_mapa')) 
 
     return render_template(
         'ingressos/info_ingressos.html',
