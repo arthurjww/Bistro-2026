@@ -19,13 +19,16 @@ routes = Blueprint('routes', __name__)
 # Configuração do Mercado Pago
 
 MP_ACCESS_TOKEN = os.environ["MP_ACCESS_TOKEN"]  # privado, só no backend
-MP_PUBLIC_KEY = os.environ["MP_PUBLIC_KEY"]  # público, vai pro template/JS
 MP_WEBHOOK_SECRET = os.environ["MP_WEBHOOK_SECRET"]
 
 sdk = mercadopago.SDK(MP_ACCESS_TOKEN)
 
 # TODO: preço definido — R$130, crianças de 0 a 3 anos (tipo_ingresso == 0) não pagam
 PRECO_INGRESSO = 130  # tipo_ingresso == 2
+
+# Tempo que o QR code do Pix fica válido (ISO 8601 duration).
+# Ajuste para bater com o tempo do seu cronômetro de reserva de lugar.
+PIX_EXPIRACAO = "PT30M"  # 30 minutos
 
 
 def cronometro_expirado(cronometro):
@@ -55,6 +58,13 @@ def informacoes():
 
 @routes.get('/lugares/confirmar_codigo')
 def confirmar_codigo():
+    if cronometro_expirado(session.get('cronometro_reservado')):
+        return jsonify({'erro': 'A reserva expirou.'}), 409
+    
+    lugares = session.get('lugares', [])
+    if not lugares:
+        return jsonify({'erro': 'Nenhum lugar reservado na sessão.'}), 400
+    
     codigo = request.args.get('codigo')
     db = get_db()
 
@@ -68,8 +78,11 @@ def confirmar_codigo():
     ).fetchone()
 
     if aluno is not None:
-        if aluno['usos_restantes'] > 0:
-            session['codigo'] = aluno['codigo']
+
+        quant_ingressos = len(lugares)
+
+        if aluno['usos_restantes'] >= quant_ingressos:
+            session['codigo'] = aluno['cod_aluno']
 
             return jsonify({
                 'sucesso': 'Código confirmado.',
@@ -77,7 +90,7 @@ def confirmar_codigo():
             }), 200
 
         return jsonify({
-            'erro': 'Não há usos restantes.'
+            'erro': 'Não há usos restantes suficientes.'
         }), 409
 
     return jsonify({
@@ -187,9 +200,26 @@ def criar_ingressos():
                 )
             )
 
+            # sem isso o lugar nunca fica ocupado e outra pessoa pode reservar
+            # o mesmo assento enquanto o pagamento está em aberto.
+            db.execute(
+                'UPDATE Lugares SET ocupado = 1 WHERE cod_lugar = ?',
+                (cod_lugar,)
+            )
+
             tokens_criados.append(token)
 
             a_pagar += valor_ingresso
+
+        db.execute(
+            '''
+            UPDATE Aluno
+            SET usos_restantes = usos_restantes - ?
+            WHERE cod_aluno = ?
+            ''',
+            (len(tokens_criados), codigo_aluno)
+            
+        )
 
         db.commit()
 
@@ -203,6 +233,8 @@ def criar_ingressos():
     return jsonify({'sucesso': 'Ingressos criados.'}), 201
 
 
+# Pagamento (Pix via Orders API)
+
 @routes.get('/pagamento')
 def pagamento():
     codigo_aluno, lugares, a_pagar = session.get('codigo'), session.get('lugares'), session.get('a_pagar')
@@ -214,68 +246,26 @@ def pagamento():
     if a_pagar is None:
         return jsonify({'erro': 'Sem preço previsto para ser pago.'}), 400
 
-    if request.method == 'POST':
-        db = get_db()
-
-        db.execute(
-            '''
-            UPDATE Aluno
-            SET usos_restantes = usos_restantes - ?
-            WHERE cod_aluno = ?
-            ''',
-            (len(lugares), codigo_aluno)
-        )
-
-        tokens_criados = session.get('tokens_criados', [])
-
-        falhas_envio = []
-
-        for token in tokens_criados:
-            db.execute(
-                'UPDATE Ingresso SET foi_pago = 1 WHERE token_QR = ?',
-                (token,)
-            )
-            try:
-                enviar_ingresso_por_email(token)
-            except Exception as e:
-                falhas_envio.append({'token': token, 'erro': str(e)})
-
-        db.commit()
-
-        if falhas_envio:
-            resposta = {
-                'erro': 'Erro ao mandar email',
-                'aviso': 'Ingressos criados, mas houve falha ao enviar alguns emails.',
-                'falhas_envio': falhas_envio
-            }
-            return jsonify(resposta), 500
-
-        return jsonify({
-            'sucesso': 'Emails enviados com sucesso.',
-            'tokens': tokens_criados
-        }), 200
+    # A tela só precisa coletar o e-mail do pagador e chamar POST /pagamento
+    # o QR code do Pix vem na resposta desse POST
 
     return render_template(
         'ingressos/pagamento.html',
         lugares=lugares,
-        a_pagar=a_pagar,
-        mp_public_key=MP_PUBLIC_KEY
+        a_pagar=a_pagar
     )
 
 
 @routes.post('/pagamento')
 def processar_pagamento():
     """
-    Gera cobrança PIX no Mercado Pago.
+    Cria o pedido Pix na Mercado Pago e devolve o QR code pro frontend exibir.
     Body esperado:
     {
-        "payer": {
-            "email": "exemplo@email.com",
-            "first_name": "Nome",
-            "identification": {"type": "CPF", "number": "12345678900"}
-        }
+        "email_pagador": "cliente@email.com"
     }
     """
+
     if cronometro_expirado(session.get('cronometro_reservado')):
         return jsonify({'erro': 'A reserva expirou.'}), 409
 
@@ -287,7 +277,7 @@ def processar_pagamento():
         return jsonify({'erro': 'Nenhum ingresso pendente de pagamento nesta sessão.'}), 400
 
     if a_pagar <= 0:
-        # Nada a cobrar (ex: só ingressos gratuitos) — confirma direto
+        # Nada a cobrar (ex: só ingressos gratuitos) — confirma direto, sem Mercado Pago
         _confirmar_ingressos_pagos(tokens_criados)
         return jsonify({'sucesso': True, 'status': 'approved'}), 200
 
@@ -330,20 +320,32 @@ def processar_pagamento():
         'x-idempotency-key': str(uuid.uuid4()),
     }
 
-    payment_data = {
-        "transaction_amount": float(a_pagar),
-        "description": "Compra de ingressos",
-        "payment_method_id": "pix",
+    order_data = {
+        "type": "online",
+        "total_amount": f"{a_pagar:.2f}",
         "external_reference": referencia_externa,
+        "processing_mode": "automatic",
+        "transactions": {
+            "payments": [
+                {
+                    "amount": f"{a_pagar:.2f}",
+                    "payment_method": {
+                        "id": "pix",
+                        "type": "bank_transfer",
+                    },
+                    "expiration_time": PIX_EXPIRACAO,
+                }
+            ]
+        },
         "payer": payer_data
     }
 
     try:
-        resultado = sdk.payment().create(payment_data, request_options)
+        resultado = sdk.order().create(order_data, request_options)
     except Exception as e:
         return jsonify({'erro': f'Falha ao comunicar com o Mercado Pago: {e}'}), 502
 
-    payment = resultado.get('response', {})
+    order = resultado.get('response', {})
 
     if resultado.get('status') not in (200, 201):
         db.execute(
@@ -351,42 +353,36 @@ def processar_pagamento():
             ('error', referencia_externa)
         )
         db.commit()
-        return jsonify({'erro': 'Pagamento recusado ou inválido.', 'detalhes': payment}), 400
-
-    payment_id = str(payment.get('id'))
-    status = payment.get('status')
+        return jsonify({'erro': 'Não foi possível gerar o Pix.', 'detalhes': order}), 400
 
     db.execute(
         'UPDATE Pedido SET order_id = ? WHERE referencia_externa = ?',
-        (payment_id, referencia_externa)
+        (order.get('id'), referencia_externa)
     )
     db.commit()
 
-    if status in ('approved', 'processed'):
-        _confirmar_ingressos_pagos(tokens_criados)
-        db.execute(
-            'UPDATE Pedido SET status = ? WHERE referencia_externa = ?',
-            (status, referencia_externa)
-        )
-        db.commit()
-        return jsonify({'sucesso': True, 'status': status}), 200
+    status = order.get('status')
+
+    pagamento_info = (order.get('transactions', {}).get('payments') or [{}])[0]
+    payment_method_resp = pagamento_info.get('payment_method', {})
+
+    dados_pix = {
+        'qr_code': payment_method_resp.get('qr_code'),               # código "copia e cola"
+        'qr_code_base64': payment_method_resp.get('qr_code_base64'), # imagem do QR em base64
+        'ticket_url': payment_method_resp.get('ticket_url'),
+    }
 
     if status in ('expired', 'canceled', 'rejected'):
-        return jsonify({'erro': 'Pagamento não aprovado.', 'status': status}), 400
+        return jsonify({'erro': 'Pix não pôde ser gerado.', 'status': status}), 400
 
-    # Extrai dados do PIX (QR Code e Copia e Cola)
-    point_of_interaction = payment.get('point_of_interaction', {}) or {}
-    transaction_data = point_of_interaction.get('transaction_data', {}) or {}
-
+    # Pix nunca vem "processed" na criação — fica em action_required/pending
+    # até o pagador escanear e pagar. A confirmação definitiva vem do webhook.
     return jsonify({
         'sucesso': True,
         'status': status,
-        'id': payment.get('id'),
-        'qr_code': transaction_data.get('qr_code'),
-        'qr_code_base64': transaction_data.get('qr_code_base64'),
-        'ticket_url': transaction_data.get('ticket_url')
-    }), 200
-
+        'pendente': True,
+        'pix': dados_pix,
+    }), 202
 
 def _confirmar_ingressos_pagos(tokens):
     """Marca os ingressos como pagos e envia por e-mail. Idempotente por token."""
@@ -447,8 +443,7 @@ def _validar_assinatura_webhook(req) -> bool:
     if not ts or not v1:
         return False
 
-    corpo = req.get_json(silent=True) or {}
-    data_id = req.args.get('data.id') or str(corpo.get('data', {}).get('id') or corpo.get('id') or '')
+    data_id = req.args.get('data.id', '')
     manifest = f"id:{data_id};request-id:{request_id};ts:{ts};"
 
     hmac_calculado = hmac.new(
@@ -464,36 +459,26 @@ def webhook_mercadopago():
         return jsonify({'erro': 'assinatura inválida'}), 401
 
     corpo = request.get_json(silent=True) or {}
-    topico = request.args.get('topic') or request.args.get('type') or corpo.get('type') or corpo.get('action')
+    topico = request.args.get('topic') or corpo.get('type')
 
-    if topico and topico not in ('payment', 'payment.created', 'payment.updated', 'order'):
-        return '', 200  # confirma recebimento para tópicos não gerenciados
+    if topico not in ('payment', 'order'):
+        return '', 200  # confirma recebimento, senão o Mercado Pago reenvia
 
-    recurso_id = request.args.get('id') or request.args.get('data.id') or corpo.get('data', {}).get('id') or corpo.get('id')
+    recurso_id = corpo.get('data', {}).get('id')
     if not recurso_id:
         return '', 200
 
-    try:
-        resultado = sdk.payment().get(recurso_id)
-    except Exception:
-        return '', 200
+    resultado = sdk.order().get(recurso_id)
+    order = resultado.get('response', {})
 
-    payment = resultado.get('response', {})
-
-    status = payment.get('status')
-    referencia_externa = payment.get('external_reference')
+    status = order.get('status')
+    referencia_externa = order.get('external_reference')
 
     db = get_db()
-    pedido = None
-    if referencia_externa:
-        pedido = db.execute(
-            'SELECT * FROM Pedido WHERE referencia_externa = ?', (referencia_externa,)
-        ).fetchone()
+    pedido = db.execute(
+        'SELECT * FROM Pedido WHERE referencia_externa = ?', (referencia_externa,)
+    ).fetchone()
 
-    if pedido is None:
-        pedido = db.execute(
-            'SELECT * FROM Pedido WHERE order_id = ?', (str(recurso_id),)
-        ).fetchone()
 
     if pedido is None:
         return '', 200  # não é um pedido nosso ou já foi limpo
@@ -503,19 +488,18 @@ def webhook_mercadopago():
 
     tokens = json.loads(pedido['tokens'])
 
-    if status in ('approved', 'processed'):
+    if status == 'processed':
         _confirmar_ingressos_pagos(tokens)
-    elif status in ('expired', 'canceled', 'cancelled', 'rejected', 'refunded', 'charged_back'):
+    elif status in ('expired', 'canceled', 'rejected'):
         _liberar_ingressos_nao_pagos(tokens, pedido['cod_aluno'])
 
     db.execute(
         'UPDATE Pedido SET status = ? WHERE referencia_externa = ?',
-        (status, pedido['referencia_externa'])
+        (status, referencia_externa)
     )
     db.commit()
 
-    return '', 200
-
+    return '', 200 
 
 @routes.get('/pagamento/sucesso')
 def pagamento_sucesso():
