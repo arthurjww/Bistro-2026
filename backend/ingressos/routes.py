@@ -279,7 +279,7 @@ def processar_pagamento():
     if a_pagar <= 0:
         # Nada a cobrar (ex: só ingressos gratuitos) — confirma direto, sem Mercado Pago
         _confirmar_ingressos_pagos(tokens_criados)
-        return jsonify({'sucesso': True, 'status': 'approved'}), 200
+        return jsonify({'sucesso': True, 'status': 'processed'}), 200
 
     dados = request.get_json(force=True) or {}
     payer_input = dados.get('payer', {}) if isinstance(dados.get('payer'), dict) else {}
@@ -343,8 +343,16 @@ def processar_pagamento():
     try:
         resultado = sdk.order().create(order_data, request_options)
     except Exception as e:
+        db.execute(
+            'UPDATE Pedido SET status = ? WHERE referencia_externa = ?',
+            ('error', referencia_externa)
+        )
+        db.commit()
+        _liberar_ingressos_nao_pagos(tokens_criados, codigo_aluno)
+
         return jsonify({'erro': f'Falha ao comunicar com o Mercado Pago: {e}'}), 502
 
+        
     order = resultado.get('response', {})
 
     if resultado.get('status') not in (200, 201):
@@ -353,6 +361,7 @@ def processar_pagamento():
             ('error', referencia_externa)
         )
         db.commit()
+        _liberar_ingressos_nao_pagos(tokens_criados, codigo_aluno)
         return jsonify({'erro': 'Não foi possível gerar o Pix.', 'detalhes': order}), 400
 
     db.execute(
@@ -373,6 +382,7 @@ def processar_pagamento():
     }
 
     if status in ('expired', 'canceled', 'rejected'):
+        _liberar_ingressos_nao_pagos(tokens_criados, codigo_aluno)
         return jsonify({'erro': 'Pix não pôde ser gerado.', 'status': status}), 400
 
     # Pix nunca vem "processed" na criação — fica em action_required/pending
