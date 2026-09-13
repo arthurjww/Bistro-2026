@@ -60,48 +60,6 @@ def informacoes():
     )
 
 
-@routes.get('/lugares/confirmar_codigo')
-def confirmar_codigo():
-    if cronometro_expirado(session.get('cronometro_reservado')):
-        return jsonify({'erro': 'A reserva expirou.'}), 409
-    
-    lugares = session.get('lugares', [])
-    if not lugares:
-        return jsonify({'erro': 'Nenhum lugar reservado na sessão.'}), 400
-    
-    codigo = request.args.get('codigo')
-    db = get_db()
-
-    aluno = db.execute(
-        '''
-        SELECT *
-        FROM Aluno
-        WHERE cod_aluno = ?
-        ''',
-        (codigo,)
-    ).fetchone()
-
-    if aluno is not None:
-
-        quant_ingressos = len(lugares)
-
-        if aluno['usos_restantes'] >= quant_ingressos:
-            session['codigo'] = aluno['cod_aluno']
-
-            return jsonify({
-                'sucesso': 'Código confirmado.',
-                'usos': aluno["usos_restantes"]
-            }), 200
-
-        return jsonify({
-            'erro': 'Não há usos restantes suficientes.'
-        }), 409
-
-    return jsonify({
-        'erro': 'Código não encontrado.'
-    }), 404
-
-
 # Chars que não são confudíveis, caso a adm precise digitar manualmente na hora
 CHARS_TOKEN = 'ACDEFGHJKLMNPQRTUVWXYZabcdefghjkmnpqrstuvwxyz234679'
 

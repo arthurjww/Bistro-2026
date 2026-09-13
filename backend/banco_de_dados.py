@@ -30,7 +30,7 @@ def create_all():
     db = get_db()
     cursor = db.cursor()
 
-    #aluno 
+    #aluno
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS Aluno (
             cod_aluno TEXT PRIMARY KEY 
@@ -43,42 +43,59 @@ def create_all():
         )
     """)
 
-
-    #lugares
+    # lugares
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS Lugares (
-            cod_lugar TEXT PRIMARY KEY 
-                CHECK(length(cod_lugar) <= 3),
+       CREATE TABLE IF NOT EXISTS Lugares(
+           cod_lugar TEXT PRIMARY KEY
+               CHECK (length(cod_lugar) <= 2),
+    
+           mesa      TEXT    NOT NULL
+               CHECK (length(mesa) = 1),
+    
+           cadeira   INTEGER NOT NULL
+               CHECK (cadeira > 0),
+    
+           salao     INTEGER NOT NULL
+               CHECK (salao IN (1, 2))
+       )
+   """)
 
-            cod_aluno TEXT NOT NULL 
-                CHECK(length(cod_aluno) = 6),
+    # reserva
+    # ocupado 0 = livre 1 = ocupado 2 = em pagamento / reservado
+    cursor.execute("""
+       CREATE TABLE IF NOT EXISTS Reserva(
+           cod_reserva          INTEGER PRIMARY KEY AUTOINCREMENT,
 
-            mesa TEXT NOT NULL 
-                CHECK(length(mesa) = 1),
+           cod_lugar            TEXT    NOT NULL
+               REFERENCES Lugares (cod_lugar),
 
-            ocupado BOOLEAN,
+           dia_bistro           TEXT    NOT NULL,
 
-            cronometro_reservado DATETIME,
+           ocupado              INTEGER NOT NULL DEFAULT 0
+               CHECK (ocupado IN (0, 1, 2)),
 
-            FOREIGN KEY(cod_aluno)
-                REFERENCES Aluno(cod_aluno)
-        )
-    """)
+           cod_aluno            TEXT
+               REFERENCES Aluno (cod_aluno),
 
+           cronometro_reservado TEXT,
+
+           UNIQUE (cod_lugar, dia_bistro)
+       )
+   """)
     #admin 
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS Administradores (
+       CREATE TABLE IF NOT EXISTS Administradores(
             cod_admin INTEGER PRIMARY KEY AUTOINCREMENT,
-
+            
             nome_admin TEXT NOT NULL 
                 CHECK(length(nome_admin) <= 50),
-
+            
             senha TEXT NOT NULL 
                 CHECK(length(senha) <= 50),
-
+            
             email TEXT NOT NULL 
                 CHECK(length(email) <= 255)
-        )
+       )
     """)
 
 

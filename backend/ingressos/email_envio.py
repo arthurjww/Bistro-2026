@@ -28,7 +28,8 @@ MAIL_SENDER_NAME = os.getenv(
 def enviar_email(
     destinatario,
     assunto,
-    mensagem,
+    mensagem_texto,
+    mensagem_html,
     anexo=None,
 ):
     """
@@ -74,7 +75,19 @@ def enviar_email(
     msg["To"] = destinatario
     msg["Subject"] = assunto
 
-    msg.set_content(mensagem)
+    if mensagem_texto is not None:
+        msg.set_content(mensagem_texto)
+
+    if mensagem_html is not None:
+        if mensagem_texto is None:
+            # Se só HTML foi fornecido, cria uma versão
+            # texto mínima para compatibilidade.
+            msg.set_content("Este email contém conteúdo HTML.")
+
+        msg.add_alternative(
+            mensagem_html,
+            subtype="html",
+        )
 
     # ========================================================
     # ANEXO(S)

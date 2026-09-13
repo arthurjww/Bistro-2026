@@ -1,6 +1,7 @@
 from backend.banco_de_dados import get_db
 from backend.ingressos.email_envio import enviar_email
 
+from flask import render_template
 from pathlib import Path
 import secrets
 
@@ -10,6 +11,26 @@ file = Path(__file__).resolve().parents[2] / 'nomes_emails.csv'
 
 CHARS_TOKEN = 'ACDEFGHJKLMNPQRTUVWXYZabcdefghjkmnpqrstuvwxyz234679'
 
+mensagem_texto = '''
+Olá, {nome}.
+
+Segue o código abaixo para seus convidados no Bistrot 2026 Sinestesia.
+
+Código: {codigo}
+
+Você pode usá-lo até {usos} vezes.
+
+Abaixo seguem as instruções:
+
+- Este código é usado para validar a compra dos ingressos.
+- Apenas o compartilhe com pessoas de confiança.
+- Após a escolha do código e dos lugares, você terá 15 minutos para
+  escrever as informações dos ingressos e pagar.
+- Caso necessário, é possível comprar ingressos com o mesmo código
+  em diferentes sessões.
+- Qualquer dúvida, entre em contato conosco:
+  +55 (54) 99999-9999.
+'''.strip()
 
 def _gerar_token_unico(db):
     """Gera um token de 6 caracteres alfanuméricos único na tabela alunos."""
@@ -34,7 +55,7 @@ def criar_alunos():
     try:
         with file.open('r', encoding='utf-8') as f:
             for linha in f:
-                nome = linha.strip().split(';')[0]
+                nome, email, quant = linha.strip().split(',')
 
                 igual = db.execute(
                     '''
@@ -47,7 +68,7 @@ def criar_alunos():
                 if igual is not None:
                     continue
                 # TODO: TESTE
-                if nome != 'Guilherme Terres Munaretto da Costa':
+                if nome != 'Guilherme Matté':
                     continue
 
                 pk = _gerar_token_unico(db)
@@ -56,7 +77,7 @@ def criar_alunos():
                 '''
                     INSERT INTO Aluno
                     VALUES (?, ?, ?)
-                ''', (pk, nome, 2)
+                ''', (pk, nome, int(quant))
                 )
                 print('criado')
 
@@ -72,22 +93,30 @@ def enviar_cod():
     try:
         with file.open('r', encoding='utf-8') as f:
             for linha in f:
-                nome, email = linha.strip().split(';')
+                nome, email, quant = linha.strip().split(',')
                 # TODO: TESTE
-                if nome != 'Guilherme Terres Munaretto da Costa':
+                if nome != 'Guilherme Matté':
                     continue
-                pk = db.execute(
+                aluno = db.execute(
                     '''
-                    SELECT cod_aluno
+                    SELECT *
                     FROM Aluno
                     WHERE nome_aluno = ?
                     ''', (nome,)
                 ).fetchone()
 
-                msg = f'''{nome}
-                Abaixo está o seu código para ser utilizado para a compra dos ingresso no Bistrot 2026 Sinestesia
-                {pk["cod_aluno"]}'''
-                enviar_email(email, 'Código para compra de ingressos', msg)
+                msg_texto = mensagem_texto.format(
+                    nome=aluno['nome_aluno'],
+                    codigo=aluno['cod_aluno'],
+                    usos=aluno['usos_restantes']
+                )
+                msg_html = render_template(
+                    'ingressos/codigo_aluno.html',
+                    nome=aluno['nome_aluno'],
+                    codigo=aluno['cod_aluno'],
+                    usos=aluno['usos_restantes']
+                )
+                enviar_email(email, 'Código para compra de ingressos', msg_texto, msg_html)
             print('enviado')
     except FileNotFoundError as e:
         print(e)
