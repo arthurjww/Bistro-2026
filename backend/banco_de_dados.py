@@ -48,20 +48,40 @@ def create_all():
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS Lugares (
             cod_lugar TEXT PRIMARY KEY 
-                CHECK(length(cod_lugar) <= 3),
-
-            cod_aluno TEXT NOT NULL 
-                CHECK(length(cod_aluno) = 6),
+                CHECK(length(cod_lugar) <= 2),
 
             mesa TEXT NOT NULL 
                 CHECK(length(mesa) = 1),
+            
+            cadeira INTEGER NOT NULL
+                CHECK(cadeira > 0),
 
-            ocupado BOOLEAN,
+            salao INTEGER NOT NULL
+                CHECK(salao IN (1,2))
 
-            cronometro_reservado DATETIME,
+        )
+    """)
 
-            FOREIGN KEY(cod_aluno)
-                REFERENCES Aluno(cod_aluno)
+    #reserva
+    #ocupado 0 = livre 1 = ocupado 2 = em pagamento / reservado
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS Reserva (
+            cod_reserva INTEGER PRIMARY KEY AUTOINCREMENT,
+            
+            dia_bistro TEXT NOT NULL,
+            
+            ocupado INTEGER NOT NULL DEFAULT 0
+                CHECK(ocupado IN(0,1,2)),
+            
+            cronometro_reservado TEXT,
+            
+            UNIQUE(cod_lugar, dia_bistro)
+
+            FOREIGN KEY (cod_lugar)
+                REFERENCES Lugares(cod_lugar),
+        
+            FOREIGN KEY (cod_aluno)
+                REFERENCES Aluno(cod_aluno),
         )
     """)
 
