@@ -44,19 +44,33 @@ def index():
 
 @routes.get('/info_ingressos')
 def informacoes():
-    lugares, cronometro = session.get('lugares', []), session.get('cronometro_reservado')
-    if not lugares or not cronometro:
-        #url_for alterado para receber o endpoint do mapa de mesas, 
-        # assim consegue redirecionar direto pra lá. 
-        # OBS: o endpoint não é o '/lugares' - como estava anteriormente, o endpoint correto é: 'lugares.rota_mapa'. 
-        # PORTANTO NÃO DEVE SER ALTERADO. - para mais detalhes ver o commit do dia 13/09 - matté.
-        return redirect(url_for('lugares.rota_mapa')) 
+    reservas, cronometro = session.get('reservas', []), session.get('cronometro_reservado')
+    if not reservas or not cronometro:
+        return redirect(url_for('lugares.rota_mapa'))
+
+    lugares_dias = []
+    db = get_db()
+
+    for cod_reserva in reservas:
+        reserva = db.execute(
+            '''
+            SELECT cod_lugar, dia_bistro
+            FROM Reserva
+            WHERE cod_reserva = ?
+            ''', (cod_reserva,)
+        ).fetchone()
+
+        if reserva is None:
+            session.clear()
+            return redirect(url_for('lugares.rota_mapa'))
+
+        lugares_dias.append((reserva['cod_luagr'], reserva['dia_bistro']))
 
     return render_template(
         'ingressos/info_ingressos.html',
         cronometro=cronometro,
-        quant=len(lugares),
-        ingressos=lugares
+        quant=len(lugares_dias),
+        ingressos=lugares_dias
     )
 
 
@@ -385,15 +399,15 @@ def _liberar_ingressos_nao_pagos(tokens, cod_aluno):
     db = get_db()
 
     for token in tokens:
-        lugar = db.execute(
-            'SELECT cod_lugar FROM Ingresso WHERE token_QR = ? AND foi_pago = 0',
+        reserva = db.execute(
+            'SELECT cod_reserva FROM Ingresso WHERE token_QR = ? AND foi_pago = 0',
             (token,)
         ).fetchone()
 
-        if lugar is None:
+        if reserva is None:
             continue  # já foi pago em outra tentativa, ou não existe — não mexe
 
-        db.execute('UPDATE Lugares SET ocupado = 0 WHERE cod_lugar = ?', (lugar['cod_lugar'],))
+        db.execute('DELETE FROM Reserva WHERE cod_reserva = ?', (reserva['cod_reserva'],))
         db.execute('DELETE FROM Ingresso WHERE token_QR = ?', (token,))
 
     if cod_aluno:
