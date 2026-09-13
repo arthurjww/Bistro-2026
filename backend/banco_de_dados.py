@@ -68,21 +68,20 @@ def create_all():
         CREATE TABLE IF NOT EXISTS Reserva (
             cod_reserva INTEGER PRIMARY KEY AUTOINCREMENT,
             
-            cod_lugar TEXT NOT NULL
-                REFERENCES Lugares(cod_lugar),
-            
             dia_bistro TEXT NOT NULL,
             
             ocupado INTEGER NOT NULL DEFAULT 0
                 CHECK(ocupado IN(0,1,2)),
             
-            cod_aluno TEXT 
-                REFERENCES Aluno(cod_aluno),
-            
             cronometro_reservado TEXT,
             
             UNIQUE(cod_lugar, dia_bistro)
 
+            FOREIGN KEY (cod_lugar)
+                REFERENCES Lugares(cod_lugar),
+        
+            FOREIGN KEY (cod_aluno)
+                REFERENCES Aluno(cod_aluno),
         )
     """)
 
