@@ -77,48 +77,7 @@ def create_all():
                 REFERENCES Lugares(cod_lugar),
         
             FOREIGN KEY (cod_aluno)
-<<<<<<< Updated upstream
                 REFERENCES Aluno(cod_aluno)
-=======
-                REFERENCES Aluno(cod_aluno),
-        )
-    """)
-       CREATE TABLE IF NOT EXISTS Lugares(
-           cod_lugar TEXT PRIMARY KEY
-               CHECK (length(cod_lugar) <= 2),
-    
-           mesa      TEXT    NOT NULL
-               CHECK (length(mesa) = 1),
-    
-           cadeira   INTEGER NOT NULL
-               CHECK (cadeira > 0),
-    
-           salao     INTEGER NOT NULL
-               CHECK (salao IN (1, 2))
-       )
-   """)
-
-    # reserva
-    # ocupado 0 = livre 1 = ocupado 2 = em pagamento / reservado
-    cursor.execute("""
-       CREATE TABLE IF NOT EXISTS Reserva(
-           cod_reserva          INTEGER PRIMARY KEY AUTOINCREMENT,
-
-           cod_lugar            TEXT    NOT NULL
-               REFERENCES Lugares (cod_lugar),
-
-           dia_bistro           TEXT    NOT NULL,
-
-           ocupado              INTEGER NOT NULL DEFAULT 0
-               CHECK (ocupado IN (0, 1, 2)),
-
-           cod_aluno            TEXT
-               REFERENCES Aluno (cod_aluno),
-
-           cronometro_reservado TEXT,
-
-           UNIQUE (cod_lugar, dia_bistro)
->>>>>>> Stashed changes
        )
    """)
     #admin 
@@ -215,17 +174,6 @@ def create_all():
        VALUES (1, 1)
     """)
 
-    db.execute('''
-        CREATE TABLE IF NOT EXISTS Pedido (
-            referencia_externa TEXT PRIMARY KEY,
-            order_id TEXT,
-            tokens TEXT NOT NULL,
-            cod_aluno TEXT,
-            valor REAL NOT NULL,
-            status TEXT NOT NULL DEFAULT 'pending',
-            criado_em TIMESTAMP NOT NULL
-        )
-    ''')
     #commit - salva aterações 
     db.commit()
 

@@ -38,7 +38,6 @@ def _gerar_pdf_bytes(ingresso):
         data_compra=ingresso['data_compra'],
         token=ingresso['token'],
         lugar=ingresso['cod_lugar'],  # Exibe o assento/mesa
-        dia_bistro=ingresso['dia_bistro'],
         qr_code=qr_base64,
     )
 
@@ -58,22 +57,18 @@ def buscar_ingresso_pago(token):
       cursor.execute(
         """
             SELECT
-                i.nome,
-                i.email_envio AS email,
-                i.data_compra,
-                i.token_QR AS token,
-                i.cod_lugar,
-                r.dia_bistro,
+                nome,
+                email_envio AS email,
+                data_compra,
+                token_QR AS token,
+                cod_lugar,
                 CASE
-                    WHEN i.tipo_ingresso = 0 THEN 'Gratuito'
-                    WHEN i.tipo_ingresso = 1 THEN 'Meia'
+                    WHEN tipo_ingresso = 0 THEN 'Gratuito'
+                    WHEN tipo_ingresso = 1 THEN 'Meia'
                     ELSE 'Inteira'
                 END AS tipo
-            FROM Ingresso i
-            INNER JOIN Reserva r
-                ON i.cod_lugar = r.cod_lugar 
-                AND i.cod_aluno = r.cod_aluno
-            WHERE i.token_QR = ? AND i.foi_pago = 1
+            FROM Ingresso
+            WHERE token_QR = ? AND foi_pago = 1
         """,
           (token,),
         )
@@ -167,5 +162,4 @@ def validar_ingresso():
     lugar=ingresso['cod_lugar'],
     tipo=ingresso['tipo'],
     data_compra=ingresso['data_compra'],
-    dia_bistro=ingresso['dia_bistro']
   )
