@@ -1,0 +1,209 @@
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>LOGIN RELATÓRIOS</title>
+</head>
+<body>
+  <h2>Login Para Realizar a Visualização dos Relatórios do Bistrô</h2>
+
+  <!-- remove depois, mas o email para ver se tá funcionando é 123@gmail.com e a senha é bistro-->
+  <!-- aba dos emails-->
+  <form id="loginForm" novalidate="">
+    <label for="email"><strong>Email</strong></label><br>
+    <input
+      type="text"
+      id="email"
+      name="email"
+      value="email..."
+      style="color: rgba(0,0,0,0.65);"
+      autocomplete="off"
+    ><br>
+    <span id="erroEmail"></span><br><br>
+    <!-- aba das senhas-->
+    <label for="senha"><strong>Senha</strong></label><br>
+    <input
+      type="text"
+      id="senha"
+      name="senha"
+      value="senha..."
+      style="color: rgba(0,0,0,0.65);"
+      autocomplete="off"
+    ><br>
+    <span id="erroSenha"></span><br><br>
+
+    <button type="submit" id="botaoEntrar">Entrar</button>
+    <p id="mensagemGeral"></p>
+  </form>
+
+  <script>
+    /*
+     aqui é para ver se o email realmente bate com o que está no python e com o banco, 
+     alterar para bater com o Banco de Dados
+     reforçando por enquanto o único email correto é 123@gmail.com e a senha é bistro,
+      tem que vincular com o flask e o Banco para fazer os emails reais pegarem
+    */
+
+    const form = document.getElementById('loginForm');
+    const campoEmail = document.getElementById('email');
+    const campoSenha = document.getElementById('senha');
+    const erroEmail = document.getElementById('erroEmail');
+    const erroSenha = document.getElementById('erroSenha');
+    const mensagemGeral = document.getElementById('mensagemGeral');
+    const botaoEntrar = document.getElementById('botaoEntrar');
+
+    const PLACEHOLDER_EMAIL = 'email...';
+    const PLACEHOLDER_SENHA = 'senha...';
+
+    // retorna valor do email 
+    function getEmailValue() {
+      return campoEmail.value === PLACEHOLDER_EMAIL ? '' : campoEmail.value.trim();
+    }
+
+    // retorna valor da senha 
+    function getSenhaValue() {
+      return campoSenha.value === PLACEHOLDER_SENHA ? '' : campoSenha.value;
+    }
+
+    function emailReal(valor) {
+      // checa se realmente é um email 
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valor);
+    }
+
+    function limparMensagens() {
+      erroEmail.textContent = '';
+      erroSenha.textContent = '';
+      mensagemGeral.textContent = '';
+    }
+
+    function validacaoEmail() {
+      let valido = true;
+      limparMensagens();
+
+      const emailVal = getEmailValue();
+      const senhaVal = getSenhaValue();
+
+      if (!emailReal(emailVal)) {
+        erroEmail.textContent = 'Informe um email válido.';
+        valido = false;
+      }
+
+      if (senhaVal.length < 4) {
+        erroSenha.textContent = 'A senha deve ter pelo menos 4 caracteres.';
+        valido = false;
+      }
+
+      return valido;
+    }
+
+    // como funciona o campo do email, quando não digitado e quando digitar
+    campoEmail.addEventListener('focus', () => {
+      if (campoEmail.value === PLACEHOLDER_EMAIL) {
+        campoEmail.value = '';
+        campoEmail.style.color = 'rgba(0,0,0,1)';
+        campoEmail.type = 'email';
+      } else {
+        campoEmail.type = 'email';
+        campoEmail.style.color = 'rgba(0,0,0,1)';
+      }
+    });
+
+    campoEmail.addEventListener('blur', () => {
+      if (campoEmail.value.trim() === '') {
+        campoEmail.type = 'text';
+        campoEmail.value = PLACEHOLDER_EMAIL;
+        campoEmail.style.color = 'rgba(0,0,0,0.65)';
+      }
+    });
+
+    // como funciona o campo da senha, quando não digitado e quando digitar
+    campoSenha.addEventListener('focus', () => {
+      if (campoSenha.value === PLACEHOLDER_SENHA) {
+        campoSenha.value = '';
+        campoSenha.type = 'password';
+        campoSenha.style.color = 'rgba(0,0,0,1)';
+      } else {
+        campoSenha.type = 'password';
+        campoSenha.style.color = 'rgba(0,0,0,1)';
+      }
+    });
+
+    campoSenha.addEventListener('input', () => {
+      // se o campo estiver em texto (text) e o usuário digitar, converte para senha (password)
+      if (campoSenha.type === 'text' && campoSenha.value !== '' && campoSenha.value !== PLACEHOLDER_SENHA) {
+        const cur = campoSenha.value;
+        campoSenha.type = 'password';
+        campoSenha.value = cur;
+        campoSenha.style.color = 'rgba(0,0,0,1)';
+      }
+    });
+
+    campoSenha.addEventListener('blur', () => {
+      if (campoSenha.value === '') {
+        campoSenha.type = 'text';
+        campoSenha.value = PLACEHOLDER_SENHA;
+        campoSenha.style.color = 'rgba(0,0,0,0.65)';
+      }
+    });
+
+    // deixar bonitinho o bloco de email e senha
+    (function inicializarOsPlaceholders() {
+      if (!campoEmail.value) {
+        campoEmail.type = 'text';
+        campoEmail.value = PLACEHOLDER_EMAIL;
+        campoEmail.style.color = 'rgba(0,0,0,0.65)';
+      } else if (campoEmail.value === PLACEHOLDER_EMAIL) {
+        campoEmail.type = 'text';
+        campoEmail.style.color = 'rgba(0,0,0,0.65)';
+      } else {
+        campoEmail.type = 'email';
+        campoEmail.style.color = 'rgba(0,0,0,1)';
+      }
+
+      if (!campoSenha.value) {
+        campoSenha.type = 'text';
+        campoSenha.value = PLACEHOLDER_SENHA;
+        campoSenha.style.color = 'rgba(0,0,0,0.65)';
+      } else if (campoSenha.value === PLACEHOLDER_SENHA) {
+        campoSenha.type = 'text';
+        campoSenha.style.color = 'rgba(0,0,0,0.65)';
+      } else {
+        campoSenha.type = 'password';
+        campoSenha.style.color = 'rgba(0,0,0,1)';
+      }
+    })();
+
+    form.addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+
+      if (!validacaoEmail()) {
+        return;
+      }
+
+      const dados = {
+        email: getEmailValue(),
+        senha: getSenhaValue()
+      };
+
+      botaoEntrar.disabled = true;
+      botaoEntrar.textContent = 'Entrando...';
+      mensagemGeral.textContent = '';
+
+      //aqui pode fazer ser flask também, mas por enquanto vou deixar ir direto para o html. 
+      //remover após realizar os emails e senhas reais os termos '123@gmail.com' e "bistro"
+      if (dados.email === '123@gmail.com' && dados.senha === 'bistro') {
+        // redireciona para os relatórios após verificar se o email e senha se batem com os dados salvos
+        window.location.href = 'index.html';
+      } else {
+        mensagemGeral.textContent = 'Email ou senha incorretos.';
+        botaoEntrar.disabled = false;
+        botaoEntrar.textContent = 'Entrar';
+        // resetar campo de senha para "senha..."
+        campoSenha.type = 'text';
+        campoSenha.value = PLACEHOLDER_SENHA;
+        campoSenha.style.color = 'rgba(0,0,0,0.65)';
+        campoSenha.focus();
+      }
+    });
+  </script>
+</body>
+</html>
