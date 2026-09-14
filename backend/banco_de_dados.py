@@ -115,6 +115,7 @@ def create_all():
            cronometro_reservado TEXT,
 
            UNIQUE (cod_lugar, dia_bistro)
+                REFERENCES Aluno(cod_aluno)
        )
    """)
     #admin 
@@ -211,17 +212,6 @@ def create_all():
        VALUES (1, 1)
     """)
 
-    db.execute('''
-        CREATE TABLE IF NOT EXISTS Pedido (
-            referencia_externa TEXT PRIMARY KEY,
-            order_id TEXT,
-            tokens TEXT NOT NULL,
-            cod_aluno TEXT,
-            valor REAL NOT NULL,
-            status TEXT NOT NULL DEFAULT 'pending',
-            criado_em TIMESTAMP NOT NULL
-        )
-    ''')
     #commit - salva aterações 
     db.commit()
 
