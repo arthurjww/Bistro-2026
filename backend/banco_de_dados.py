@@ -77,9 +77,6 @@ def create_all():
                 REFERENCES Lugares(cod_lugar),
         
             FOREIGN KEY (cod_aluno)
-<<<<<<< Updated upstream
-                REFERENCES Aluno(cod_aluno)
-=======
                 REFERENCES Aluno(cod_aluno),
         )
     """)
@@ -118,7 +115,6 @@ def create_all():
            cronometro_reservado TEXT,
 
            UNIQUE (cod_lugar, dia_bistro)
->>>>>>> Stashed changes
        )
    """)
     #admin 
