@@ -44,19 +44,33 @@ def index():
 
 @routes.get('/info_ingressos')
 def informacoes():
-    lugares, cronometro = session.get('lugares', []), session.get('cronometro_reservado')
-    if not lugares or not cronometro:
-        #url_for alterado para receber o endpoint do mapa de mesas, 
-        # assim consegue redirecionar direto pra lá. 
-        # OBS: o endpoint não é o '/lugares' - como estava anteriormente, o endpoint correto é: 'lugares.rota_mapa'. 
-        # PORTANTO NÃO DEVE SER ALTERADO. - para mais detalhes ver o commit do dia 13/09 - matté.
-        return redirect(url_for('lugares.rota_mapa')) 
+    reservas, cronometro = session.get('reservas', []), session.get('cronometro_reservado')
+    if not reservas or not cronometro:
+        return redirect(url_for('lugares.rota_mapa'))
+
+    lugares_dias = []
+    db = get_db()
+
+    for cod_reserva in reservas:
+        reserva = db.execute(
+            '''
+            SELECT cod_lugar, dia_bistro
+            FROM Reserva
+            WHERE cod_reserva = ?
+            ''', (cod_reserva,)
+        ).fetchone()
+
+        if reserva is None:
+            session.clear()
+            return redirect(url_for('lugares.rota_mapa'))
+
+        lugares_dias.append((reserva['cod_luagr'], reserva['dia_bistro']))
 
     return render_template(
         'ingressos/info_ingressos.html',
         cronometro=cronometro,
-        quant=len(lugares),
-        ingressos=lugares
+        quant=len(lugares_dias),
+        ingressos=lugares_dias
     )
 
 
@@ -92,10 +106,10 @@ def criar_ingressos():
     if not dados or 'ingressos' not in dados:
         return jsonify ({'erro': 'Dados de ingressos ausentes.'}), 400
 
-    lugares_sessao = session.get('lugares', [])
+    reservas_sessao = session.get('reservas', [])
     codigo_aluno = session.get('codigo')
 
-    if not lugares_sessao:
+    if not reservas_sessao:
         return jsonify({'erro': 'Nenhum lugar reservado na sessão.'}), 400
 
     if not codigo_aluno:
@@ -103,7 +117,7 @@ def criar_ingressos():
 
     ingressos_enviados = dados['ingressos']
 
-    if len(ingressos_enviados) != len(lugares_sessao):
+    if len(ingressos_enviados) != len(reservas_sessao):
         return jsonify({
             'erro':'Quantidade de ingressos não corresponde aos lugares reservados.'
         }), 400
@@ -113,7 +127,7 @@ def criar_ingressos():
     a_pagar = 0
 
     try:
-        for item, cod_lugar in zip (ingressos_enviados, lugares_sessao):
+        for item, cod_reserva in zip (ingressos_enviados, reservas_sessao):
 
             nome = item.get('nome')
             email_envio = item.get('email_envio')
@@ -155,18 +169,11 @@ def criar_ingressos():
                     0,          # utilizado
                     None,       # data_utilizado
                     codigo_aluno,
-                    cod_lugar,
+                    cod_reserva,
                     datetime.now(),
                     telefone,
                     valor_ingresso
                 )
-            )
-
-            # sem isso o lugar nunca fica ocupado e outra pessoa pode reservar
-            # o mesmo assento enquanto o pagamento está em aberto.
-            db.execute(
-                'UPDATE Lugares SET ocupado = 1 WHERE cod_lugar = ?',
-                (cod_lugar,)
             )
 
             tokens_criados.append(token)
@@ -199,11 +206,11 @@ def criar_ingressos():
 
 @routes.get('/pagamento')
 def pagamento():
-    codigo_aluno, lugares, a_pagar = session.get('codigo'), session.get('lugares'), session.get('a_pagar')
+    codigo_aluno, reservas, a_pagar = session.get('codigo'), session.get('reservas'), session.get('a_pagar')
 
     if codigo_aluno is None:
         return jsonify({'erro': 'Nenhum código salvo.'}), 400
-    if lugares is None:
+    if reservas is None:
         return jsonify({'erro': 'Nenhum lugar reservado na sessão.'}), 400
     if a_pagar is None:
         return jsonify({'erro': 'Sem preço previsto para ser pago.'}), 400
@@ -213,7 +220,7 @@ def pagamento():
 
     return render_template(
         'ingressos/pagamento.html',
-        lugares=lugares,
+        reservas=len(reservas),
         a_pagar=a_pagar
     )
 
@@ -385,15 +392,15 @@ def _liberar_ingressos_nao_pagos(tokens, cod_aluno):
     db = get_db()
 
     for token in tokens:
-        lugar = db.execute(
-            'SELECT cod_lugar FROM Ingresso WHERE token_QR = ? AND foi_pago = 0',
+        reserva = db.execute(
+            'SELECT cod_reserva FROM Ingresso WHERE token_QR = ? AND foi_pago = 0',
             (token,)
         ).fetchone()
 
-        if lugar is None:
+        if reserva is None:
             continue  # já foi pago em outra tentativa, ou não existe — não mexe
 
-        db.execute('UPDATE Lugares SET ocupado = 0 WHERE cod_lugar = ?', (lugar['cod_lugar'],))
+        db.execute('DELETE FROM Reserva WHERE cod_reserva = ?', (reserva['cod_reserva'],))
         db.execute('DELETE FROM Ingresso WHERE token_QR = ?', (token,))
 
     if cod_aluno:

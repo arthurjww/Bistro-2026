@@ -14,7 +14,7 @@ CHARS_TOKEN = 'ACDEFGHJKLMNPQRTUVWXYZabcdefghjkmnpqrstuvwxyz234679'
 mensagem_texto = '''
 Olá, {nome}.
 
-Segue o código abaixo para seus convidados no Bistrot 2026 Sinestesia.
+Segue o código abaixo para seus convidados no Bistrô 2026 Sinestesia.
 
 Código: {codigo}
 
@@ -29,7 +29,9 @@ Abaixo seguem as instruções:
 - Caso necessário, é possível comprar ingressos com o mesmo código
   em diferentes sessões.
 - Qualquer dúvida, entre em contato conosco:
-  +55 (54) 99999-9999.
+  Fone: +55 (54) 99112-1192
+  E-mail: sacsinestesiabistro@gmail.com
+
 '''.strip()
 
 def _gerar_token_unico(db):
@@ -56,6 +58,7 @@ def criar_alunos():
         with file.open('r', encoding='utf-8') as f:
             for linha in f:
                 nome, email, quant = linha.strip().split(',')
+                nome, email, quant = nome.strip(), email.strip(), quant.strip()
 
                 igual = db.execute(
                     '''
@@ -94,6 +97,8 @@ def enviar_cod():
         with file.open('r', encoding='utf-8') as f:
             for linha in f:
                 nome, email, quant = linha.strip().split(',')
+                nome, email, quant = nome.strip(), email.strip(), quant.strip()
+
                 # TODO: TESTE
                 if nome != 'Guilherme Matté':
                     continue
