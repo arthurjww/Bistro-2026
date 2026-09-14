@@ -29,7 +29,9 @@ Abaixo seguem as instruções:
 - Caso necessário, é possível comprar ingressos com o mesmo código
   em diferentes sessões.
 - Qualquer dúvida, entre em contato conosco:
-  +55 (54) 99999-9999.
+  Fone: +55 (54) 99112-1192
+  E-mail: sacsinestesiabistro@gmail.com
+
 '''.strip()
 
 def _gerar_token_unico(db):
