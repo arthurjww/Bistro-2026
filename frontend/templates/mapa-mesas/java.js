@@ -1,5 +1,5 @@
 async function carregarMapa() {
-    const resposta = await fetch(`/mapa`);
+    const resposta = await fetch(`/lugares`);
     const mapa = await resposta.json();
     renderizarMapa(mapa);
 }

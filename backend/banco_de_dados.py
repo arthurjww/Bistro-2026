@@ -47,15 +47,9 @@ def create_all():
     cursor.execute("""
        CREATE TABLE IF NOT EXISTS Lugares(
            cod_lugar TEXT PRIMARY KEY
-               CHECK (length(cod_lugar) <= 2),
+               CHECK (length(cod_lugar) <= 3),
     
-           mesa      TEXT    NOT NULL
-               CHECK (length(mesa) = 1),
-    
-           cadeira   INTEGER NOT NULL
-               CHECK (cadeira > 0),
-    
-           salao     INTEGER NOT NULL
+           salao INTEGER NOT NULL
                CHECK (salao IN (1, 2))
        )
    """)

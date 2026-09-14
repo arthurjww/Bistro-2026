@@ -24,7 +24,8 @@ class LugarIndisponivelError(Exception):
     pass
 
 class Salao():
-    LAYOUT = {}  
+    LAYOUT = {}
+    NUMERO_SALAO = None  
 
     def validar_cod_lugar(self, cod_lugar):
         if not cod_lugar or len(cod_lugar) < 1 or len(cod_lugar) > 2:
@@ -48,6 +49,9 @@ class Salao():
         return mesa, cadeira
 
     def seed_lugares(self):
+        if self.NUMERO_SALAO is None:
+            raise NotImplementedError("Defina NUMERO_SALAO na subclasse antes de usar seed_lugares()")
+
         db = get_db()
         cursor = db.cursor()
 
@@ -55,52 +59,75 @@ class Salao():
             for cadeira in range(1, qtd_cadeiras + 1):
                 cod_lugar = f"{mesa}{cadeira}"
                 cursor.execute("""
-                    INSERT OR IGNORE INTO Lugares (cod_lugar, mesa, cadeira, ocupado) VALUES (?, ?, ?, ?)
-                """, (cod_lugar, mesa, cadeira, LIVRE))
+                    INSERT OR IGNORE INTO Lugares (cod_lugar, salao) VALUES (?, ?)
+                """, (cod_lugar, self.NUMERO_SALAO))
         db.commit()
 
-    def listar_mapa(self):
+    # Recebe dia_bistro e usa LEFT_JOIN com Reserva
+    # Se não existe reserva para aquele lugar+dia, considera livre (ocupado=0)
+    def listar_mapa(self, dia_bistro):
         db = get_db()
         cursor = db.cursor()
         cursor.execute("""
-            SELECT cod_lugar, mesa, cadeira, ocupado
-            FROM Lugares
-            ORDER BY mesa, cadeira
-        """)
+            SELECT L.cod_lugar, 
+               COALESCE(R.ocupado, 0) AS ocupado
+            FROM Lugares AS L
+            LEFT JOIN Reservas AS R
+                ON R.cod_lugar = L.cod_lugar
+                AND R.dia_bistro = ?
+            WHERE L.salao = ?
+            ORDER BY L.cod_lugar
+        """), (dia_bistro, self.NUMERO_SALAO)
 
         mapa = {}
         for linha in cursor.fetchall():
+            cod_lugar = linha["cod_lugar"]
+            mesa = cod_lugar[0]
+            cadeira = int(cod_lugar[1:])
             mapa.setdefault(linha["mesa"], []).append({
-                "cod_lugar": linha["cod_lugar"],
-                "cadeira": linha["cadeira"],
+                "cod_lugar": cod_lugar,
+                "cadeira": cadeira,
                 "ocupado": linha["ocupado"]
             })
         return mapa
 
-    def escolher_lugar(self, cod_lugar, cod_aluno):
+    # Escolher lugar agora, obrigatoriamente precisa saber o dia da reserva
+    def escolher_lugar(self, cod_lugar, cod_aluno, dia_bistro):
         self.validar_cod_lugar(cod_lugar)
         db = get_db()
         cursor = db.cursor()
 
         cursor.execute("""
-            UPDATE Lugares
-            SET ocupado = ?, cod_aluno = ?
-            WHERE cod_lugar = ? AND ocupado = ?
-        """, (EM_PAGAMENTO, cod_aluno, cod_lugar, LIVRE))
+            INSERT INTO Reserva (cod_lugar, cod_aluno, dia_bistro, ocupado)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(cod_lugar, dia_bistro) DO UPDATE SET
+                cod_aluno = excluded.cod_aluno,
+                ocupado = excluded.ocupado
+            WHERE Reserva.ocupado = 0
+        """, (cod_lugar, cod_aluno, dia_bistro, LIVRE))
 
         db.commit()
 
         if cursor.rowcount == 0:
             return False, "Lugar indisponível"
 
-        return True, None
+        linha = db.execute("""
+            SELECT cod_reserva
+            FROM reserva
+            WHERE cod_lugar = ? 
+            AND dia_bistro = ?
+        """, (cod_lugar, dia_bistro)).fetchone()
+
+        return True, linha["cod_reserva"]
     
 class Salao1(Salao):
     LAYOUT = LAYOUT_MESAS_GALPAO1
+    NUMERO_SALAO = 1 
 
 
 class Salao2(Salao):
     LAYOUT = LAYOUT_MESAS_GALPAO2
+    NUMERO_SALAO = 2
 
 def qual_salao(cod_lugar):
     if not cod_lugar:
@@ -112,8 +139,8 @@ def qual_salao(cod_lugar):
         return Salao1
     if mesa in LAYOUT_MESAS_GALPAO2:
         return Salao2
-
-    raise LugarInvalidoError(f'Mesa {mesa} não existe')
+    if mesa not in LAYOUT_MESAS_GALPAO1 or mesa not in LAYOUT_MESAS_GALPAO2:
+        raise LugarInvalidoError(f'Mesa {mesa} não existe')
 
 
 def obter_qtd_dias():

@@ -8,39 +8,42 @@ bp_lugares = Blueprint("lugares", __name__)
 
 def verificar_db():
     db = get_db()
-
     data_exp = int(time() * 1000)
 
-    lugares_exp = db.execute('''
+    reservas_exp = db.execute('''
         SELECT *
-        FROM Lugares
+        FROM Reserva
         WHERE ocupado = ?
-          AND cronometro_reservado = ?
-    ''', (1, data_exp)
+          AND cronometro_reservado <= ?
+    ''', (EM_PAGAMENTO, data_exp)
     ).fetchall()
 
-    for lugar in lugares_exp:
-        cod_aluno = db.execute('''
+    for r in reservas_exp:
+        ingresso = db.execute('''
             SELECT cod_aluno
             FROM Ingresso
             WHERE cod_lugar = ?
-        ''', (lugar['cod_lugar'])
+        ''', (r['cod_reserva'],)
+        ).fetchone()
+        db.execute(
+            'DELETE FROM Ingresso WHERE cod_reserva = ?', (r['cod_reserva'],)
         )
         db.execute(
-            'DELETE * FROM Ingresso WHERE cod_lugar = ?', (lugar['cod_lugar'],)
+            'UPDATE Reserva SET ocupado = ? WHERE cod_reserva = ?', (LIVRE, r['cod_reserva'],)
         )
-        db.execute(
-            'UPDATE Lugares SET ocupado = ? WHERE cod_lugar = ?', (lugar['cod_lugar'],)
-        )
-        db.execute(
-            'UPDATE Aluno SET usos_restantes = usos_restantes + ? WHERE cod_aluno = ?', (1, cod_aluno)
-        )
+        if ingresso is not None:
+            db.execute(
+                'UPDATE Aluno SET usos_restantes = usos_restantes + ? WHERE cod_aluno = ?', (ingresso['cod_aluno'],)
+            )
+
+    db.commit()
 
 
 @bp_lugares.route("/lugares", methods=["GET"])
 def rota_mapa():
     verificar_db()
-    return render_template('mapa-mesas/bistrot.html')
+    saloes = listar_saloes_disponiveis()
+    return render_template('mapa-mesas/bistrot.html', saloes_disponiveis=[salao.NUMERO_SALAO for salao in saloes]) #saloes disponiveis = informação para javascript
 
 @bp_lugares.route("/lugares/confirmar_codigo", methods=['GET'])
 def confirmar_codigo():
@@ -78,6 +81,10 @@ def rota_escolher(cod_lugar):
     if not cod_aluno:
         return jsonify({"erro": "Aluno não autenticado"}), 401
 
+    dia_bistro = request.args.get("dia")
+    if not dia_bistro:
+        return jsonify({"erro": "dia_bistro não informado"}), 400
+
     try:
         salao = qual_salao(cod_lugar)
     except LugarInvalidoError as e:
@@ -87,40 +94,43 @@ def rota_escolher(cod_lugar):
         return jsonify({"erro": "Salão 2 não disponível para este evento"}), 403
 
     try:
-        sucesso, motivo = salao().escolher_lugar(cod_lugar, cod_aluno)
+        sucesso, resultado = salao().escolher_lugar(cod_lugar, cod_aluno, dia_bistro)
     except LugarInvalidoError as e:
         return jsonify({"erro": str(e)}), 400
 
     if not sucesso:
-        return jsonify({"erro": motivo}), 409
+        # aqui "resultado" é a mensagem de erro
+        return jsonify({"erro": resultado}), 409
 
-    lugares = session.get('lugares', [])
-    if cod_lugar not in lugares:
-        lugares.append(cod_lugar)
+    cod_reserva = resultado # resultado é igual a reserva do momento
 
-    session['lugares'] = lugares
+    reservas = session.get('reservas', [])
+    if cod_reserva not in reservas:
+        reservas.append(cod_reserva)
+    session['reservas'] = reservas
 
-    return jsonify({"ok": True, 'lugares': lugares})
+    return jsonify({"ok": True, 'reservas': reservas})
 
 @bp_lugares.route("/lugares/seguir", methods=['GET'])
 def seguir():
     cronometro = int(time() * 1000) + 15 * 60_000
-    lugares = session.get("lugares", [])
+    reservas = session.get("reservas", [])
     cod_aluno = session.get("codigo")
     ocupado = EM_PAGAMENTO
-    if not lugares:
+    if not reservas:
         return jsonify({"erro": "Nenhum lugar selecionado"}), 400
     if not cod_aluno:
         return jsonify({"erro": "Aluno não identificado"}), 401
-    for cod_lugar in lugares:
-        get_db().execute(
-            '''UPDATE Lugares 
-                SET cronometro_reservado = ?
-                WHERE cod_lugar = ?
-                AND cod_aluno = ?
-                AND ocupado = ?''', (cronometro, cod_lugar, cod_aluno, ocupado)
-        )
+
     db = get_db()
+    for cod_reserva in reservas:
+        get_db().execute(
+            '''UPDATE Reserva 
+                SET cronometro_reservado = ?
+                WHERE cod_reserva = ?
+                AND cod_aluno = ?
+                AND ocupado = ?''', (cronometro, cod_reserva, cod_aluno, ocupado)
+        )
     db.commit()
     session['cronometro_reservado'] = cronometro
     session.permanent = True
