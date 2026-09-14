@@ -27,14 +27,32 @@ sdk = mercadopago.SDK(MP_ACCESS_TOKEN)
 PRECO_INGRESSO = 130  # tipo_ingresso == 2
 
 # Tempo que o QR code do Pix fica válido (ISO 8601 duration).
-# Ajuste para bater com o tempo do seu cronômetro de reserva de lugar.
-PIX_EXPIRACAO = "PT30M"  # 30 minutos
+PIX_EXPIRACAO = "PT15M"  # 15 minutos
 
 
-def cronometro_expirado(cronometro):
-    if cronometro is not None:
-        return int(time() * 1000) >= cronometro
-    return False
+def _cronometro_expirado(cronometro):
+    # retornar True significa que o cronometro expirou
+    if cronometro is None:
+        return True
+    return int(time() * 1000) >= cronometro
+
+
+def _resetar_cronometro(reservas, db):
+    cronometro = int(time()) * 1000 + 15 * 60_000
+
+    placeholders = ','.join('?' for _ in reservas)
+    db.execute(
+        f'''
+        UPDATE Reserva
+        SET cronometro_reservado = ?
+        WHERE cod_reserva in ({placeholders})
+        ''', (cronometro,)
+    )
+    db.commit()
+
+    session['cronometro_reservado'] = cronometro
+
+    return cronometro
 
 
 @routes.get('/')
@@ -48,23 +66,25 @@ def informacoes():
     if not reservas or not cronometro:
         return redirect(url_for('lugares.rota_mapa'))
 
-    lugares_dias = []
     db = get_db()
 
-    for cod_reserva in reservas:
-        reserva = db.execute(
-            '''
-            SELECT cod_lugar, dia_bistro
-            FROM Reserva
-            WHERE cod_reserva = ?
-            ''', (cod_reserva,)
-        ).fetchone()
+    placeholders = ','.join('?' for _ in reservas)
 
-        if reserva is None:
-            session.clear()
-            return redirect(url_for('lugares.rota_mapa'))
+    reservas_db = db.execute(
+        f'''
+        SELECT cod_lugar, dia_bistro
+        FROM Reserva
+        WHERE cod_reserva IN ({placeholders})
+        ''',
+        reservas
+    ).fetchall()
 
-        lugares_dias.append((reserva['cod_luagr'], reserva['dia_bistro']))
+    if len(reservas_db) != len(reservas):
+        return redirect(url_for('lugares.rota_mapa'))
+
+    lugares_dias = [
+        (r['cod_lugar'], r['dia_bistro']) for r in reservas_db
+    ]
 
     return render_template(
         'ingressos/info_ingressos.html',
@@ -96,7 +116,7 @@ def _gerar_token_unico(db):
 
 @routes.post('/info_ingressos/criar_ingressos')
 def criar_ingressos():
-    if cronometro_expirado(session.get('cronometro_reservado')):
+    if _cronometro_expirado(session.get('cronometro_reservado')):
         return jsonify({
             'erro': 'A reserva expirou.'
         }), 409
@@ -104,7 +124,7 @@ def criar_ingressos():
     dados = request.get_json()
 
     if not dados or 'ingressos' not in dados:
-        return jsonify ({'erro': 'Dados de ingressos ausentes.'}), 400
+        return jsonify({'erro': 'Dados de ingressos ausentes.'}), 400
 
     reservas_sessao = session.get('reservas', [])
     codigo_aluno = session.get('codigo')
@@ -113,13 +133,13 @@ def criar_ingressos():
         return jsonify({'erro': 'Nenhum lugar reservado na sessão.'}), 400
 
     if not codigo_aluno:
-        return jsonify ({'erro': 'Código de aluno não confirmado.'}), 400
+        return jsonify({'erro': 'Código de aluno não confirmado.'}), 400
 
     ingressos_enviados = dados['ingressos']
 
     if len(ingressos_enviados) != len(reservas_sessao):
         return jsonify({
-            'erro':'Quantidade de ingressos não corresponde aos lugares reservados.'
+            'erro': 'Quantidade de ingressos não corresponde aos lugares reservados.'
         }), 400
 
     db = get_db()
@@ -127,7 +147,7 @@ def criar_ingressos():
     a_pagar = 0
 
     try:
-        for item, cod_reserva in zip (ingressos_enviados, reservas_sessao):
+        for item, cod_reserva in zip(ingressos_enviados, reservas_sessao):
 
             nome = item.get('nome')
             email_envio = item.get('email_envio')
@@ -137,14 +157,23 @@ def criar_ingressos():
                      'erro': 'Nome e email são obrigatórios para todos os ingressos.'
                 }), 400
 
-            tipo_ingresso = int(item.get('tipo_ingresso'))
+            tipo_ingresso= item.get('tipo_ingresso')
+            try:
+                # melhor int do que float, pois valor não tem casas decimais
+                # e float costuma ser instável em cálculos e.g. 0.1 + 0.2 != 0.3
+                tipo_ingresso = int(tipo_ingresso)
+            except (TypeError, ValueError):
+                return jsonify({
+                    'erro': f'tipo_ingresso inválido para o ingresso de "{nome}".'
+                }), 400
+
             observacoes = item.get('observacoes')
             telefone = item.get('telefone')
 
             if tipo_ingresso == 0:
-                valor_ingresso = 0 # não pagantes
+                valor_ingresso = 0  # não pagantes
             elif tipo_ingresso == 1:
-                valor_ingresso = PRECO_INGRESSO / 2
+                valor_ingresso = PRECO_INGRESSO // 2
             else:
                 valor_ingresso = PRECO_INGRESSO
 
@@ -187,7 +216,7 @@ def criar_ingressos():
             WHERE cod_aluno = ?
             ''',
             (len(tokens_criados), codigo_aluno)
-            
+
         )
 
         db.commit()
@@ -196,8 +225,7 @@ def criar_ingressos():
         db.rollback()
         return jsonify({'erro': f'Erro ao criar ingressos: {e}.'}), 500
 
-    session['tokens_criados'] = tokens_criados
-    session['a_pagar'] = a_pagar
+    _resetar_cronometro(reservas_sessao, db)
 
     return jsonify({'sucesso': 'Ingressos criados.'}), 201
 
@@ -206,20 +234,20 @@ def criar_ingressos():
 
 @routes.get('/pagamento')
 def pagamento():
-    codigo_aluno, reservas, a_pagar = session.get('codigo'), session.get('reservas'), session.get('a_pagar')
+    codigo_aluno, reservas, a_pagar, cronometro = (
+        session.get('codigo'), session.get('reservas', []),
+        session.get('a_pagar'), session.get('cronometro')
+    )
 
-    if codigo_aluno is None:
-        return jsonify({'erro': 'Nenhum código salvo.'}), 400
-    if reservas is None:
-        return jsonify({'erro': 'Nenhum lugar reservado na sessão.'}), 400
-    if a_pagar is None:
-        return jsonify({'erro': 'Sem preço previsto para ser pago.'}), 400
+    if None in (codigo_aluno, a_pagar, cronometro) or not reservas:
+        return redirect(url_for('lugares.rota_mapa'))
 
-    # A tela só precisa coletar o e-mail do pagador e chamar POST /pagamento
+    # A tela só precisa coletar os dados do pagador e chamar POST /pagamento
     # o QR code do Pix vem na resposta desse POST
 
     return render_template(
         'ingressos/pagamento.html',
+        cronometro=cronometro,
         reservas=len(reservas),
         a_pagar=a_pagar
     )
@@ -231,18 +259,23 @@ def processar_pagamento():
     Cria o pedido Pix na Mercado Pago e devolve o QR code pro frontend exibir.
     Body esperado:
     {
-        "email_pagador": "cliente@email.com"
+        "payer": {
+            "email": "cliente@email.com",
+            "first_name": "Nome",
+            "identification": {"type": "CPF", "number": "00000000000"}
+        }
     }
     """
 
-    if cronometro_expirado(session.get('cronometro_reservado')):
+    if _cronometro_expirado(session.get('cronometro_reservado')):
         return jsonify({'erro': 'A reserva expirou.'}), 409
 
     tokens_criados = session.get('tokens_criados', [])
+    reservas = session.get('reservas', [])
     a_pagar = session.get('a_pagar')
     codigo_aluno = session.get('codigo')
 
-    if not tokens_criados or a_pagar is None:
+    if not tokens_criados or not reservas or a_pagar is None:
         return jsonify({'erro': 'Nenhum ingresso pendente de pagamento nesta sessão.'}), 400
 
     if a_pagar <= 0:
@@ -321,7 +354,6 @@ def processar_pagamento():
 
         return jsonify({'erro': f'Falha ao comunicar com o Mercado Pago: {e}'}), 502
 
-        
     order = resultado.get('response', {})
 
     if resultado.get('status') not in (200, 201):
@@ -339,6 +371,9 @@ def processar_pagamento():
     )
     db.commit()
 
+    # Guardamos a referência pra /pagamento/status saber qual Pedido consultar
+    session['referencia_externa_pagamento'] = referencia_externa
+
     status = order.get('status')
 
     pagamento_info = (order.get('transactions', {}).get('payments') or [{}])[0]
@@ -354,14 +389,45 @@ def processar_pagamento():
         _liberar_ingressos_nao_pagos(tokens_criados, codigo_aluno)
         return jsonify({'erro': 'Pix não pôde ser gerado.', 'status': status}), 400
 
+    novo_cronometro = _resetar_cronometro(reservas, db)
+
     # Pix nunca vem "processed" na criação — fica em action_required/pending
     # até o pagador escanear e pagar. A confirmação definitiva vem do webhook.
     return jsonify({
         'sucesso': True,
         'status': status,
         'pendente': True,
+        'cronometro': novo_cronometro,
         'pix': dados_pix,
     }), 202
+
+
+@routes.get('/pagamento/status')
+def pagamento_status():
+    referencia_externa = session.get('referencia_externa_pagamento')
+
+    if not referencia_externa:
+        return jsonify({'erro': 'Nenhum pagamento pendente nesta sessão.'}), 400
+
+    db = get_db()
+    pedido = db.execute(
+        'SELECT status FROM Pedido WHERE referencia_externa = ?', (referencia_externa,)
+    ).fetchone()
+
+    if pedido is None:
+        return jsonify({'erro': 'Pedido não encontrado.'}), 404
+
+    status = pedido['status']
+
+    if status == 'processed':
+        return jsonify({'pago': True}), 200
+
+    if status in ('expired', 'canceled', 'rejected', 'error'):
+        return jsonify({'pago': False, 'falhou': True, 'status': status}), 200
+
+    # ainda 'pending' / 'action_required' — o webhook não confirmou nada ainda
+    return jsonify({'pago': False}), 200
+
 
 def _confirmar_ingressos_pagos(tokens):
     """Marca os ingressos como pagos e envia por e-mail. Idempotente por token."""
@@ -388,7 +454,7 @@ def _confirmar_ingressos_pagos(tokens):
 
 
 def _liberar_ingressos_nao_pagos(tokens, cod_aluno):
-    """Pagamento recusado/expirado: libera lugares e desfaz o desconto usado."""
+    """Pagamento recusado/expirado: libera lugares e desfaz o uso do aluno."""
     db = get_db()
 
     for token in tokens:
@@ -438,9 +504,18 @@ def webhook_mercadopago():
         return jsonify({'erro': 'assinatura inválida'}), 401
 
     corpo = request.get_json(silent=True) or {}
-    topico = request.args.get('topic') or corpo.get('type')
+    # aparentemente, order está em type e não topic
+    topico = request.args.get('type') or corpo.get('type')
 
-    if topico not in ('payment', 'order'):
+    # O pagamento é criado pela Orders API (sdk.order().create()).
+    # Para esse fluxo, processamos apenas notificações do tópico 'order',
+    # pois o data.id recebido nesse tópico é o ID da Order e pode ser
+    # consultado com sdk.order().get().
+    #
+    # Notificações do tópico 'payment' possuem o ID de um pagamento,
+    # que deve ser consultado pela API de pagamentos, não pela API de orders.
+    # Como este fluxo usa a Order como fonte de verdade, ignoramos 'payment'.
+    if topico != 'order':
         return '', 200  # confirma recebimento, senão o Mercado Pago reenvia
 
     recurso_id = corpo.get('data', {}).get('id')
@@ -458,80 +533,54 @@ def webhook_mercadopago():
         'SELECT * FROM Pedido WHERE referencia_externa = ?', (referencia_externa,)
     ).fetchone()
 
-
     if pedido is None:
         return '', 200  # não é um pedido nosso ou já foi limpo
 
     if pedido['status'] == status:
         return '', 200  # idempotência: já processamos essa mudança de status
 
-    tokens = json.loads(pedido['tokens'])
-
-    if status == 'processed':
-        _confirmar_ingressos_pagos(tokens)
-    elif status in ('expired', 'canceled', 'rejected'):
-        _liberar_ingressos_nao_pagos(tokens, pedido['cod_aluno'])
-
     db.execute(
         'UPDATE Pedido SET status = ? WHERE referencia_externa = ?',
         (status, referencia_externa)
     )
     db.commit()
+    tokens = json.loads(pedido['tokens'])
 
-    return '', 200 
+    if status == 'processed':
+        _confirmar_ingressos_pagos(tokens)
+    else:
+        # status em ('expired', 'canceled', 'rejected') ou desconhecido
+        _liberar_ingressos_nao_pagos(tokens, pedido['cod_aluno'])
+
+    return jsonify({'status': status}), 200
+
 
 @routes.get('/pagamento/sucesso')
 def pagamento_sucesso():
-    tokens = session.get('tokens_criados')
+    reservas = session.get('reservas', [])
 
-    if not tokens:
-        return redirect(url_for('routes.index'))
+    if not reservas:
+        return redirect(url_for('lugares.rota_mapa'))
 
     db = get_db()
-    placeholders = ','.join('?' for _ in tokens)
+    placeholders = ','.join('?' for _ in reservas)
     ingressos = db.execute(
-        f'SELECT nome, token_QR, foi_pago FROM Ingresso WHERE token_QR IN ({placeholders})',
-        tokens
+        f'SELECT nome, token_QR FROM Ingresso WHERE token_QR IN ({placeholders})',
+        reservas
     ).fetchall()
 
-    if not ingressos:
-        return redirect(url_for('routes.index'))
-
-    todos_pagos = all(i['foi_pago'] == 1 for i in ingressos)
-
-    if todos_pagos:
-        for chave in ('tokens_criados', 'a_pagar', 'lugares', 'cronometro_reservado', 'codigo'):
-            session.pop(chave, None)
+    if len(reservas) != len(ingressos):
+        return redirect(url_for('lugares.rota_mapa'))
 
     return render_template(
         'ingressos/sucesso.html',
         ingressos=ingressos,
-        pendente=not todos_pagos
     )
-
-
-@routes.get('/pagamento/status')
-def pagamento_status():
-    """Endpoint leve pra fazer polling na tela de sucesso enquanto 'pendente' == True."""
-    tokens = session.get('tokens_criados')
-    if not tokens:
-        return jsonify({'erro': 'Nenhum ingresso na sessão.'}), 400
-
-    db = get_db()
-    placeholders = ','.join('?' for _ in tokens)
-    ingressos = db.execute(
-        f'SELECT foi_pago FROM Ingresso WHERE token_QR IN ({placeholders})',
-        tokens
-    ).fetchall()
-
-    todos_pagos = bool(ingressos) and all(i['foi_pago'] == 1 for i in ingressos)
-
-    return jsonify({'pago': todos_pagos}), 200
 
 
 @routes.get('/verificar_cronometro')
 def verificar_cronometro():
-    expirado = cronometro_expirado(session.get('cronometro_reservado'))
+    expirado = _cronometro_expirado(session.get('cronometro_reservado'))
 
     if expirado:
         return jsonify({

@@ -6,37 +6,51 @@ from backend.mapa_mesas.lugares import *
 
 bp_lugares = Blueprint("lugares", __name__)
 
+
 def verificar_db():
     db = get_db()
     data_exp = int(time() * 1000)
 
-    reservas_exp = db.execute('''
-        SELECT *
-        FROM Reserva
-        WHERE ocupado = ?
-          AND cronometro_reservado <= ?
-    ''', (EM_PAGAMENTO, data_exp)
-    ).fetchall()
+    expiradas = db.execute('''
+                           SELECT cod_reserva
+                           FROM Reserva
+                           WHERE ocupado = ?
+                             AND cronometro_reservado <= ?
+                           ''', (EM_PAGAMENTO, data_exp)).fetchall()
 
-    for r in reservas_exp:
-        ingresso = db.execute('''
-            SELECT cod_aluno
-            FROM Ingresso
-            WHERE cod_lugar = ?
-        ''', (r['cod_reserva'],)
-        ).fetchone()
+    cod_reservas = [r['cod_reserva'] for r in expiradas]
+
+    if cod_reservas:
+        placeholders = ','.join('?' for _ in cod_reservas)
+
+        ingressos = db.execute(
+            f'SELECT cod_aluno FROM Ingresso WHERE cod_reserva IN ({placeholders})',
+            cod_reservas
+        ).fetchall()
+
         db.execute(
-            'DELETE FROM Ingresso WHERE cod_reserva = ?', (r['cod_reserva'],)
+            f'DELETE FROM Ingresso WHERE cod_reserva IN ({placeholders})', cod_reservas
         )
         db.execute(
-            'UPDATE Reserva SET ocupado = ? WHERE cod_reserva = ?', (LIVRE, r['cod_reserva'],)
+            f'UPDATE Reserva SET ocupado = ? WHERE cod_reserva IN ({placeholders})',
+            (LIVRE, *cod_reservas)
         )
-        if ingresso is not None:
+
+        dict_alunos_usos = {}
+        for ing in ingressos:
+            dict_alunos_usos[ing['cod_aluno']] = dict_alunos_usos.get(ing['cod_aluno'], 0) + 1
+
+        for cod_aluno, qtd in dict_alunos_usos.items():
             db.execute(
-                'UPDATE Aluno SET usos_restantes = usos_restantes + ? WHERE cod_aluno = ?', (ingresso['cod_aluno'],)
+                'UPDATE Aluno SET usos_restantes = usos_restantes + ? WHERE cod_aluno = ?',
+                (qtd, cod_aluno)
             )
 
-    db.commit()
+        db.commit()
+
+    for chave in ('reservas', 'cronometro_reservado', 'codigo',
+                  'tokens_criados', 'a_pagar', ''):
+        session.pop(chave, None)
 
 
 @bp_lugares.route("/lugares", methods=["GET"])

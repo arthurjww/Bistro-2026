@@ -1,6 +1,6 @@
 const div = document.getElementById('divIngressos');
 const forms = div.querySelectorAll('form');
-
+const telefones = div.querySelectorAll('input[name="telefone"]');
 
 // Aplica máscara para pessoa só digitar números
 telefones.forEach(input => {
@@ -16,6 +16,32 @@ forms.forEach(form => {
         event.preventDefault();
     });
 });
+
+
+/**
+ * Mostra ao usuário a mensagem de erro vinda do backend (campo "erro" do JSON
+ * retornado pelo Flask) e, por padrão, devolve para a tela de seleção de lugares.
+*/
+async function tratarErroResposta(resposta, redirecionar = true) {
+    let mensagem = 'Ocorreu um erro inesperado. Tente novamente.';
+
+    try {
+        const dados = await resposta.json();
+        if (dados && dados.erro) {
+            mensagem = dados.erro;
+        } else if (dados && dados.mensagem) {
+            mensagem = dados.mensagem;
+        }
+    } catch (e) {
+        // Corpo da resposta não veio em JSON — mantém mensagem genérica.
+    }
+
+    alert(mensagem);
+
+    if (redirecionar) {
+        window.location.href = urls.lugares;
+    }
+}
 
 
 // Envia os dados do ingresso. Se sucesso, avança para o pagamento
@@ -43,8 +69,6 @@ async function enviarDadosESeguirPagamento() {
             } else {
                 dados[input.name] = input.value;
             }
-
-            dados[input.name] = input.value;
         });
 
         if (dados.telefone) {
@@ -58,14 +82,96 @@ async function enviarDadosESeguirPagamento() {
         ingressos: ingressos
     };
 
-    const resposta = await fetch(urls.criar_ingressos, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    });
+    try {
+        const resposta = await fetch(urls.criar_ingressos, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
 
-    if (resposta.ok) {
-        window.location.href = '/pagamento';
-        return;
+        if (resposta.ok) {
+            window.location.href = urls.pagamento;
+            return;
+        }
+
+        await tratarErroResposta(resposta);
+
+    } catch (erro) {
+        console.error('Erro ao enviar ingressos:', erro);
+        alert('Não foi possível conectar ao servidor. Verifique sua internet e tente novamente.');
     }
 }
+
+
+async function cronometroAtualizado() {
+    const agora = new Date();
+
+    const diff = reservado - agora;
+
+    if (diff <= 0) {
+        document.getElementById('timer').textContent = '00:00';
+
+        clearInterval(intervalo);
+        clearInterval(verificarIntervalo);
+
+        await verificarCronometro();
+
+        return;
+    }
+
+    let segundos = Math.floor(diff / 1000);
+    const minutos = Math.floor(segundos / 60);
+    segundos = segundos % 60;
+
+    document.getElementById('timer').textContent =
+        `${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`;
+}
+
+const intervalo = setInterval(cronometroAtualizado, 1000);
+cronometroAtualizado();
+
+
+let reservaExpirada = false;
+
+async function verificarCronometro() {
+    if (reservaExpirada) {
+        return;
+    }
+
+    try {
+        const resposta = await fetch(urls.verificar_cronometro, {
+            method: 'GET'
+        });
+
+        if (reservaExpirada) {
+            return;
+        }
+
+        if (resposta.status === 410) {
+            reservaExpirada = true;
+
+            const dados = await resposta.json();
+
+            clearInterval(intervalo);
+            clearInterval(verificarIntervalo);
+
+            alert(dados.mensagem || 'O tempo da reserva expirou.');
+
+            window.location.href = urls.lugares;
+
+            return;
+        }
+
+        if (!resposta.ok) {
+            reservaExpirada = true;
+            clearInterval(intervalo);
+            clearInterval(verificarIntervalo);
+            await tratarErroResposta(resposta);
+            return;
+        }
+    } catch (erro) {
+        console.error('Erro ao verificar cronômetro:', erro);
+    }
+}
+
+const verificarIntervalo = setInterval(verificarCronometro, 30001);
