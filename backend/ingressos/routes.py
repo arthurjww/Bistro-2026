@@ -44,6 +44,7 @@ def index():
 
 @routes.get('/info_ingressos')
 def informacoes():
+<<<<<<< Updated upstream
     reservas, cronometro = session.get('reservas', []), session.get('cronometro_reservado')
     if not reservas or not cronometro:
         return redirect(url_for('lugares.rota_mapa'))
@@ -65,6 +66,15 @@ def informacoes():
             return redirect(url_for('lugares.rota_mapa'))
 
         lugares_dias.append((reserva['cod_luagr'], reserva['dia_bistro']))
+=======
+    lugares, cronometro = session.get('lugares', []), session.get('cronometro_reservado')
+    if not lugares or not cronometro:
+        #url_for alterado para receber o endpoint do mapa de mesas, 
+        # assim consegue redirecionar direto pra lá. 
+        # OBS: o endpoint não é o '/lugares' - como estava anteriormente, o endpoint correto é: 'lugares.rota_mapa'. 
+        # PORTANTO NÃO DEVE SER ALTERADO. - para mais detalhes ver o commit do dia 13/09 - matté.
+        return redirect(url_for('lugares.rota_mapa')) 
+>>>>>>> Stashed changes
 
     return render_template(
         'ingressos/info_ingressos.html',
@@ -127,7 +137,11 @@ def criar_ingressos():
     a_pagar = 0
 
     try:
+<<<<<<< Updated upstream
         for item, cod_reserva in zip (ingressos_enviados, reservas_sessao):
+=======
+        for item, cod_lugar in zip (ingressos_enviados, lugares_sessao):
+>>>>>>> Stashed changes
 
             nome = item.get('nome')
             email_envio = item.get('email_envio')
@@ -176,6 +190,16 @@ def criar_ingressos():
                 )
             )
 
+<<<<<<< Updated upstream
+=======
+            # sem isso o lugar nunca fica ocupado e outra pessoa pode reservar
+            # o mesmo assento enquanto o pagamento está em aberto.
+            db.execute(
+                'UPDATE Lugares SET ocupado = 1 WHERE cod_lugar = ?',
+                (cod_lugar,)
+            )
+
+>>>>>>> Stashed changes
             tokens_criados.append(token)
 
             a_pagar += valor_ingresso
@@ -206,11 +230,19 @@ def criar_ingressos():
 
 @routes.get('/pagamento')
 def pagamento():
+<<<<<<< Updated upstream
     codigo_aluno, reservas, a_pagar = session.get('codigo'), session.get('reservas'), session.get('a_pagar')
 
     if codigo_aluno is None:
         return jsonify({'erro': 'Nenhum código salvo.'}), 400
     if reservas is None:
+=======
+    codigo_aluno, lugares, a_pagar = session.get('codigo'), session.get('lugares'), session.get('a_pagar')
+
+    if codigo_aluno is None:
+        return jsonify({'erro': 'Nenhum código salvo.'}), 400
+    if lugares is None:
+>>>>>>> Stashed changes
         return jsonify({'erro': 'Nenhum lugar reservado na sessão.'}), 400
     if a_pagar is None:
         return jsonify({'erro': 'Sem preço previsto para ser pago.'}), 400
@@ -220,7 +252,11 @@ def pagamento():
 
     return render_template(
         'ingressos/pagamento.html',
+<<<<<<< Updated upstream
         reservas=len(reservas),
+=======
+        lugares=lugares,
+>>>>>>> Stashed changes
         a_pagar=a_pagar
     )
 
@@ -392,6 +428,7 @@ def _liberar_ingressos_nao_pagos(tokens, cod_aluno):
     db = get_db()
 
     for token in tokens:
+<<<<<<< Updated upstream
         reserva = db.execute(
             'SELECT cod_reserva FROM Ingresso WHERE token_QR = ? AND foi_pago = 0',
             (token,)
@@ -401,6 +438,17 @@ def _liberar_ingressos_nao_pagos(tokens, cod_aluno):
             continue  # já foi pago em outra tentativa, ou não existe — não mexe
 
         db.execute('DELETE FROM Reserva WHERE cod_reserva = ?', (reserva['cod_reserva'],))
+=======
+        lugar = db.execute(
+            'SELECT cod_lugar FROM Ingresso WHERE token_QR = ? AND foi_pago = 0',
+            (token,)
+        ).fetchone()
+
+        if lugar is None:
+            continue  # já foi pago em outra tentativa, ou não existe — não mexe
+
+        db.execute('UPDATE Lugares SET ocupado = 0 WHERE cod_lugar = ?', (lugar['cod_lugar'],))
+>>>>>>> Stashed changes
         db.execute('DELETE FROM Ingresso WHERE token_QR = ?', (token,))
 
     if cod_aluno:

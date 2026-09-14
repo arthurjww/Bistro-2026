@@ -1,3 +1,7 @@
+<<<<<<< Updated upstream
+=======
+const inputCodigo = document.getElementById('input_codigo');
+>>>>>>> Stashed changes
 const div = document.getElementById('divIngressos');
 const forms = div.querySelectorAll('form');
 
@@ -18,6 +22,32 @@ forms.forEach(form => {
 });
 
 
+<<<<<<< Updated upstream
+=======
+// Manda fetch para confirmar código do aluno. Se confirmado, permite details ser aberto
+async function confirmarCodigoAluno() {
+    const params = new URLSearchParams({
+        codigo: inputCodigo.value
+    });
+
+    const resposta = await fetch(`${urls.confirmar_codigo}?${params}`, {
+        method: 'GET',
+    });
+
+    if (resposta.ok) {
+        const dados = await resposta.json();
+        if (dados.sucesso === 'Código confirmado.') {
+            // se vira Davi
+        }
+        // dá para colocar mudanças do css aqui
+    } else {
+        const dados = await resposta.json()
+        inputCodigo.parentElement.querySelector('span').textContent = dados.erro;
+    }
+}
+
+
+>>>>>>> Stashed changes
 // Envia os dados do ingresso. Se sucesso, avança para o pagamento
 async function enviarDadosESeguirPagamento() {
     for (const form of forms) {

@@ -14,7 +14,11 @@ CHARS_TOKEN = 'ACDEFGHJKLMNPQRTUVWXYZabcdefghjkmnpqrstuvwxyz234679'
 mensagem_texto = '''
 Olá, {nome}.
 
+<<<<<<< Updated upstream
 Segue o código abaixo para seus convidados no Bistrô 2026 Sinestesia.
+=======
+Segue o código abaixo para seus convidados no Bistrot 2026 Sinestesia.
+>>>>>>> Stashed changes
 
 Código: {codigo}
 
@@ -58,7 +62,10 @@ def criar_alunos():
         with file.open('r', encoding='utf-8') as f:
             for linha in f:
                 nome, email, quant = linha.strip().split(',')
+<<<<<<< Updated upstream
                 nome, email, quant = nome.strip(), email.strip(), quant.strip()
+=======
+>>>>>>> Stashed changes
 
                 igual = db.execute(
                     '''
@@ -97,8 +104,11 @@ def enviar_cod():
         with file.open('r', encoding='utf-8') as f:
             for linha in f:
                 nome, email, quant = linha.strip().split(',')
+<<<<<<< Updated upstream
                 nome, email, quant = nome.strip(), email.strip(), quant.strip()
 
+=======
+>>>>>>> Stashed changes
                 # TODO: TESTE
                 if nome != 'Guilherme Matté':
                     continue

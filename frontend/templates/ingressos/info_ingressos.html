@@ -19,9 +19,15 @@
 	<div id="divIngressos" class="detalhes-ingressos">
 		<summary>Preencher dados de {{ quant }} ingressos</summary>
 
+<<<<<<< Updated upstream
 		{% for lugar, dia in ingressos %}
 		<form class="form-ingresso">
 			<h3>Ingresso {{ loop.index + 1}} - Lugar {{ lugar }} - Dia {{ dia }}/10</h3>
+=======
+		{% for lugar in ingressos %}
+		<form class="form-ingresso">
+			<h3>Ingresso {{ loop.index + 1}} - Lugar {{ lugar }}</h3>
+>>>>>>> Stashed changes
 
 			<label>
 				Nome:
@@ -71,6 +77,10 @@
 
 	<script>
 		const urls = {
+<<<<<<< Updated upstream
+=======
+			confirmar_codigo: {{ url_for('routes.confirmar_codigo') | tojson }},
+>>>>>>> Stashed changes
 			criar_ingressos: {{ url_for('routes.criar_ingressos') | tojson }},
 			pagamento: {{ url_for('routes.pagamento') | tojson }},
 			verificar_cronometro: {{ url_for('routes.verificar_cronometro') | tojson }}
