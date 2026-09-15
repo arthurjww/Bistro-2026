@@ -49,13 +49,7 @@ def create_all():
         CREATE TABLE IF NOT EXISTS Lugares (
             cod_lugar TEXT PRIMARY KEY 
                 CHECK(length(cod_lugar) <= 2),
-
-            mesa TEXT NOT NULL 
-                CHECK(length(mesa) = 1),
             
-            cadeira INTEGER NOT NULL
-                CHECK(cadeira > 0),
-
             salao INTEGER NOT NULL
                 CHECK(salao IN (1,2))
 
@@ -67,13 +61,17 @@ def create_all():
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS Reserva (
             cod_reserva INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            cod_lugar TEXT NOT NULL,
+
+            cod_aluno TEXT NOT NULL,
             
             dia_bistro TEXT NOT NULL,
             
             ocupado INTEGER NOT NULL DEFAULT 0
                 CHECK(ocupado IN(0,1,2)),
             
-            cronometro_reservado TEXT,
+            cronometro_reservado INTEGER,
             
             UNIQUE(cod_lugar, dia_bistro)
 
@@ -149,6 +147,21 @@ def create_all():
             FOREIGN KEY (cod_lugar)
                 REFERENCES Lugares(cod_lugar)
         )
+    """)
+
+     # quantidade de dias
+    cursor.execute("""
+       CREATE TABLE IF NOT EXISTS Config
+       (
+           id       INTEGER PRIMARY KEY CHECK (id = 1),
+           qtd_dias INTEGER NOT NULL DEFAULT 1
+               CHECK (qtd_dias IN (1, 2))
+       )
+   """)
+
+    cursor.execute("""
+       INSERT OR IGNORE INTO Config (id, qtd_dias)
+       VALUES (1, 1)
     """)
 
     #Músicas
