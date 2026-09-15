@@ -539,18 +539,18 @@ def webhook_mercadopago():
     if pedido['status'] == status:
         return '', 200  # idempotência: já processamos essa mudança de status
 
+    tokens = json.loads(pedido['tokens'])
+
+    if status == 'processed':
+        _confirmar_ingressos_pagos(tokens)
+    elif status in ('expired', 'canceled', 'rejected'):
+        _liberar_ingressos_nao_pagos(tokens, pedido['cod_aluno'])
+
     db.execute(
         'UPDATE Pedido SET status = ? WHERE referencia_externa = ?',
         (status, referencia_externa)
     )
     db.commit()
-    tokens = json.loads(pedido['tokens'])
-
-    if status == 'processed':
-        _confirmar_ingressos_pagos(tokens)
-    else:
-        # status em ('expired', 'canceled', 'rejected') ou desconhecido
-        _liberar_ingressos_nao_pagos(tokens, pedido['cod_aluno'])
 
     return jsonify({'status': status}), 200
 
