@@ -89,7 +89,7 @@ def create_all():
                 CHECK(length(nome_admin) <= 50),
             
             senha TEXT NOT NULL 
-                CHECK(length(senha) <= 50),
+                CHECK(length(senha) <= 255),
             
             email TEXT NOT NULL 
                 CHECK(length(email) <= 255)
