@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reservas — Layout Original</title>
+<style>
+  *{box-sizing:border-box;}
+  body{font-family:sans-serif;background:#fff;color:#000;padding:20px;max-width:1100px;margin:0 auto;}
+  h1{font-size:22px;margin:0 0 4px;}
+  p{color:#555;font-size:13px;margin:0 0 16px;}
+  svg{width:100%;border:1px solid #000;}
+  .wall{fill:none;stroke:#000;stroke-width:3;}
+  .room-tag{font-size:16px;font-weight:bold;fill:#000;}
+  .table-shape{fill:#fff;stroke:#000;stroke-width:1.5;}
+  .table-group.active .table-shape{stroke-width:3;}
+  .label{font-size:14px;font-weight:bold;text-anchor:middle;fill:#000;}
+  .seat{cursor:pointer;stroke:#000;stroke-width:1;}
+  .seat.available{fill:#fff;}
+  .seat.selected{fill:#000;}
+  .seat.reserved{fill:#aaa;cursor:not-allowed;}
+  .fixture{fill:#eee;stroke:#000;stroke-width:1;}
+  .fixture-label{font-size:11px;letter-spacing:1px;text-anchor:middle;fill:#000;}
+  .corridor-label{font-size:11px;text-anchor:middle;fill:#000;}
+  .entrance-label{font-size:12px;font-weight:bold;text-anchor:middle;fill:#000;}
+  .arrow{fill:#000;}
+  .list{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0;}
+  .tbtn{border:1px solid #000;background:#fff;padding:6px 10px;font-size:12px;cursor:pointer;font:inherit;}
+  .tbtn.active{background:#000;color:#fff;}
+  .bar{display:flex;justify-content:space-between;align-items:center;margin-top:14px;flex-wrap:wrap;gap:10px;}
+  .info{font-size:13px;}
+  .primary{background:#000;color:#fff;border:none;padding:8px 16px;cursor:pointer;font:inherit;}
+  .primary:disabled{background:#ccc;}
+  .ghost{background:#fff;border:1px solid #000;padding:8px 16px;cursor:pointer;font:inherit;}
+  .legend{display:flex;gap:14px;font-size:12px;margin-top:10px;flex-wrap:wrap;}
+  .legend span{display:inline-flex;align-items:center;gap:5px;}
+  .dot{width:12px;height:12px;display:inline-block;border:1px solid #000;}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(150%);background:#000;color:#fff;padding:10px 18px;transition:transform .3s;}
+  .toast.show{transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<h1>Reserve sua mesa</h1>
+<p>Toque numa mesa no mapa ou na lista, depois nas cadeiras livres (brancas). Cinza = já reservada.</p>
+
+<svg id="plan" viewBox="0 0 1500 940"></svg>
+
+<div class="legend">
+  <span><span class="dot" style="background:#fff"></span>Livre</span>
+  <span><span class="dot" style="background:#aaa"></span>Reservada</span>
+  <span><span class="dot" style="background:#000"></span>Selecionada</span>
+</div>
+
+<h2 style="font-size:16px;margin-top:18px;">Mesas</h2>
+<div class="list" id="tableList"></div>
+
+<div class="bar">
+  <div class="info" id="info">Nenhuma cadeira selecionada</div>
+  <div>
+    <button class="ghost" id="clear">Limpar</button>
+    <button class="primary" id="confirm" disabled>Confirmar</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+"use strict";
+const svg = document.getElementById('plan');
+const ns = 'http://www.w3.org/2000/svg';
+const el = (tag,attrs={}) => { const n = document.createElementNS(ns,tag); for(const k in attrs) n.setAttribute(k,attrs[k]); return n; };
+
+const tables = [
+  {id:'tG',type:'rect',cx:730,cy:110,w:210,h:54,seats:8,label:'G'},
+  {id:'tF',type:'rect',cx:730,cy:260,w:210,h:54,seats:8,label:'F'},
+  {id:'tE',type:'rect',cx:730,cy:410,w:210,h:54,seats:8,label:'E'},
+  {id:'tD',type:'rect',cx:730,cy:555,w:210,h:54,seats:8,label:'D'},
+  {id:'tH',type:'rect',cx:1000,cy:110,w:170,h:54,seats:6,label:'H'},
+  {id:'tI',type:'rect',cx:1000,cy:260,w:170,h:54,seats:6,label:'I'},
+  {id:'tJ',type:'vert',cx:1000,cy:410,w:64,h:140,seats:6,label:'J'},
+  {id:'tK',type:'round',cx:1150,cy:410,r:50,seats:6,label:'K'},
+  {id:'tC',type:'round',cx:740,cy:705,r:52,seats:8,label:'C'},
+  {id:'tB',type:'round',cx:940,cy:640,r:46,seats:6,label:'B'},
+  {id:'tA',type:'round',cx:1150,cy:705,r:52,seats:8,label:'A'},
+  {id:'tP',type:'vert',cx:130,cy:490,w:60,h:140,seats:8,label:'P'},
+  {id:'tL',type:'round',cx:390,cy:480,r:50,seats:6,label:'L'},
+  {id:'tO',type:'vert',cx:130,cy:680,w:60,h:140,seats:8,label:'O'},
+  {id:'tN',type:'rect',cx:270,cy:680,w:70,h:90,seats:4,label:'N'},
+  {id:'tM',type:'round',cx:390,cy:680,r:46,seats:6,label:'M'},
+  {id:'tQ',type:'vert',cx:275,cy:490,w:50,h:160,seats:10,label:'Q'},
+];
+const SEAT_SIZE = 13;
+
+function seatPositions(t){
+  const pts = [];
+  if(t.type==='round'){
+    const dist = t.r+14;
+    for(let i=0;i<t.seats;i++){ const a=-Math.PI/2+2*Math.PI*i/t.seats; pts.push({id:t.id+'-s'+(i+1),x:t.cx+dist*Math.cos(a),y:t.cy+dist*Math.sin(a)}); }
+  }else if(t.type==='vert'){
+    const n=t.seats/2, usable=t.h-28;
+    for(let i=0;i<n;i++){ const y=t.cy-t.h/2+14+usable*i/(n-1); pts.push({id:t.id+'-s'+(i+1),x:t.cx-t.w/2-13,y}); }
+    for(let i=0;i<n;i++){ const y=t.cy-t.h/2+14+usable*i/(n-1); pts.push({id:t.id+'-s'+(n+i+1),x:t.cx+t.w/2+13,y}); }
+  }else{
+    const top=Math.ceil(t.seats/2), bot=t.seats-top, margin=16, usable=t.w-2*margin, off=13;
+    for(let i=0;i<top;i++){ const x=t.cx-t.w/2+margin+(top>1?usable*i/(top-1):usable/2); pts.push({id:t.id+'-s'+(i+1),x,y:t.cy-t.h/2-off}); }
+    for(let i=0;i<bot;i++){ const x=t.cx-t.w/2+margin+(bot>1?usable*i/(bot-1):usable/2); pts.push({id:t.id+'-s'+(top+i+1),x,y:t.cy+t.h/2+off}); }
+  }
+  return pts;
+}
+
+const seatToTable = {};
+tables.forEach(t => seatPositions(t).forEach(s => seatToTable[s.id]=t.id));
+const allSeats = Object.keys(seatToTable);
+
+// Paredes e salas
+svg.appendChild(el('rect',{x:515,y:35,width:950,height:790,rx:4,class:'wall'}));
+{ const t=el('text',{x:540,y:64,class:'room-tag'}); t.textContent='Salão 1'; svg.appendChild(t); }
+svg.appendChild(el('rect',{x:35,y:375,width:450,height:450,rx:4,class:'wall'}));
+{ const t=el('text',{x:60,y:404,class:'room-tag'}); t.textContent='Salão 2'; svg.appendChild(t); }
+
+// Circulação entre salões
+{
+  const g = el('g',{});
+  g.appendChild(el('rect',{x:485,y:535,width:30,height:170,class:'fixture'}));
+  const t = el('text',{x:500,y:620,class:'corridor-label',transform:'rotate(-90 500 620)'});
+  t.textContent='Circulação entre os salões';
+  g.appendChild(t); svg.appendChild(g);
+}
+
+// Entrada
+{
+  const g = el('g',{});
+  g.appendChild(el('polygon',{points:'260,838 232,878 288,878',class:'arrow'}));
+  const t1=el('text',{x:260,y:898,class:'entrance-label'}); t1.textContent='ENTRADA PARA OS SALÕES';
+  const t2=el('text',{x:260,y:914,class:'entrance-label'}); t2.textContent='DO RESTAURANTE';
+  g.appendChild(t1); g.appendChild(t2); svg.appendChild(g);
+}
+
+// Toaletes / Palco / Cozinha
+svg.appendChild(el('rect',{x:1250,y:55,width:170,height:120,rx:8,class:'fixture'}));
+{ const t=el('text',{x:1335,y:120,class:'fixture-label'}); t.textContent='TOALETES'; svg.appendChild(t); }
+svg.appendChild(el('rect',{x:850,y:750,width:200,height:55,rx:8,class:'fixture'}));
+{ const t=el('text',{x:950,y:782,class:'fixture-label'}); t.textContent='PALCO'; svg.appendChild(t); }
+svg.appendChild(el('rect',{x:1400,y:330,width:45,height:380,rx:5,class:'fixture'}));
+{ const t=el('text',{x:1422,y:525,class:'fixture-label',transform:'rotate(-90 1422 525)'}); t.textContent='COZINHA'; svg.appendChild(t); }
+
+// Mesas e cadeiras
+const seatEls = {}, tableEls = {};
+tables.forEach(t=>{
+  const g = el('g',{class:'table-group','data-id':t.id});
+  g.appendChild(t.type==='round'
+    ? el('circle',{cx:t.cx,cy:t.cy,r:t.r,class:'table-shape'})
+    : el('rect',{x:t.cx-t.w/2,y:t.cy-t.h/2,width:t.w,height:t.h,rx:6,class:'table-shape'}));
+  const lbl = el('text',{x:t.cx,y:t.cy+4,class:'label'}); lbl.textContent = t.label;
+  g.appendChild(lbl);
+  g.addEventListener('click', ()=>selectTable(t.id));
+  svg.appendChild(g); tableEls[t.id]=g;
+  seatPositions(t).forEach(s=>{
+    const r = el('rect',{x:s.x-SEAT_SIZE/2,y:s.y-SEAT_SIZE/2,width:SEAT_SIZE,height:SEAT_SIZE,rx:3,class:'seat available','data-id':s.id});
+    r.addEventListener('click', e=>{e.stopPropagation(); onSeatClick(s.id);});
+    svg.appendChild(r); seatEls[s.id]=r;
+  });
+});
+
+// Estado
+let reserved = new Set(), pending = new Set(), active = null;
+
+function freeCount(tid){ return allSeats.filter(id=>seatToTable[id]===tid && !reserved.has(id)).length; }
+
+function repaint(){
+  allSeats.forEach(id=>{
+    const cls = pending.has(id) ? 'selected' : reserved.has(id) ? 'reserved' : 'available';
+    seatEls[id].setAttribute('class','seat '+cls);
+  });
+  document.getElementById('info').textContent = pending.size===0 ? 'Nenhuma cadeira selecionada' : pending.size+' cadeira(s) selecionada(s)';
+  document.getElementById('confirm').disabled = pending.size===0;
+  renderList();
+}
+
+function onSeatClick(id){
+  if(reserved.has(id)){ toast('Cadeira já reservada.'); return; }
+  active = seatToTable[id];
+  pending.has(id) ? pending.delete(id) : pending.add(id);
+  repaint(); highlight();
+}
+
+function selectTable(id){ active=id; repaint(); highlight(); }
+
+function highlight(){ Object.keys(tableEls).forEach(id=> tableEls[id].classList.toggle('active', id===active)); }
+
+function renderList(){
+  const list = document.getElementById('tableList');
+  list.innerHTML='';
+  [...tables].sort((a,b)=>a.label.localeCompare(b.label,'pt-BR')).forEach(t=>{
+    const free = freeCount(t.id);
+    const b = document.createElement('button');
+    b.className = 'tbtn'+(t.id===active?' active':'');
+    b.textContent = 'Mesa '+t.label+' — '+(free===0?'lotada':free+' livre'+(free===1?'':'s'));
+    b.addEventListener('click', ()=>selectTable(t.id));
+    list.appendChild(b);
+  });
+}
+
+document.getElementById('clear').addEventListener('click', ()=>{ pending.clear(); repaint(); });
+
+document.getElementById('confirm').addEventListener('click', async ()=>{
+  if(pending.size===0) return;
+  pending.forEach(id=>reserved.add(id));
+  const toSave = Array.from(reserved);
+  pending.clear(); repaint(); highlight();
+  try{
+    await window.storage.set('reservas-layout-original', JSON.stringify(toSave), true);
+    toast('Reserva confirmada.');
+  }catch(e){ toast('Erro ao salvar. Tente novamente.'); }
+});
+
+let toastTimer;
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+async function init(){
+  try{
+    const res = await window.storage.get('reservas-layout-original', true);
+    if(res && res.value) JSON.parse(res.value).forEach(id=>{ if(seatEls[id]) reserved.add(id); });
+  }catch(e){}
+  repaint(); highlight();
+}
+init();
+})();
+
+</script>
+</body>
+</html>
