@@ -16,16 +16,18 @@ def obter_lista_restricoes():
         '''SELECT
             i.nome AS participante,
             i.id AS ingresso,
-            l.mesa || ' / Lugar ' || i.cod_lugar AS mesa_lugar,
+            'Lugar ' || r.cod_lugar || ' / Salão ' || l.salao AS mesa_lugar,
             i.observacoes AS restricao
         FROM Ingresso AS i
+        INNER JOIN Reserva AS r
+            ON i.cod_reserva = r.cod_reserva
         INNER JOIN Lugares AS l
-            ON i.cod_lugar = l.cod_lugar
+            ON r.cod_lugar = l.cod_lugar
         WHERE i.observacoes IS NOT NULL
           AND i.observacoes != ''
         ORDER BY
-            l.mesa,
-            i.cod_lugar;
+            l.salao,
+            r.cod_lugar;
         '''
     )
 

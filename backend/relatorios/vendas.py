@@ -86,7 +86,7 @@ def obter_lista_vendas():
                 PARTITION BY i.cod_aluno
             ) AS quant_por_aluno,
             i.id AS numero_ingresso,
-            i.cod_lugar || ' / Mesa ' || l.mesa AS lugare_mesa,
+            'Lugar ' || r.cod_lugar || ' / Salão ' || l.salao AS lugar_e_mesa,
             CASE
                 WHEN i.foi_pago = 1 THEN 'Pago'
                 ELSE 'Não pago'
@@ -94,12 +94,14 @@ def obter_lista_vendas():
         FROM Ingresso AS i
         INNER JOIN Aluno AS a
             ON i.cod_aluno = a.cod_aluno
+        INNER JOIN Reserva AS r
+            ON i.cod_reserva = r.cod_reserva
         INNER JOIN Lugares AS l
-            ON i.cod_lugar = l.cod_lugar
+            ON r.cod_lugar = l.cod_lugar
         ORDER BY
             a.nome_aluno,
-            l.mesa,
-            i.cod_lugar;
+            l.salao,
+            r.cod_lugar;
         '''
     )
 

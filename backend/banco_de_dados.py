@@ -30,7 +30,7 @@ def create_all():
     db = get_db()
     cursor = db.cursor()
 
-    #aluno 
+    #aluno
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS Aluno (
             cod_aluno TEXT PRIMARY KEY 
@@ -39,46 +39,61 @@ def create_all():
             nome_aluno TEXT NOT NULL 
                 CHECK(length(nome_aluno) <= 50),
 
-            usos_restantes INT DEFAULT  2
+            usos_restantes INTEGER NOT NULL
         )
     """)
 
-
-    #lugares
+    # lugares
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS Lugares (
-            cod_lugar TEXT PRIMARY KEY 
-                CHECK(length(cod_lugar) <= 3),
+       CREATE TABLE IF NOT EXISTS Lugares(
+           cod_lugar TEXT PRIMARY KEY
+               CHECK (length(cod_lugar) <= 3),
+    
+           salao INTEGER NOT NULL
+               CHECK (salao IN (1, 2))
+       )
+   """)
 
-            cod_aluno TEXT NOT NULL 
-                CHECK(length(cod_aluno) = 6),
+    # reserva
+    # ocupado 0 = livre 1 = ocupado 2 = em pagamento / reservado
+    cursor.execute("""
+       CREATE TABLE IF NOT EXISTS Reserva(
+           cod_reserva          INTEGER PRIMARY KEY AUTOINCREMENT,
 
-            mesa TEXT NOT NULL 
-                CHECK(length(mesa) = 1),
+           cod_lugar            TEXT    NOT NULL,
+           
+           cod_aluno            TEXT    NOT NULL,
+            
+            dia_bistro TEXT NOT NULL,
+            
+            ocupado INTEGER NOT NULL DEFAULT 0
+                CHECK(ocupado IN(0,1,2)),
+            
+            cronometro_reservado INTEGER,
+            
+            UNIQUE(cod_lugar, dia_bistro),
 
-            ocupado BOOLEAN,
-
-            cronometro_reservado DATETIME,
-
-            FOREIGN KEY(cod_aluno)
+            FOREIGN KEY (cod_lugar)
+                REFERENCES Lugares(cod_lugar),
+        
+            FOREIGN KEY (cod_aluno)
                 REFERENCES Aluno(cod_aluno)
-        )
-    """)
-
+       )
+   """)
     #admin 
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS Administradores (
+       CREATE TABLE IF NOT EXISTS Administradores(
             cod_admin INTEGER PRIMARY KEY AUTOINCREMENT,
-
+            
             nome_admin TEXT NOT NULL 
                 CHECK(length(nome_admin) <= 50),
-
+            
             senha TEXT NOT NULL 
                 CHECK(length(senha) <= 50),
-
+            
             email TEXT NOT NULL 
                 CHECK(length(email) <= 255)
-        )
+       )
     """)
 
 
@@ -91,34 +106,35 @@ def create_all():
             nome TEXT NOT NULL
                 CHECK(length(nome) <= 50),
 
-            tipo_ingresso INT,
+            tipo_ingresso INTEGER NOT NULL
+                CHECK(tipo_ingresso IN (0, 1, 2)),
 
             observacoes TEXT 
                 CHECK(length(observacoes) <= 255),
-
+            
             email_envio TEXT NOT NULL
                 CHECK(length(email_envio) <= 50),
 
-            foi_pago BOOLEAN,
+            foi_pago INTEGER NOT NULL DEFAULT 0
+                CHECK(foi_pago IN (0, 1)),
 
             token_QR TEXT UNIQUE
                 CHECK(length(token_QR) = 6),
 
-            utilizado BOOLEAN,
+            utilizado INTEGER NOT NULL DEFAULT 0
+                CHECK(utilizado IN (0, 1)),
 
             data_utilizado DATETIME,
 
             cod_aluno TEXT NOT NULL
                 CHECK(length(cod_aluno) = 6),
 
-            cod_lugar TEXT NOT NULL
-                CHECK(length(cod_lugar) <= 3),
+            cod_reserva INTEGER,
 
             data_compra DATETIME,
 
-            telefone TEXT
-                CHECK(length(telefone) <= 20),
-            
+            telefone TEXT NOT NULL
+                CHECK(length(telefone) <= 11),
                 
              valor_pago REAL NOT NULL
                 CHECK (valor_pago >= 0), 
@@ -126,9 +142,36 @@ def create_all():
             FOREIGN KEY (cod_aluno)
                 REFERENCES Aluno(cod_aluno),
 
-            FOREIGN KEY (cod_lugar)
-                REFERENCES Lugares(cod_lugar)
+            FOREIGN KEY (cod_reserva)
+                REFERENCES Reserva(cod_reserva)
         )
+    """)
+
+    db.execute('''
+        CREATE TABLE IF NOT EXISTS Pedido (
+            referencia_externa TEXT PRIMARY KEY,
+            order_id TEXT,
+            tokens TEXT NOT NULL,
+            cod_aluno TEXT,
+            valor REAL NOT NULL,
+            status TEXT NOT NULL DEFAULT 'pending',
+            criado_em TIMESTAMP NOT NULL
+        )
+    ''')
+
+    # quantidade de dias
+    cursor.execute("""
+       CREATE TABLE IF NOT EXISTS Config
+       (
+           id       INTEGER PRIMARY KEY CHECK (id = 1),
+           qtd_dias INTEGER NOT NULL DEFAULT 1
+               CHECK (qtd_dias IN (1, 2))
+       )
+   """)
+
+    cursor.execute("""
+       INSERT OR IGNORE INTO Config (id, qtd_dias)
+       VALUES (1, 1)
     """)
 
     #commit - salva aterações 

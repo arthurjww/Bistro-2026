@@ -1,0 +1,151 @@
+HTML_INGRESSO = """
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 20px;
+    }
+
+    body {
+      font-family: Helvetica, Arial, sans-serif;
+      background-color: #581418;
+      color: #FAF2DF;
+      padding: 20px;
+    }
+
+    .ticket {
+      width: 100%;
+      background-color: #3b0d10;
+      border: 2px solid #CFA86E;
+      border-radius: 8px;
+      border-collapse: collapse;
+    }
+
+    .main-info {
+      width: 68%;
+      padding: 25px;
+      vertical-align: top;
+      border-right: 2px dashed #CFA86E;
+    }
+
+    .stub-info {
+      width: 32%;
+      padding: 20px;
+      vertical-align: middle;
+      text-align: center;
+      background-color: #2b090b;
+    }
+
+    .brand-title {
+      font-size: 24px;
+      font-weight: bold;
+      letter-spacing: 4px;
+      color: #FAF2DF;
+      text-transform: uppercase;
+    }
+
+    .brand-subtitle {
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: #CFA86E;
+      margin-top: 4px;
+      font-style: italic;
+    }
+
+    .divider {
+      border-bottom: 1px dashed #CFA86E;
+      margin: 15px 0;
+    }
+
+    .label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #CFA86E;
+      margin-top: 10px;
+      margin-bottom: 2px;
+    }
+
+    .value {
+      font-size: 13px;
+      font-weight: bold;
+      color: #FAF2DF;
+    }
+
+    .badge {
+      background-color: #CFA86E;
+      color: #581418;
+      font-weight: bold;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .qr-code-img {
+      width: 110px;
+      height: 110px;
+      border: 2px solid #CFA86E;
+      border-radius: 6px;
+      background-color: #FFFFFF;
+      padding: 4px;
+      margin-bottom: 8px;
+    }
+
+    .token-text {
+      font-family: monospace;
+      font-size: 8px;
+      color: #CFA86E;
+      word-wrap: break-word;
+    }
+  </style>
+</head>
+
+<body>
+  <table class="ticket">
+    <tr>
+      <td class="main-info">
+        <div class="brand-title">SINESTESIA</div>
+        <div class="brand-subtitle">gastronomia em harmonia</div>
+
+        <div class="divider"></div>
+
+        <table width="100%">
+          <tr>
+            <td width="60%">
+              <div class="label">Titular do Ingresso</div>
+              <div class="value">{{ nome }}</div>
+            </td>
+            <td width="40%">
+              <div class="label">Tipo</div>
+              <div class="value"><span class="badge">{{ tipo }}</span></div>
+            </td>
+          </tr>
+          <tr>
+            <td width="60%">
+              <div class="label">E-mail</div>
+              <div class="value">{{ email }}</div>
+            </td>
+            <td width="40%">
+              <div class="label">Data de Compra</div>
+              <div class="value">{{ data_compra }}</div>
+            </td>
+          </tr>
+        </table>
+      </td>
+
+      <td class="stub-info">
+        <img src="data:image/png;base64,{{ qr_code }}" class="qr-code-img" />
+        <div class="label">Validação</div>
+        <div class="token-text">{{ token }}</div>
+      </td>
+    </tr>
+  </table>
+</body>
+
+</html>
+"""

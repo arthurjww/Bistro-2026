@@ -1,5 +1,6 @@
-import os 
+import os
 from pathlib import Path
+from datetime import timedelta
 from flask import Flask
 from flask_login import LoginManager
 from dotenv import load_dotenv
@@ -23,13 +24,15 @@ app = Flask (
     )
 )
 
+app.permanent_session_lifetime = timedelta(minutes=15, seconds=30)
+app.config['SESSION_REFRESH_EACH_REQUEST'] = True 
 #TODO: Mudar chave secreta no lançamento
 app.config["SECRET_KEY"] = "CETEC"
 app.config["DATABASE"] = str (DATABASE)
 
 # Configurações de Email puxadas do .env
 app.config["MAIL_SERVER"] = os.getenv("MAIL_SERVER")
-app.config["MAIL_PORT"] = int(os.getenv("MAIL_PORT", 465))
+app.config["MAIL_PORT"] = os.getenv("MAIL_PORT")
 app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME")
 app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
 app.config["MAIL_DEFAULT_SENDER"] = os.getenv("MAIL_DEFAULT_SENDER")
@@ -55,7 +58,9 @@ login_manager.login_message = (
 from .ingressos.routes import routes
 from .ingressos.auth import auth
 from .ingressos.gerador_pdf import gerador_pdf
+from .mapa_mesas.routes import bp_lugares
 app.register_blueprint(gerador_pdf)
+app.register_blueprint(bp_lugares)
 
 app.register_blueprint(routes)
 app.register_blueprint(auth)

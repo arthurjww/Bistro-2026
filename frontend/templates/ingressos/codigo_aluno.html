@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f4f6f8;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #333333;
+        }
+
+        .container {
+            max-width: 560px;
+            margin: 40px auto;
+            padding: 40px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+        }
+
+        .content {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .code-section {
+            margin: 30px 0;
+            text-align: center;
+        }
+
+        .code {
+            display: inline-block;
+            padding: 18px 32px;
+            background-color: #f0f4ff;
+            border: 1px solid #dce5ff;
+            border-radius: 10px;
+            font-size: 40px;
+            font-weight: 700;
+            letter-spacing: 6px;
+            color: #2f5bea;
+        }
+
+        .uses {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #777777;
+        }
+
+        .instructions {
+            margin-top: 30px;
+        }
+
+        .instructions ul {
+            margin: 12px 0 0;
+            padding-left: 22px;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        .contact {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eeeeee;
+            font-size: 14px;
+            color: #666666;
+        }
+
+        .contact strong {
+            color: #333333;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="content">
+
+            <p>Olá, {{ nome }}.</p>
+
+            <p>
+                Segue o código para seus convidados no
+                <strong>Bistrô 2026 Sinestesia</strong>.
+            </p>
+
+            <div class="code-section">
+                <div class="code">
+                    {{ codigo }}
+                </div>
+
+                <div class="uses">
+                    Você pode usá-lo até {{ usos }} vezes.
+                </div>
+            </div>
+
+            <div class="instructions">
+                <p>
+                    <strong>Abaixo seguem as instruções:</strong>
+                </p>
+
+                <ul>
+                    <li>
+                        Este código é usado para validar a compra dos ingressos.
+                    </li>
+
+                    <li>
+                        Compartilhe-o apenas com pessoas de confiança.
+                    </li>
+
+                    <li>
+                        Após a escolha do código e dos lugares, você terá
+                        15 minutos para preencher as informações dos ingressos
+                        e realizar o pagamento.
+                    </li>
+
+                    <li>
+                        Caso necessário, é possível comprar ingressos com
+                        o mesmo código em diferentes sessões.
+                    </li>
+                </ul>
+            </div>
+
+            <div class="contact">
+                Qualquer dúvida, entre em contato conosco:
+                <br>
+                <strong><a href="https://wa.me/5554991121192?text=Ol%C3%A1%2C%20tenho%20uma%20d%C3%BAvida%20sobre%20o%20Bistr%C3%B4">Fone: +55 (54) 99112-1192</a></strong>
+                <br>
+                <strong><a href="mailto:sacsinestesiabistro@gmail.com?subject=D%C3%BAvida&body=Ol%C3%A1%2C%20tenho%20uma%20d%C3%BAvida%3A%20">E-mail: sacsinestesiabistro@gmail.com</a></strong>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>
