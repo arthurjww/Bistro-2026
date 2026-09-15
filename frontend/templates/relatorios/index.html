@@ -57,6 +57,7 @@
     <!-- Visão Geral -->
     <div id="visao-geral" class="secao" style="display: none;">
       <h2>Visão Geral</h2>
+      <form method="get">
       <div class="filtros" style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
         <div class="filtro-item">
           <label for="tecnico"><strong>Técnico:</strong></label>
@@ -69,56 +70,59 @@
         </div>
         <div class="filtro-item">
           <label for="aluno"><strong>Alunos:</strong></label>
-          <select id="aluno">
-            <option value="todos" selected>Todos</option>
+          <select id="aluno" name="aluno">
+            <option value="">Todos</option>
             {% for aluno in lista_alunos %}
-            <option value="{{ aluno.nome }}">{{ aluno.nome }}</option>
+            <option value="{{ aluno.cod_aluno }}">{{ aluno.nome }}</option>
             {% endfor %}
           </select>
         </div>
         <div class="filtro-item">
           <label for="comprador"><strong>Participantes:</strong></label>
-          <select id="comprador">
-            <option value="todos" selected>Todos</option>
+          <select id="comprador" name="participante">
+            <option value="">Selecione um participante</option>
             {% for comprador in lista_compradores %}
-            <option value="{{ comprador.nome }}">{{ comprador.nome }}</option>
+            <option value="{{ comprador.id }}">{{ comprador.nome }}</option>
             {% endfor %}
           </select>
         </div>
       </div>
-      <h3>Informações do Cliente</h3>
+      <button type="submit">Aplicar filtro</button>
+      </form>
+      {% if detalhes_participante %}
+      <h3>Informações do Participante</h3>
       <div class="info-container" id="info-container">
         <div class="card">
           <strong>Aluno Responsável</strong>
-          <span class="valor" id="nome_aluno">{{ nome_aluno }}</span>
+          <span class="valor" id="nome_aluno">{{ detalhes_participante.nome_aluno }}</span>
         </div>
         <div class="card">
           <strong>Nome do Participante</strong>
-          <span class="valor" id="nome_cliente">{{ nome_cliente }}</span>
+          <span class="valor" id="nome_cliente">{{ detalhes_participante.nome_cliente }}</span>
         </div>
         <div class="card">
           <strong>Quantidade de Ingressos</strong>
-          <span class="valor" id="ingressos">{{ qtd_ingressos }}</span>
+          <span class="valor" id="ingressos">{{ detalhes_participante.qtd_ingressos }}</span>
         </div>
         <div class="card">
           <strong>Número do Ingresso</strong>
-          <span class="valor" id="n_ingresso">{{ n_ingresso }}</span>
+          <span class="valor" id="n_ingresso">{{ detalhes_participante.n_ingresso }}</span>
         </div>
         <div class="card">
           <strong>Telefone do Participante</strong>
-          <span class="valor" id="telefone">{{ telefone_comprador }}</span>
+          <span class="valor" id="telefone">{{ detalhes_participante.telefone_comprador }}</span>
         </div>
         <div class="card">
           <strong>Restrições Alimentícias</strong>
-          <span class="valor" id="restricoes-texto">{{ restricoes_texto }}</span>
+          <span class="valor" id="restricoes-texto">{{ detalhes_participante.restricoes_texto }}</span>
         </div>
         <div class="card">
           <strong>Data e Hora da Compra</strong>
-          <span class="valor" id="data_hora">{{ data_hora_compra }}</span>
+          <span class="valor" id="data_hora">{{ detalhes_participante.data_hora_compra }}</span>
         </div>
         <div class="card">
           <strong>Status do Pagamento</strong>
-          <span class="valor" id="compra">{{ status_compra }}</span>
+          <span class="valor" id="compra">{{ detalhes_participante.status_compra }}</span>
         </div>
       </div>
       <div class="observacoes" style="margin-top: 20px;">
@@ -131,6 +135,9 @@ Relatório gerado com os dados atualizados no sistema.
       <div class="botoes-acao">
         <button class="btn-pdf" onclick="gerarPDF('visao-geral', 'relatorio_visao_geral.pdf')">📥 Gerar PDF</button>
       </div>
+      {% else %}
+      <p>Selecione um participante para visualizar os detalhes.</p>
+      {% endif %}
     </div>
     <!-- Financeiro -->
     <div id="financeiro" class="secao" style="display: none;">
@@ -302,6 +309,35 @@ Relatório gerado com os dados atualizados no sistema.
         }
       });
     });
+
+    const parametros = new URLSearchParams(window.location.search);
+    const participanteSelecionado = parametros.get('participante');
+    const alunoSelecionado = parametros.get('aluno');
+
+    if (participanteSelecionado) {
+      const filtroParticipante = document.getElementById('comprador');
+
+      if (filtroParticipante) {
+        filtroParticipante.value = participanteSelecionado;
+      }
+    }
+
+    if (alunoSelecionado) {
+      const filtroAluno = document.getElementById('aluno');
+
+      if (filtroAluno) {
+        filtroAluno.value = alunoSelecionado;
+      }
+    }
+
+    if (parametros.has('participante')) {
+      const botaoVisaoGeral = document.querySelector(
+        '[data-secao="visao-geral"]'
+      );
+
+      botaoVisaoGeral.click();
+    }
+
     // Geração de PDF com html2pdf
     async function gerarPDF(idElemento, nomeArquivo) {
       const elemento = document.getElementById(idElemento);
