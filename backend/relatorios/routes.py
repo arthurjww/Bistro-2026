@@ -10,6 +10,7 @@ from .financeiro import obter_lista_financeiro
 from .visao_geral import obter_alunos_filtro
 from .visao_geral import obter_participantes_filtro
 from .visao_geral import obter_detalhes_participante
+from .resumo_participantes import obter_resumo_participantes
 
 # se quiser usar subdomain adicionar: subdomain='admin'
 relatorios = Blueprint('relatorios', __name__)
@@ -28,6 +29,7 @@ def painel_relatorios():
     lista_financeiro = obter_lista_financeiro()
     lista_alunos = obter_alunos_filtro()
     lista_compradores = obter_participantes_filtro(codigo_aluno)
+    lista_resumo = obter_resumo_participantes()
 
     detalhes_participante = None
 
@@ -46,6 +48,7 @@ def painel_relatorios():
         lista_financeiro = lista_financeiro,
         lista_alunos = lista_alunos,
         lista_compradores = lista_compradores,
-        detalhes_participante = detalhes_participante
+        detalhes_participante = detalhes_participante,
+        lista_resumo = lista_resumo,
     )
 
