@@ -49,7 +49,7 @@ def verificar_db():
         db.commit()
 
     for chave in ('reservas', 'cronometro_reservado', 'codigo',
-                  'tokens_criados', 'a_pagar', ''):
+                  'tokens_criados', 'a_pagar', 'referencia_externa_pagamento'):
         session.pop(chave, None)
 
 
