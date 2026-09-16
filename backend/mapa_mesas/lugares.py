@@ -68,43 +68,47 @@ class Salao():
     def listar_mapa(self, dia_bistro):
         db = get_db()
         cursor = db.cursor()
+
         cursor.execute("""
-            SELECT L.cod_lugar, 
-               COALESCE(R.ocupado, 0) AS ocupado
+            SELECT L.cod_lugar,
+                COALESCE(R.ocupado, 0) AS ocupado
             FROM Lugares AS L
-            LEFT JOIN Reservas AS R
+            LEFT JOIN Reserva AS R
                 ON R.cod_lugar = L.cod_lugar
                 AND R.dia_bistro = ?
             WHERE L.salao = ?
             ORDER BY L.cod_lugar
-        """), (dia_bistro, self.NUMERO_SALAO)
+        """, (dia_bistro, self.NUMERO_SALAO))
 
         mapa = {}
+
         for linha in cursor.fetchall():
             cod_lugar = linha["cod_lugar"]
             mesa = cod_lugar[0]
             cadeira = int(cod_lugar[1:])
-            mapa.setdefault(linha["mesa"], []).append({
+
+            mapa.setdefault(mesa, []).append({
                 "cod_lugar": cod_lugar,
                 "cadeira": cadeira,
                 "ocupado": linha["ocupado"]
             })
+
         return mapa
 
     # Escolher lugar agora, obrigatoriamente precisa saber o dia da reserva
-    def escolher_lugar(self, cod_lugar, cod_aluno, dia_bistro):
+    def escolher_lugar(self, cod_lugar, cod_aluno, dia_bistro, cronometro_reservado):
         self.validar_cod_lugar(cod_lugar)
         db = get_db()
         cursor = db.cursor()
 
         cursor.execute("""
-            INSERT INTO Reserva (cod_lugar, cod_aluno, dia_bistro, ocupado)
+            INSERT INTO Reserva (cod_lugar, cod_aluno, dia_bistro, cronometro_reservado, ocupado)
             VALUES (?, ?, ?, ?)
             ON CONFLICT(cod_lugar, dia_bistro) DO UPDATE SET
                 cod_aluno = excluded.cod_aluno,
                 ocupado = excluded.ocupado
             WHERE Reserva.ocupado = 0
-        """, (cod_lugar, cod_aluno, dia_bistro, LIVRE))
+        """, (cod_lugar, cod_aluno, dia_bistro, cronometro_reservado, EM_PAGAMENTO))
 
         db.commit()
 
@@ -116,7 +120,8 @@ class Salao():
             FROM reserva
             WHERE cod_lugar = ? 
             AND dia_bistro = ?
-        """, (cod_lugar, dia_bistro)).fetchone()
+            AND cronometro_reservado = ?
+        """, (cod_lugar, dia_bistro, cronometro_reservado)).fetchone()
 
         return True, linha["cod_reserva"]
     

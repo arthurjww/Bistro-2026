@@ -6,51 +6,65 @@ from backend.mapa_mesas.lugares import *
 
 bp_lugares = Blueprint("lugares", __name__)
 
-
 def verificar_db():
     db = get_db()
     data_exp = int(time() * 1000)
 
-    expiradas = db.execute('''
-                           SELECT cod_reserva
-                           FROM Reserva
-                           WHERE ocupado = ?
-                             AND cronometro_reservado <= ?
-                           ''', (EM_PAGAMENTO, data_exp)).fetchall()
+    expiradas = db.execute("""
+        SELECT cod_reserva
+        FROM Reserva
+        WHERE ocupado = ?
+          AND cronometro_reservado IS NOT NULL
+          AND cronometro_reservado <= ?
+    """, (EM_PAGAMENTO, data_exp)).fetchall()
 
-    cod_reservas = [r['cod_reserva'] for r in expiradas]
+    cod_reservas = [reserva["cod_reserva"] for reserva in expiradas]
 
-    if cod_reservas:
-        placeholders = ','.join('?' for _ in cod_reservas)
+    if not cod_reservas:
+        return
 
-        ingressos = db.execute(
-            f'SELECT cod_aluno FROM Ingresso WHERE cod_reserva IN ({placeholders})',
-            cod_reservas
-        ).fetchall()
+    placeholders = ",".join("?" for _ in cod_reservas)
 
+    ingressos = db.execute(
+        f"SELECT cod_aluno FROM Ingresso WHERE cod_reserva IN ({placeholders})",
+        cod_reservas
+    ).fetchall()
+
+    db.execute(
+        f"DELETE FROM Ingresso WHERE cod_reserva IN ({placeholders})",
+        cod_reservas
+    )
+
+    db.execute(
+        f"UPDATE Reserva SET ocupado = ?, cronometro_reservado = NULL WHERE cod_reserva IN ({placeholders})",
+        (LIVRE, *cod_reservas)
+    )
+
+    usos_por_aluno = {}
+
+    for ingresso in ingressos:
+        cod_aluno = ingresso["cod_aluno"]
+        usos_por_aluno[cod_aluno] = usos_por_aluno.get(cod_aluno, 0) + 1
+
+    for cod_aluno, quantidade in usos_por_aluno.items():
         db.execute(
-            f'DELETE FROM Ingresso WHERE cod_reserva IN ({placeholders})', cod_reservas
-        )
-        db.execute(
-            f'UPDATE Reserva SET ocupado = ? WHERE cod_reserva IN ({placeholders})',
-            (LIVRE, *cod_reservas)
+            "UPDATE Aluno SET usos_restantes = usos_restantes + ? WHERE cod_aluno = ?",
+            (quantidade, cod_aluno)
         )
 
-        dict_alunos_usos = {}
-        for ing in ingressos:
-            dict_alunos_usos[ing['cod_aluno']] = dict_alunos_usos.get(ing['cod_aluno'], 0) + 1
+    db.commit()
 
-        for cod_aluno, qtd in dict_alunos_usos.items():
-            db.execute(
-                'UPDATE Aluno SET usos_restantes = usos_restantes + ? WHERE cod_aluno = ?',
-                (qtd, cod_aluno)
-            )
+    reservas_sessao = set(session.get("reservas", []))
 
-        db.commit()
-
-    for chave in ('reservas', 'cronometro_reservado', 'codigo',
-                  'tokens_criados', 'a_pagar', 'referencia_externa_pagamento'):
-        session.pop(chave, None)
+    if reservas_sessao.intersection(cod_reservas):
+        for chave in (
+            "reservas",
+            "cronometro_reservado",
+            "tokens_criados",
+            "a_pagar",
+            "referencia_externa_pagamento"
+        ):
+            session.pop(chave, None)
 
 
 @bp_lugares.route("/lugares", methods=["GET"])
@@ -58,6 +72,28 @@ def rota_mapa():
     verificar_db()
     saloes = listar_saloes_disponiveis()
     return render_template('mapa-mesas/bistrot.html', saloes_disponiveis=[salao.NUMERO_SALAO for salao in saloes]) #saloes disponiveis = informação para javascript
+
+@bp_lugares.route("/lugares/mapa", methods=["GET"])
+def listar_mapa():
+    dia = request.args.get("dia")
+
+    if not dia:
+        return jsonify({"erro": "dia não informado"}), 400
+
+    verificar_db()
+
+    lugares = []
+
+    for salao in listar_saloes_disponiveis():
+        mapa = salao().listar_mapa(dia)
+        for lugares_mesa in mapa.values():
+            lugares.extend(lugares_mesa)
+
+    return jsonify({
+        "dia": dia,
+        "lugares": lugares
+    }), 200
+    
 
 @bp_lugares.route("/lugares/confirmar_codigo", methods=['GET'])
 def confirmar_codigo():
@@ -73,7 +109,7 @@ def confirmar_codigo():
     ).fetchone()
 
     if aluno is not None:
-        if aluno['usos_restantes'] >= 0:    
+        if aluno['usos_restantes'] > 0:    
             session['codigo'] = codigo
 
             return jsonify({

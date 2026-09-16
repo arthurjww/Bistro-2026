@@ -83,6 +83,45 @@ header p.sub {
   text-transform: uppercase;
 }
 
+.code-card {
+  min-width: 260px;
+}
+
+.code-card label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.code-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.code-actions input {
+  min-width: 0;
+  width: 100%;
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  color: var(--text);
+  font: inherit;
+}
+
+.code-status {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.code-status.success {
+  color: var(--available-line);
+}
+
+.code-status.error {
+  color: var(--reserved-line);
+}
+
 /* Layout */
 
 .layout {
@@ -241,7 +280,7 @@ header p.sub {
   overflow-x: auto;
 }
 
-svg#floorplan {
+svg#mapa {
   width: 100%;
   min-width: 760px;
   height: auto;

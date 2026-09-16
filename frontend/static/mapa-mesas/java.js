@@ -14,7 +14,7 @@
 
         /* ---------- Geometria das mesas (Salão 1 + Salão 2) ---------- */
 
-        const tables = [
+        const allTables = [
 
             /* Salão 1 (direita) */
             { id: 'tG', type: 'rect',  cx: 730,  cy: 110, w: 210, h: 54, seats: 8,  label: 'Mesa G' },
@@ -32,14 +32,27 @@
             /* Salão 2 (esquerda) */
             { id: 'tP', type: 'vert',  cx: 130,  cy: 490, w: 60,  h: 140, seats: 8, label: 'Mesa P' },
             { id: 'tL', type: 'round', cx: 390,  cy: 480, r: 50, seats: 6,          label: 'Mesa L' },
-            { id: 'tO', type: 'vert',  cx: 130,  cy: 680, w: 60,  h: 140, seats: 8, label: 'Mesa O' },
-            { id: 'tN', type: 'rect',  cx: 270,  cy: 680, w: 70,  h: 90,  seats: 4, label: 'Mesa N' },
+            { id: 'tO', type: 'vert',  cx: 130,  cy: 680, w: 60,  h: 140, seats: 6, label: 'Mesa O' },
+            { id: 'tN', type: 'rect',  cx: 270,  cy: 680, w: 70,  h: 90,  seats: 6, label: 'Mesa N' },
             { id: 'tM', type: 'round', cx: 390,  cy: 680, r: 46, seats: 6,          label: 'Mesa M' },
-            { id: 'tQ', type: 'vert',  cx: 275,  cy: 490, w: 50,  h: 160, seats: 10, label: 'Mesa Q' },
-
         ];
 
         const SEAT_SIZE = 16;
+        const API_BASE = '';
+        const saloesDisponiveis = new Set(JSON.parse(svg.dataset.saloes || '[1, 2]'));
+        const tables = allTables.filter(table => {
+            const salao = 'ABCDEFGHIJK'.includes(table.id[1]) ? 1 : 2;
+            return saloesDisponiveis.has(salao);
+        });
+        const queryParams = new URLSearchParams(window.location.search);
+        const hoje = new Date();
+        const dataLocal = [
+            hoje.getFullYear(),
+            String(hoje.getMonth() + 1).padStart(2, '0'),
+            String(hoje.getDate()).padStart(2, '0')
+        ].join('-');
+        const diaBistro = queryParams.get('dia') || dataLocal;
+        const MAPA_ENDPOINT = `${API_BASE}/lugares/mapa?dia=${encodeURIComponent(diaBistro)}`;
 
         function getSeatPositions(t) {
 
@@ -101,6 +114,15 @@
         tables.forEach(t => getSeatPositions(t).forEach(s => { seatToTable[s.id] = t.id; }));
         const allSeatIds = Object.keys(seatToTable);
         const TOTAL_SEATS = allSeatIds.length;
+
+        function getLugarCode(seatId) {
+            const tableId = seatToTable[seatId];
+            const table = tables.find(t => t.id === tableId);
+            const seatNumber = seatId.substring(seatId.indexOf('-s') + 2);
+            return `${table.label.replace('Mesa ', '')}${seatNumber}`;
+        }
+
+        const seatIdByLugarCode = new Map(allSeatIds.map(id => [getLugarCode(id), id]));
 
         /* ---------- Planta fixa: paredes, salões, corredor, entrada, fixtures ---------- */
 
@@ -236,6 +258,7 @@
         let reservedSet = new Set();
         let pendingSet = new Set();
         let activeTableId = null;
+        let codigoConfirmado = false;
 
         function tableFreeCount(tableId) {
             const seats = allSeatIds.filter(id => seatToTable[id] === tableId);
@@ -358,25 +381,98 @@
             repaintSeats();
         });
 
+        /* ---------- Código do aluno ---------- */
+
+        const codeInput = document.getElementById('codigoInput');
+        const codeStatus = document.getElementById('codeStatus');
+
+        function setCodeStatus(message, type = '') {
+            codeStatus.textContent = message;
+            codeStatus.className = `code-status ${type}`.trim();
+        }
+
+        document.getElementById('confirmCodeBtn').addEventListener('click', async () => {
+            const codigo = codeInput.value.trim();
+
+            if (codigo.length !== 6) {
+                setCodeStatus('Digite o código de seis caracteres.', 'error');
+                return;
+            }
+
+            try {
+                const resposta = await fetch(
+                    `${API_BASE}/lugares/confirmar_codigo?codigo=${encodeURIComponent(codigo)}`,
+                    { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' }
+                );
+                const dados = await resposta.json();
+
+                if (!resposta.ok) {
+                    throw new Error(dados.erro || 'Não foi possível validar o código.');
+                }
+
+                codigoConfirmado = true;
+                codeInput.disabled = true;
+                document.getElementById('confirmCodeBtn').disabled = true;
+                setCodeStatus(`${dados.usos_restantes} uso(s) restante(s).`, 'success');
+            } catch (error) {
+                codigoConfirmado = false;
+                setCodeStatus(error.message, 'error');
+            }
+        });
+
         /* ---------- Confirmar (Próximo) ---------- */
 
         document.getElementById('confirmBtn').addEventListener('click', async () => {
 
             if (pendingSet.size === 0) return;
 
-            pendingSet.forEach(id => reservedSet.add(id));
+            if (!codigoConfirmado) {
+                setCodeStatus('Valide o código do aluno antes de reservar.', 'error');
+                codeInput.focus();
+                return;
+            }
 
-            const toSave = Array.from(reservedSet);
-            pendingSet.clear();
-
-            repaintSeats();
-            highlightActiveTable();
+            const selectedSeats = Array.from(pendingSet);
+            const confirmedSeats = [];
 
             try {
-                await window.storage.set('reservas-atuais', JSON.stringify(toSave), true);
-                showToast('Reserva confirmada com sucesso.');
-            } catch (e) {
-                showToast('Não foi possível salvar a reserva agora. Tente novamente.');
+                for (const seatId of selectedSeats) {
+                    const codLugar = getLugarCode(seatId);
+                    const resposta = await fetch(
+                        `${API_BASE}/lugares/${encodeURIComponent(codLugar)}/escolher?dia=${encodeURIComponent(diaBistro)}`,
+                        {
+                            method: 'POST',
+                            headers: { 'Accept': 'application/json' },
+                            credentials: 'same-origin'
+                        }
+                    );
+
+                    const dados = await resposta.json();
+                    if (!resposta.ok) {
+                        throw new Error(dados.erro || 'Não foi possível reservar o lugar.');
+                    }
+
+                    confirmedSeats.push(seatId);
+                }
+
+                confirmedSeats.forEach(id => {
+                    reservedSet.add(id);
+                    pendingSet.delete(id);
+                });
+
+                repaintSeats();
+                highlightActiveTable();
+                showToast('Lugares reservados. Continuando para o pagamento.');
+                window.location.assign(`${API_BASE}/lugares/seguir`);
+            } catch (error) {
+                confirmedSeats.forEach(id => {
+                    reservedSet.add(id);
+                    pendingSet.delete(id);
+                });
+
+                repaintSeats();
+                highlightActiveTable();
+                showToast(error.message);
             }
 
         });
@@ -393,23 +489,54 @@
             toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
         }
 
+        /* ---------- Sincronização com o Flask ---------- */
+
+        async function atualizarMapa({ silencioso = false } = {}) {
+            try {
+                const resposta = await fetch(MAPA_ENDPOINT, {
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin'
+                });
+                const dados = await resposta.json().catch(() => ({}));
+
+                if (!resposta.ok) {
+                    throw new Error(dados.erro || 'Não foi possível carregar o mapa.');
+                }
+
+                if (!Array.isArray(dados.lugares)) {
+                    throw new Error('O mapa recebido do servidor é inválido.');
+                }
+
+                const novasReservas = new Set(
+                    dados.lugares
+                        .filter(lugar => Number(lugar.ocupado) !== 0)
+                        .map(lugar => seatIdByLugarCode.get(lugar.cod_lugar))
+                        .filter(Boolean)
+                );
+                const selecoesIndisponiveis = [...pendingSet].filter(id => novasReservas.has(id));
+
+                selecoesIndisponiveis.forEach(id => pendingSet.delete(id));
+                reservedSet = novasReservas;
+                repaintSeats();
+                highlightActiveTable();
+
+                if (selecoesIndisponiveis.length && !silencioso) {
+                    showToast('Uma cadeira selecionada acabou de ficar indisponível.');
+                }
+            } catch (error) {
+                if (!silencioso) {
+                    showToast(error.message);
+                }
+            }
+        }
+
         /* ---------- Init ---------- */
 
         async function init() {
-
-            try {
-                const res = await window.storage.get('reservas-atuais', true);
-                if (res && res.value) {
-                    JSON.parse(res.value).forEach(id => {
-                        if (seatEls[id]) reservedSet.add(id);
-                    });
-                }
-            } catch (e) {
-                // Nenhuma reserva salva ainda.
-            }
-
             repaintSeats();
             highlightActiveTable();
+            await atualizarMapa();
+            window.setInterval(() => atualizarMapa({ silencioso: true }), 15000);
         }
 
         init();

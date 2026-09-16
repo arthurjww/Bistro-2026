@@ -170,12 +170,13 @@ def create_all():
    """)
 
     cursor.execute("""
-       INSERT OR IGNORE INTO Config (id, qtd_dias)
-       VALUES (1, 1)
+       INSERT INTO Config (id, qtd_dias)
+       VALUES (1, 2)
+       ON CONFLICT(id) DO UPDATE SET
+           qtd_dias = excluded.qtd_dias
     """)
 
     #commit - salva aterações 
     db.commit()
-
 
 

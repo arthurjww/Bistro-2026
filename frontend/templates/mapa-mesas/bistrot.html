@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bistrô — Reservas</title>
-    <link rel="stylesheet" href="../../static/mapa-mesas/mapa-mesas.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='mapa-mesas/mapa-mesas.css') }}">
 </head>
 
 <body>
@@ -28,6 +28,16 @@
             <div class="occ-badge">
                 <div class="num" id="occNum">—</div>
                 <div class="lbl">lugares livres</div>
+            </div>
+
+            <div class="code-card">
+                <label for="codigoInput">Código do aluno</label>
+                <div class="code-actions">
+                    <input id="codigoInput" type="text" inputmode="numeric" maxlength="6"
+                        autocomplete="off" placeholder="Digite seu código">
+                    <button class="ghost" id="confirmCodeBtn" type="button">Validar código</button>
+                </div>
+                <p id="codeStatus" class="code-status">Valide o código antes de reservar os lugares.</p>
             </div>
         </header>
 
@@ -99,7 +109,8 @@
 
                     <svg
                         id="mapa"
-                        viewBox="0 0 870 900"
+                        data-saloes='{{ saloes_disponiveis | tojson }}'
+                        viewBox="0 0 1480 930"
                         xmlns="http://www.w3.org/2000/svg">
                     </svg>
 
