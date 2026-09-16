@@ -24,7 +24,7 @@ app = Flask (
     )
 )
 
-app.permanent_session_lifetime = timedelta(minutes=15, seconds=30)
+app.permanent_session_lifetime = timedelta(minutes=30)
 app.config['SESSION_REFRESH_EACH_REQUEST'] = True 
 #TODO: Mudar chave secreta no lançamento
 app.config["SECRET_KEY"] = "CETEC"
@@ -66,7 +66,7 @@ app.register_blueprint(routes)
 app.register_blueprint(auth)
 
 with app.app_context():
-    create_all()
+    #create_all()
 
     # testes para pastas
     print("main_folder:", main_folder)

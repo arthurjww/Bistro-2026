@@ -14,7 +14,7 @@
 
 		{% for lugar, dia in ingressos %}
 		<form class="form-ingresso">
-			<h3>Ingresso {{ loop.index + 1}} - Lugar {{ lugar }} - Dia {{ dia }}/10</h3>
+			<h3>Ingresso {{ loop.index }} - Lugar {{ lugar }} - Dia {{ dia }}/10</h3>
 
 			<label>
 				Nome:
@@ -23,7 +23,7 @@
 
 			<label>
 				Telefone para entrarmos em contato, caso necessário
-				<input type="tel" id="telefone" required>
+				<input type="tel" name="telefone" required>
 			</label>
 
 			<label>

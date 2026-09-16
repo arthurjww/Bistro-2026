@@ -27,7 +27,7 @@ sdk = mercadopago.SDK(MP_ACCESS_TOKEN)
 PRECO_INGRESSO = 130  # tipo_ingresso == 2
 
 # Tempo que o QR code do Pix fica válido (ISO 8601 duration).
-PIX_EXPIRACAO = "PT15M"  # 15 minutos
+PIX_EXPIRACAO = "PT30M"  # 30 minutos
 
 
 def _cronometro_expirado(cronometro):
@@ -38,7 +38,7 @@ def _cronometro_expirado(cronometro):
 
 
 def _resetar_cronometro(reservas, db):
-    cronometro = int(time()) * 1000 + 15 * 60_000
+    cronometro = int(time()) * 1000 + 30 * 60_000
 
     placeholders = ','.join('?' for _ in reservas)
     db.execute(
@@ -46,7 +46,7 @@ def _resetar_cronometro(reservas, db):
         UPDATE Reserva
         SET cronometro_reservado = ?
         WHERE cod_reserva in ({placeholders})
-        ''', (cronometro,)
+        ''', (cronometro, *reservas)
     )
     db.commit()
 
@@ -184,7 +184,7 @@ def criar_ingressos():
                 INSERT INTO Ingresso (
                     nome, tipo_ingresso, observacoes, email_envio,
                     foi_pago, token_QR, utilizado, data_utilizado,
-                    cod_aluno, cod_lugar, data_compra, telefone, valor_pago
+                    cod_aluno, cod_reserva, data_compra, telefone, valor_pago
                 )
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ''',
@@ -225,6 +225,8 @@ def criar_ingressos():
         db.rollback()
         return jsonify({'erro': f'Erro ao criar ingressos: {e}.'}), 500
 
+    session['a_pagar'] = a_pagar
+    session['tokens_criados'] = tokens_criados
     _resetar_cronometro(reservas_sessao, db)
 
     return jsonify({'sucesso': 'Ingressos criados.'}), 201
@@ -236,7 +238,7 @@ def criar_ingressos():
 def pagamento():
     codigo_aluno, reservas, a_pagar, cronometro = (
         session.get('codigo'), session.get('reservas', []),
-        session.get('a_pagar'), session.get('cronometro')
+        session.get('a_pagar'), session.get('cronometro_reservado')
     )
 
     if None in (codigo_aluno, a_pagar, cronometro) or not reservas:
@@ -350,8 +352,6 @@ def processar_pagamento():
             ('error', referencia_externa)
         )
         db.commit()
-        _liberar_ingressos_nao_pagos(tokens_criados, codigo_aluno)
-
         return jsonify({'erro': f'Falha ao comunicar com o Mercado Pago: {e}'}), 502
 
     order = resultado.get('response', {})
@@ -362,7 +362,6 @@ def processar_pagamento():
             ('error', referencia_externa)
         )
         db.commit()
-        _liberar_ingressos_nao_pagos(tokens_criados, codigo_aluno)
         return jsonify({'erro': 'Não foi possível gerar o Pix.', 'detalhes': order}), 400
 
     db.execute(
@@ -386,7 +385,6 @@ def processar_pagamento():
     }
 
     if status in ('expired', 'canceled', 'rejected'):
-        _liberar_ingressos_nao_pagos(tokens_criados, codigo_aluno)
         return jsonify({'erro': 'Pix não pôde ser gerado.', 'status': status}), 400
 
     novo_cronometro = _resetar_cronometro(reservas, db)
@@ -436,13 +434,14 @@ def _confirmar_ingressos_pagos(tokens):
 
     for token in tokens:
         ingresso = db.execute(
-            'SELECT foi_pago FROM Ingresso WHERE token_QR = ?', (token,)
+            'SELECT foi_pago, cod_reserva FROM Ingresso WHERE token_QR = ?', (token,)
         ).fetchone()
 
         if ingresso is None or ingresso['foi_pago'] == 1:
             continue  # já processado ou não existe — não reenvia e-mail de novo
 
         db.execute('UPDATE Ingresso SET foi_pago = 1 WHERE token_QR = ?', (token,))
+        db.execute('UPDATE Reserva SET ocupado = 1 WHERE cod_reserva = ?', (ingresso['cod_reserva'],))
         db.commit()
 
         try:
@@ -451,31 +450,6 @@ def _confirmar_ingressos_pagos(tokens):
             falhas_envio.append({'token': token, 'erro': str(e)})
 
     return falhas_envio
-
-
-def _liberar_ingressos_nao_pagos(tokens, cod_aluno):
-    """Pagamento recusado/expirado: libera lugares e desfaz o uso do aluno."""
-    db = get_db()
-
-    for token in tokens:
-        reserva = db.execute(
-            'SELECT cod_reserva FROM Ingresso WHERE token_QR = ? AND foi_pago = 0',
-            (token,)
-        ).fetchone()
-
-        if reserva is None:
-            continue  # já foi pago em outra tentativa, ou não existe — não mexe
-
-        db.execute('DELETE FROM Reserva WHERE cod_reserva = ?', (reserva['cod_reserva'],))
-        db.execute('DELETE FROM Ingresso WHERE token_QR = ?', (token,))
-
-    if cod_aluno:
-        db.execute(
-            'UPDATE Aluno SET usos_restantes = usos_restantes + ? WHERE cod_aluno = ?',
-            (len(tokens), cod_aluno)
-        )
-
-    db.commit()
 
 
 # Webhook — fonte de verdade sobre aprovação/recusa do PIX
@@ -543,8 +517,6 @@ def webhook_mercadopago():
 
     if status == 'processed':
         _confirmar_ingressos_pagos(tokens)
-    elif status in ('expired', 'canceled', 'rejected'):
-        _liberar_ingressos_nao_pagos(tokens, pedido['cod_aluno'])
 
     db.execute(
         'UPDATE Pedido SET status = ? WHERE referencia_externa = ?',
