@@ -16,10 +16,8 @@ function pararTodosIntervalos() {
 // ============================
 // Formatação simples de CPF
 // ============================
-document.getElementById('cpf').addEventListener('input', function (e) {
-  let v = e.target.value.replace(/\D/g, '');
-  if (v.length > 11) v = v.slice(0, 11);
-  e.target.value = v.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+IMask(document.getElementById('cpf'), {
+  mask: '000.000.000-00'
 });
 
 // ============================
