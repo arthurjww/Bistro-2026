@@ -127,7 +127,7 @@ def rota_escolher(cod_lugar):
 
 @bp_lugares.route("/lugares/seguir", methods=['GET'])
 def seguir():
-    cronometro = int(time() * 1000) + 15 * 60_000
+    cronometro = int(time() * 1000) + 30 * 60_000
     reservas = session.get("reservas", [])
     cod_aluno = session.get("codigo")
     ocupado = EM_PAGAMENTO
