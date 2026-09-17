@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, request
+from flask_login import login_required
 from .vendas import obter_total_ingressos
 from .vendas import obter_ingressos_pagos
 from .vendas import obter_ingressos_nao_pagos
@@ -16,6 +17,7 @@ from .resumo_participantes import obter_resumo_participantes
 relatorios = Blueprint('relatorios', __name__)
 
 @relatorios.get('/relatorios')
+@login_required
 def painel_relatorios():
     numero_ingresso = request.args.get('participante', type=int)
     codigo_aluno = request.args.get('aluno')
