@@ -37,9 +37,11 @@ from ..banco_de_dados import close_connection
 app.teardown_appcontext(close_connection)
 
 from .auth import auth_relatorios
+from .comandos import criar_admin
 from .routes import relatorios
 
 app.register_blueprint(auth_relatorios)
 app.register_blueprint(relatorios)
+app.cli.add_command(criar_admin)
 
 
