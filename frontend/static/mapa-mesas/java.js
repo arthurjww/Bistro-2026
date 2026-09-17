@@ -254,6 +254,7 @@
         let pendingSet = new Set();
         let activeTableId = null;
         let codigoConfirmado = false;
+        let usosRestantes = Number(document.body.dataset.usosRestantes || 0);
 
         function tableFreeCount(tableId) {
             const seats = allSeatIds.filter(id => seatToTable[id] === tableId);
@@ -300,6 +301,18 @@
             }
 
             activeTableId = seatToTable[id];
+
+            if(!codigoConfirmado) {
+                setCodeStatus('Valide o código do aluno antes de escolher lugares', 'error');
+                codeInput.focus();
+                return;
+            }
+
+            if (!pendingSet.has(id) && pendingSet.size >= usosRestantes) {
+                showToast(`Você só pode selecionar ${usosRestantes} lugar(es).`);
+                return;
+
+            }
 
             if (pendingSet.has(id)) {
                 pendingSet.delete(id);
@@ -406,11 +419,13 @@
                 }
 
                 codigoConfirmado = true;
+                usosRestantes = dados.usos_restantes
                 codeInput.disabled = true;
                 document.getElementById('confirmCodeBtn').disabled = true;
                 setCodeStatus(`${dados.usos_restantes} uso(s) restante(s).`, 'success');
             } catch (error) {
                 codigoConfirmado = false;
+                usosRestantes = 0;
                 setCodeStatus(error.message, 'error');
             }
         });

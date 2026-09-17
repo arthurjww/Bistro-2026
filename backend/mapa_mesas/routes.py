@@ -70,8 +70,23 @@ def verificar_db():
 @bp_lugares.route("/lugares", methods=["GET"])
 def rota_mapa():
     verificar_db()
+    usos_restantes = None
     saloes = listar_saloes_disponiveis()
-    return render_template('mapa-mesas/bistrot.html', saloes_disponiveis=[salao.NUMERO_SALAO for salao in saloes]) #saloes disponiveis = informação para javascript
+
+    cod_aluno = session.get("codigo")
+    usos_restantes = 0
+    
+    if cod_aluno:
+        aluno = get_db().execute("""
+            SELECT usos_restantes
+            FROM Aluno 
+            WHERE cod_aluno = ?
+        """, (cod_aluno,)).fetchone()
+
+        if aluno:
+            usos_restantes = aluno["usos_restantes"]
+
+    return render_template('mapa-mesas/bistrot.html', saloes_disponiveis=[salao.NUMERO_SALAO for salao in saloes], usos_restantes=usos_restantes) #saloes disponiveis = informação para javascript
 
 @bp_lugares.route("/lugares/datas", methods=["GET"])
 def listar_datas():
@@ -168,6 +183,16 @@ def rota_escolher(cod_lugar):
     if not sucesso:
         # aqui "resultado" é a mensagem de erro
         return jsonify({"erro": resultado}), 409
+    db = get_db()
+    usos_restantes = db.execute("""
+        UPDATE Aluno
+        SET usos_restantes = usos_restantes - 1
+        WHERE cod_aluno = ? AND usos_restantes > 0
+    """, (cod_aluno,))
+    if usos_restantes.rowcount == 0:
+        db.rollback()
+        return jsonify({"erro": "0 usos restantes"}), 409
+    db.commit()
 
     cod_reserva = resultado # resultado é igual a reserva do momento
 

@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='mapa-mesas/mapa-mesas.css') }}">
 </head>
 
-<body>
+<body data-usos-restantes="{{usos_restantes if usos_restantes is not none else 0}}">
 
     <div class="wrap">
 

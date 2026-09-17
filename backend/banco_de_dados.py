@@ -80,7 +80,10 @@ def create_all():
                 REFERENCES Aluno(cod_aluno)
        )
    """)
-
+    db.execute("DELETE FROM Ingresso")
+    db.execute("DELETE FROM Reserva")
+    db.execute("DELETE FROM sqlite_sequence WHERE name = 'Reserva'")
+    
     #admin 
     cursor.execute("""
        CREATE TABLE IF NOT EXISTS Administradores(
@@ -180,5 +183,4 @@ def create_all():
 
     #commit - salva aterações 
     db.commit()
-
 
