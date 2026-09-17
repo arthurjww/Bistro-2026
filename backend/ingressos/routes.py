@@ -529,24 +529,46 @@ def webhook_mercadopago():
 
 @routes.get('/pagamento/sucesso')
 def pagamento_sucesso():
-    reservas = session.get('reservas', [])
+    reservas_sessao = session.get('reservas', [])
 
-    if not reservas:
+    if not reservas_sessao:
         return redirect(url_for('lugares.rota_mapa'))
 
     db = get_db()
-    placeholders = ','.join('?' for _ in reservas)
+    placeholders = ','.join('?' for _ in reservas_sessao)
+
+    reservas = db.execute(
+        f'SELECT dia_bistro, ocupado FROM Reserva WHERE cod_reserva in ({placeholders})',
+        reservas_sessao
+    ).fetchall()
     ingressos = db.execute(
-        f'SELECT nome, token_QR FROM Ingresso WHERE token_QR IN ({placeholders})',
-        reservas
+        f'SELECT foi_pago FROM Ingresso WHERE cod_reserva IN ({placeholders})',
+        reservas_sessao
     ).fetchall()
 
-    if len(reservas) != len(ingressos):
+    if not all(r['ocupado'] == 1 for r in reservas):
         return redirect(url_for('lugares.rota_mapa'))
 
+    if not all(i['foi_pago'] == 1 for i in ingressos):
+        return redirect(url_for('lugares.rota_mapa'))
+
+    dias = []
+    for r in reservas:
+        if r['dia_bistro'] not in dias:
+            dias.append(r['dia_bistro'])
+
+    for chave in (
+        "cronometro_reservado",
+        "tokens_criados",
+        "a_pagar",
+        "referencia_externa_pagamento"
+    ):
+        session.pop(chave, None)
+
     return render_template(
-        'ingressos/sucesso.html',
-        ingressos=ingressos,
+        'votacao/musica.html',
+        total_ingressos=len(ingressos),
+        dias=dias
     )
 
 
