@@ -45,14 +45,9 @@
             return saloesDisponiveis.has(salao);
         });
         const queryParams = new URLSearchParams(window.location.search);
-        const hoje = new Date();
-        const dataLocal = [
-            hoje.getFullYear(),
-            String(hoje.getMonth() + 1).padStart(2, '0'),
-            String(hoje.getDate()).padStart(2, '0')
-        ].join('-');
-        const diaBistro = queryParams.get('dia') || dataLocal;
-        const MAPA_ENDPOINT = `${API_BASE}/lugares/mapa?dia=${encodeURIComponent(diaBistro)}`;
+        let diaBistro = queryParams.get('dia');
+        let MAPA_ENDPOINT = '';
+        const diaBistroSelect = document.getElementById('diaBistroSelect');
 
         function getSeatPositions(t) {
 
@@ -532,13 +527,55 @@
 
         /* ---------- Init ---------- */
 
+        function formatarData(data) {
+            const [ano, mes, dia] = data.split('-');
+            return `${dia}/${mes}/${ano}`;
+        }
+
+        async function carregarDatas() {
+            const resposta = await fetch(`${API_BASE}/lugares/datas`, {
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            });
+            const dados = await resposta.json().catch(() => ({}));
+
+            if (!resposta.ok || !Array.isArray(dados.datas) || !dados.datas.length) {
+                throw new Error(dados.erro || 'Nenhuma data do bistrô foi configurada.');
+            }
+
+            diaBistroSelect.replaceChildren();
+            dados.datas.forEach(data => {
+                const option = document.createElement('option');
+                option.value = data;
+                option.textContent = formatarData(data);
+                diaBistroSelect.appendChild(option);
+            });
+
+            if (!dados.datas.includes(diaBistro)) {
+                diaBistro = dados.datas[0];
+                const url = new URL(window.location.href);
+                url.searchParams.set('dia', diaBistro);
+                window.history.replaceState({}, '', url);
+            }
+
+            diaBistroSelect.value = diaBistro;
+            MAPA_ENDPOINT = `${API_BASE}/lugares/mapa?dia=${encodeURIComponent(diaBistro)}`;
+        }
+
+        diaBistroSelect.addEventListener('change', () => {
+            const url = new URL(window.location.href);
+            url.searchParams.set('dia', diaBistroSelect.value);
+            window.location.assign(url);
+        });
+
         async function init() {
+            await carregarDatas();
             repaintSeats();
             highlightActiveTable();
             await atualizarMapa();
             window.setInterval(() => atualizarMapa({ silencioso: true }), 15000);
         }
 
-        init();
+        init().catch(error => showToast(error.message));
 
     })();

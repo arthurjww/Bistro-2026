@@ -73,6 +73,23 @@ def rota_mapa():
     saloes = listar_saloes_disponiveis()
     return render_template('mapa-mesas/bistrot.html', saloes_disponiveis=[salao.NUMERO_SALAO for salao in saloes]) #saloes disponiveis = informação para javascript
 
+@bp_lugares.route("/lugares/datas", methods=["GET"])
+def listar_datas():
+    linhas = get_db().execute("""
+        SELECT data_dia_1, data_dia_2
+        FROM Config
+        ORDER BY id
+    """).fetchall()
+
+    datas = []
+    for linha in linhas:
+        for coluna in ("data_dia_1", "data_dia_2"):
+            data = linha[coluna]
+            if data and data not in datas:
+                datas.append(data)
+
+    return jsonify({"datas": datas}), 200
+
 @bp_lugares.route("/lugares/mapa", methods=["GET"])
 def listar_mapa():
     dia = request.args.get("dia")

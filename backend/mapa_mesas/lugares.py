@@ -96,19 +96,19 @@ class Salao():
         return mapa
 
     # Escolher lugar agora, obrigatoriamente precisa saber o dia da reserva
-    def escolher_lugar(self, cod_lugar, cod_aluno, dia_bistro, cronometro_reservado):
+    def escolher_lugar(self, cod_lugar, cod_aluno, dia_bistro):
         self.validar_cod_lugar(cod_lugar)
         db = get_db()
         cursor = db.cursor()
 
         cursor.execute("""
-            INSERT INTO Reserva (cod_lugar, cod_aluno, dia_bistro, cronometro_reservado, ocupado)
+            INSERT INTO Reserva (cod_lugar, cod_aluno, dia_bistro, ocupado)
             VALUES (?, ?, ?, ?)
             ON CONFLICT(cod_lugar, dia_bistro) DO UPDATE SET
                 cod_aluno = excluded.cod_aluno,
                 ocupado = excluded.ocupado
             WHERE Reserva.ocupado = 0
-        """, (cod_lugar, cod_aluno, dia_bistro, cronometro_reservado, EM_PAGAMENTO))
+        """, (cod_lugar, cod_aluno, dia_bistro,EM_PAGAMENTO))
 
         db.commit()
 
@@ -118,10 +118,10 @@ class Salao():
         linha = db.execute("""
             SELECT cod_reserva
             FROM reserva
-            WHERE cod_lugar = ? 
+            WHERE cod_lugar = ?
+            AND cod_aluno = ? 
             AND dia_bistro = ?
-            AND cronometro_reservado = ?
-        """, (cod_lugar, dia_bistro, cronometro_reservado)).fetchone()
+        """, (cod_lugar, cod_aluno, dia_bistro)).fetchone()
 
         return True, linha["cod_reserva"]
     
@@ -150,15 +150,15 @@ def qual_salao(cod_lugar):
 
 def obter_qtd_dias():
     db = get_db()
-    linha = db.execute('SELECT qtd_dias FROM Config WHERE id = 1').fetchone()
+    linha = db.execute('SELECT data_dia_2 FROM Config WHERE id = 2').fetchone()
 
     if not linha:
         return 1
 
-    return linha['qtd_dias']
+    return linha['data_dia_2']
 
 def salao2_esta_oculto():
-    return obter_qtd_dias() == 2
+    return True
 
 def listar_saloes_disponiveis():
     if salao2_esta_oculto():

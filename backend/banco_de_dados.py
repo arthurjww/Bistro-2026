@@ -80,6 +80,7 @@ def create_all():
                 REFERENCES Aluno(cod_aluno)
        )
    """)
+
     #admin 
     cursor.execute("""
        CREATE TABLE IF NOT EXISTS Administradores(
@@ -163,18 +164,19 @@ def create_all():
     cursor.execute("""
        CREATE TABLE IF NOT EXISTS Config
        (
-           id       INTEGER PRIMARY KEY CHECK (id = 1),
-           qtd_dias INTEGER NOT NULL DEFAULT 1
-               CHECK (qtd_dias IN (1, 2))
+           id       INTEGER NOT NULL PRIMARY KEY,
+           data_dia_1 DATETIME,
+           data_dia_2 DATETIME
        )
    """)
 
     cursor.execute("""
-       INSERT INTO Config (id, qtd_dias)
-       VALUES (1, 2)
-       ON CONFLICT(id) DO UPDATE SET
-           qtd_dias = excluded.qtd_dias
-    """)
+        INSERT OR IGNORE INTO Config(id, data_dia_1, data_dia_2)
+        VALUES (1,'2026-10-29','2026-10-29')""")
+
+    cursor.execute("""
+        INSERT OR IGNORE INTO Config (id, data_dia_1, data_dia_2)
+        VALUES (2,'2026-10-29','2026-10-30')""")
 
     #commit - salva aterações 
     db.commit()
