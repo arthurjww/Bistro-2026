@@ -22,6 +22,11 @@ relatorios = Blueprint('relatorios', __name__)
 def painel_relatorios():
     numero_ingresso = request.args.get('participante', type=int)
     codigo_aluno = request.args.get('aluno')
+    curso_tecnico = request.args.get('tecnico')
+
+    if curso_tecnico == "todos":
+        curso_tecnico = None
+
     total_ingressos = obter_total_ingressos()
     ingressos_pagos = obter_ingressos_pagos()
     ingressos_nao_pagos = obter_ingressos_nao_pagos()
@@ -30,8 +35,8 @@ def painel_relatorios():
     lista_vendas = obter_lista_vendas()
     lista_restricoes = obter_lista_restricoes()
     lista_financeiro = obter_lista_financeiro()
-    lista_alunos = obter_alunos_filtro()
-    lista_compradores = obter_participantes_filtro(codigo_aluno)
+    lista_alunos = obter_alunos_filtro(curso_tecnico)
+    lista_compradores = obter_participantes_filtro(codigo_aluno, curso_tecnico)
     lista_resumo = obter_resumo_participantes()
     lista_musicas = obter_top_5_musicas()
 
@@ -50,6 +55,7 @@ def painel_relatorios():
         lista_vendas = lista_vendas,
         lista_restricoes = lista_restricoes,
         lista_financeiro = lista_financeiro,
+        tecnico_selecionado=curso_tecnico or "todos",
         lista_alunos = lista_alunos,
         lista_compradores = lista_compradores,
         detalhes_participante = detalhes_participante,

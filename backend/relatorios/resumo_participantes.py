@@ -1,4 +1,5 @@
 from ..banco_de_dados import get_db
+from .cursos import obter_curso_por_nome
 
 def obter_resumo_participantes():
     db = get_db()
@@ -28,6 +29,14 @@ def obter_resumo_participantes():
         '''
     )
 
-    resultado = cursor.fetchall()
+    linhas = cursor.fetchall()
+    resultado = []
+
+    for linha in linhas:
+        participante = dict(linha)
+
+        participante["tecnico"] = (obter_curso_por_nome(participante["aluno"]) or "Não identificado")
+
+        resultado.append(participante)
 
     return resultado

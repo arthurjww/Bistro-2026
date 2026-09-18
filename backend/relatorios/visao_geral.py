@@ -1,6 +1,13 @@
 from ..banco_de_dados import get_db
+from .cursos import obter_curso_por_nome
 
-def obter_alunos_filtro():
+def pertence_ao_curso(nome_aluno, curso_tecnico):
+    if not curso_tecnico or curso_tecnico == "todos":
+        return True
+
+    return obter_curso_por_nome(nome_aluno) == curso_tecnico
+
+def obter_alunos_filtro(curso_tecnico=None):
     db = get_db()
 
     cursor = db.execute(
@@ -11,34 +18,63 @@ def obter_alunos_filtro():
         '''
     )
 
-    resultado = cursor.fetchall()
+    linhas = cursor.fetchall()
+    resultado = []
+
+    for linha in linhas:
+        aluno = dict(linha)
+
+        if pertence_ao_curso(aluno["nome"], curso_tecnico):
+            resultado.append(aluno)
 
     return resultado
 
-def obter_participantes_filtro(codigo_aluno=None):
+def obter_participantes_filtro(codigo_aluno=None, curso_tecnico=None):
     db = get_db()
 
     if codigo_aluno:
         cursor = db.execute(
-            '''SELECT id,
-                      nome
-               FROM Ingresso
-               WHERE cod_aluno = ?
-               ORDER BY nome;
-            ''',
+            """
+            SELECT
+                i.id,
+                i.nome,
+                a.nome_aluno
+            FROM Ingresso AS i
+            INNER JOIN Aluno AS a
+                ON i.cod_aluno = a.cod_aluno
+            WHERE i.cod_aluno = ?
+            ORDER BY i.nome;
+            """,
             (codigo_aluno,)
-            
         )
     else:
         cursor = db.execute(
-            '''SELECT id,
-                    nome
-               FROM Ingresso
-               ORDER BY nome;
-            '''
+            """
+            SELECT
+                i.id,
+                i.nome,
+                a.nome_aluno
+            FROM Ingresso AS i
+            INNER JOIN Aluno AS a
+                ON i.cod_aluno = a.cod_aluno
+            ORDER BY i.nome;
+            """
         )
 
-    resultado = cursor.fetchall()
+    linhas = cursor.fetchall()
+    resultado = []
+
+    for linha in linhas:
+        participante = dict(linha)
+
+        if pertence_ao_curso(
+            participante["nome_aluno"],
+            curso_tecnico
+        ):
+            resultado.append({
+                "id": participante["id"],
+                "nome": participante["nome"]
+            })
 
     return resultado
 

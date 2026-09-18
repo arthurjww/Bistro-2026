@@ -68,11 +68,31 @@
       <div class="filtros" style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
         <div class="filtro-item">
           <label for="tecnico"><strong>Técnico:</strong></label>
-          <select id="tecnico">
-            <option value="todos" selected>Todos</option>
-            <option value="Administração">Administração</option>
-            <option value="Gastronomia">Gastronomia</option>
-            <option value="Informática">Informática</option>
+          <select id="tecnico" name="tecnico">
+            <option
+              value="todos"
+              {% if tecnico_selecionado == "todos" %}selected{% endif %}
+            >
+              Todos
+            </option>
+            <option
+              value="Administração"
+              {% if tecnico_selecionado == "Administração" %}selected{% endif %}
+            >
+              Administração
+            </option>
+            <option
+              value="Gastronomia"
+              {% if tecnico_selecionado == "Gastronomia" %}selected{% endif %}
+            >
+              Gastronomia
+            </option>
+            <option
+              value="Informática"
+              {% if tecnico_selecionado == "Informática" %}selected{% endif %}
+            >
+              Informática
+            </option>
           </select>
         </div>
         <div class="filtro-item">
