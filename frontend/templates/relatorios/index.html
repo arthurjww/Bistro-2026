@@ -25,6 +25,23 @@
     <button class="nav-btn" data-secao="top5">Top 5 Músicas</button>
   </nav>
 
+  <form method="get" class="filtro-dia-bistro" style="margin: 20px 0;">
+    <input type="hidden" id="secao-ativa" name="secao" value="resumo-compradores">
+    <label for="dia_bistro"><strong>Dia do Bistro:</strong></label>
+    <select id="dia_bistro" name="dia_bistro">
+      <option value="">Todos os dias</option>
+      {% for dia in dias_bistro %}
+      <option
+        value="{{ dia.valor }}"
+        {% if dia_bistro_selecionado == dia.valor %}selected{% endif %}
+      >
+        {{ dia.texto }}
+      </option>
+      {% endfor %}
+    </select>
+    <button type="submit">Aplicar filtro</button>
+  </form>
+
   <main>
     <!-- Resumo de Participantes -->
     <div id="resumo-compradores" class="secao ativa">
@@ -38,8 +55,9 @@
               <th>Participante</th>
               <th>Valor Pago</th>
               <th>Data da Compra</th>
+              <th>Dia do Bistro</th>
               <th>Restrição?</th>
-              <th>Nº da Mesa</th>
+              <th>Mesa / Lugar</th>
             </tr>
           </thead>
           <tbody>
@@ -47,11 +65,12 @@
             <tr>
               <td>{{ resumo.tecnico }}</td>
               <td>{{ resumo.aluno }}</td>
-              <td>{{ resumo.comprador }}</td>
+              <td>{{ resumo.participante }}</td>
               <td>{{ resumo.valor_pago }}</td>
               <td>{{ resumo.data_compra }}</td>
+              <td>{{ resumo.dia_bistro }}</td>
               <td>{{ resumo.restricao }}</td>
-              <td>{{ resumo.n_mesa }}</td>
+              <td>{{ resumo.mesa_lugar }}</td>
             </tr>
             {% endfor %}
           </tbody>
@@ -65,6 +84,10 @@
     <div id="visao-geral" class="secao" style="display: none;">
       <h2>Visão Geral</h2>
       <form method="get">
+      <input type="hidden" name="secao" value="visao-geral">
+      {% if dia_bistro_selecionado %}
+      <input type="hidden" name="dia_bistro" value="{{ dia_bistro_selecionado }}">
+      {% endif %}
       <div class="filtros" style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
         <div class="filtro-item">
           <label for="tecnico"><strong>Técnico:</strong></label>
@@ -148,6 +171,10 @@
           <span class="valor" id="data_hora">{{ detalhes_participante.data_hora_compra }}</span>
         </div>
         <div class="card">
+          <strong>Dia do Bistro</strong>
+          <span class="valor">{{ detalhes_participante.dia_bistro }}</span>
+        </div>
+        <div class="card">
           <strong>Status do Pagamento</strong>
           <span class="valor" id="compra">{{ detalhes_participante.status_compra }}</span>
         </div>
@@ -169,6 +196,24 @@ Relatório gerado com os dados atualizados no sistema.
     <!-- Financeiro -->
     <div id="financeiro" class="secao" style="display: none;">
       <h2>Relatório Financeiro</h2>
+      <div class="cards-resumo">
+        <div class="card">
+          <strong>Faturamento Total</strong>
+          <span class="valor">
+            {{ "R$ %.2f"|format(resumo_financeiro.faturamento_total)|replace(".", ",") }}
+          </span>
+        </div>
+        <div class="card">
+          <strong>Vendas Confirmadas</strong>
+          <span class="valor">{{ resumo_financeiro.vendas_confirmadas }}</span>
+        </div>
+        <div class="card">
+          <strong>Ticket Médio</strong>
+          <span class="valor">
+            {{ "R$ %.2f"|format(resumo_financeiro.ticket_medio)|replace(".", ",") }}
+          </span>
+        </div>
+      </div>
       <div style="overflow-x: auto;">
         <table>
           <thead>
@@ -180,6 +225,7 @@ Relatório gerado com os dados atualizados no sistema.
               <th>Telefone</th>
               <th>Restrições</th>
               <th>Data e Horário da Compra</th>
+              <th>Dia do Bistro</th>
               <th>Valor Pago</th>
               <th>Status do Pagamento</th>
             </tr>
@@ -190,10 +236,11 @@ Relatório gerado com os dados atualizados no sistema.
               <td>{{ item.aluno }}</td>
               <td>{{ item.quantidade_ingressos }}</td>
               <td>{{ item.numero_ingresso }}</td>
-              <td>{{ item.nome_comprador }}</td>
+              <td>{{ item.nome_participante }}</td>
               <td>{{ item.telefone }}</td>
               <td>{{ item.restricoes }}</td>
               <td>{{ item.horario_e_dia_compra }}</td>
+              <td>{{ item.dia_bistro }}</td>
               <td>{{ "R$ %.2f"|format(item.valor_pago)|replace(".", ",") }}</td>
               <td>
                 <span class="{% if item.status == 'Pago' %}green{% else %}red{% endif %}" style="font-weight: bold;">
@@ -238,6 +285,7 @@ Relatório gerado com os dados atualizados no sistema.
               <th>Quantidade de Ingressos por Aluno</th>
               <th>Número do Ingresso</th>
               <th>Lugares / Mesas</th>
+              <th>Dia do Bistro</th>
               <th>Situação do Pagamento</th>
             </tr>
           </thead>
@@ -248,6 +296,7 @@ Relatório gerado com os dados atualizados no sistema.
               <td>{{ venda.quant_por_aluno }}</td>
               <td>{{ venda.numero_ingresso }}</td>
               <td>{{ venda.lugar_e_mesa }}</td>
+              <td>{{ venda.dia_bistro }}</td>
               <td>{{ venda.situacao_pagamento }}</td>
             </tr>
             {% endfor %}
@@ -268,6 +317,7 @@ Relatório gerado com os dados atualizados no sistema.
               <th>Participante</th>
               <th>Ingresso</th>
               <th>Mesa / Lugar</th>
+              <th>Dia do Bistro</th>
               <th>Restrição</th>
             </tr>
           </thead>
@@ -277,6 +327,7 @@ Relatório gerado com os dados atualizados no sistema.
               <td>{{ restricao.participante }}</td>
               <td>{{ restricao.ingresso }}</td>
               <td>{{ restricao.mesa_lugar }}</td>
+              <td>{{ restricao.dia_bistro }}</td>
               <td>{{ restricao.restricao }}</td>
             </tr>
             {% endfor %}
@@ -323,6 +374,12 @@ Relatório gerado com os dados atualizados no sistema.
     document.querySelectorAll('.nav-btn').forEach(btn => {
       btn.addEventListener('click', function() {
         const secaoId = this.getAttribute('data-secao');
+        const campoSecaoAtiva = document.getElementById('secao-ativa');
+
+        if (campoSecaoAtiva) {
+          campoSecaoAtiva.value = secaoId;
+        }
+
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('ativo'));
         document.querySelectorAll('.secao').forEach(s => {
           s.classList.remove('ativa');
@@ -338,6 +395,7 @@ Relatório gerado com os dados atualizados no sistema.
     });
 
     const parametros = new URLSearchParams(window.location.search);
+    const secaoSelecionada = parametros.get('secao');
     const participanteSelecionado = parametros.get('participante');
     const alunoSelecionado = parametros.get('aluno');
 
@@ -357,7 +415,15 @@ Relatório gerado com os dados atualizados no sistema.
       }
     }
 
-    if (parametros.has('participante')) {
+    if (secaoSelecionada) {
+      const botaoSecao = Array.from(
+        document.querySelectorAll('.nav-btn')
+      ).find(botao => botao.dataset.secao === secaoSelecionada);
+
+      if (botaoSecao) {
+        botaoSecao.click();
+      }
+    } else if (parametros.has('participante')) {
       const botaoVisaoGeral = document.querySelector(
         '[data-secao="visao-geral"]'
       );
