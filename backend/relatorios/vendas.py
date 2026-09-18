@@ -1,12 +1,16 @@
 from ..banco_de_dados import get_db
 
-def obter_total_ingressos():
+def obter_total_ingressos(dia_bistro=None):
     db = get_db()
 
     cursor = db.execute(
-        '''SELECT COUNT(id) AS quantidade_total
-           FROM Ingresso;
-        '''
+        '''SELECT COUNT(i.id) AS quantidade_total
+           FROM Ingresso AS i
+           INNER JOIN Reserva AS r
+                   ON i.cod_reserva = r.cod_reserva
+           WHERE (? IS NULL OR r.dia_bistro = ?);
+        ''',
+        (dia_bistro, dia_bistro)
     )
 
     resultado = cursor.fetchone()
@@ -14,14 +18,18 @@ def obter_total_ingressos():
 
     return quantidade
 
-def obter_ingressos_pagos():
+def obter_ingressos_pagos(dia_bistro=None):
     db = get_db()
 
     cursor = db.execute(
-        '''SELECT COUNT(id) as quantidade_paga
-           FROM Ingresso
-           WHERE foi_pago=1;
-        '''
+        '''SELECT COUNT(i.id) AS quantidade_paga
+           FROM Ingresso AS i
+           INNER JOIN Reserva AS r
+                   ON i.cod_reserva = r.cod_reserva
+           WHERE i.foi_pago = 1
+             AND (? IS NULL OR r.dia_bistro = ?);
+        ''',
+        (dia_bistro, dia_bistro)
     )
 
     resultado = cursor.fetchone()
@@ -29,15 +37,21 @@ def obter_ingressos_pagos():
 
     return quantidade
 
-def obter_ingressos_nao_pagos():
+def obter_ingressos_nao_pagos(dia_bistro=None):
     db = get_db()
 
     cursor = db.execute(
-        '''SELECT COUNT(id) as quantidade_nao_paga
-           FROM Ingresso
-           WHERE foi_pago=0
-           or foi_pago IS NULL;
-        '''
+        '''SELECT COUNT(i.id) AS quantidade_nao_paga
+           FROM Ingresso AS i
+           INNER JOIN Reserva AS r
+                   ON i.cod_reserva = r.cod_reserva
+           WHERE (
+               i.foi_pago = 0
+               OR i.foi_pago IS NULL
+           )
+             AND (? IS NULL OR r.dia_bistro = ?);
+        ''',
+        (dia_bistro, dia_bistro)
     )
 
     resultado = cursor.fetchone()
@@ -76,7 +90,7 @@ def obter_ingressos_restantes_por_aluno():
 
     return resultado
 
-def obter_lista_vendas():
+def obter_lista_vendas(dia_bistro=None):
     db = get_db()
 
     cursor = db.execute(
@@ -87,6 +101,7 @@ def obter_lista_vendas():
             ) AS quant_por_aluno,
             i.id AS numero_ingresso,
             'Lugar ' || r.cod_lugar || ' / Salão ' || l.salao AS lugar_e_mesa,
+            strftime('%d/%m/%Y', r.dia_bistro) AS dia_bistro,
             CASE
                 WHEN i.foi_pago = 1 THEN 'Pago'
                 ELSE 'Não pago'
@@ -98,11 +113,14 @@ def obter_lista_vendas():
             ON i.cod_reserva = r.cod_reserva
         INNER JOIN Lugares AS l
             ON r.cod_lugar = l.cod_lugar
+        WHERE (? IS NULL OR r.dia_bistro = ?)
         ORDER BY
+            r.dia_bistro,
             a.nome_aluno,
             l.salao,
             r.cod_lugar;
-        '''
+        ''',
+        (dia_bistro, dia_bistro)
     )
 
     resultado = cursor.fetchall()

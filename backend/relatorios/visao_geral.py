@@ -29,7 +29,8 @@ def obter_alunos_filtro(curso_tecnico=None):
 
     return resultado
 
-def obter_participantes_filtro(codigo_aluno=None, curso_tecnico=None):
+def obter_participantes_filtro(codigo_aluno=None, curso_tecnico=None,
+                               dia_bistro=None):
     db = get_db()
 
     if codigo_aluno:
@@ -42,10 +43,13 @@ def obter_participantes_filtro(codigo_aluno=None, curso_tecnico=None):
             FROM Ingresso AS i
             INNER JOIN Aluno AS a
                 ON i.cod_aluno = a.cod_aluno
+            INNER JOIN Reserva AS r
+                ON i.cod_reserva = r.cod_reserva
             WHERE i.cod_aluno = ?
+              AND (? IS NULL OR r.dia_bistro = ?)
             ORDER BY i.nome;
             """,
-            (codigo_aluno,)
+            (codigo_aluno, dia_bistro, dia_bistro)
         )
     else:
         cursor = db.execute(
@@ -57,8 +61,12 @@ def obter_participantes_filtro(codigo_aluno=None, curso_tecnico=None):
             FROM Ingresso AS i
             INNER JOIN Aluno AS a
                 ON i.cod_aluno = a.cod_aluno
+            INNER JOIN Reserva AS r
+                ON i.cod_reserva = r.cod_reserva
+            WHERE (? IS NULL OR r.dia_bistro = ?)
             ORDER BY i.nome;
-            """
+            """,
+            (dia_bistro, dia_bistro)
         )
 
     linhas = cursor.fetchall()
@@ -78,7 +86,7 @@ def obter_participantes_filtro(codigo_aluno=None, curso_tecnico=None):
 
     return resultado
 
-def obter_detalhes_participante(numero_ingresso):
+def obter_detalhes_participante(numero_ingresso, dia_bistro=None):
     db = get_db()
 
     cursor = db.execute(
@@ -86,13 +94,17 @@ def obter_detalhes_participante(numero_ingresso):
                   (
                     SELECT COUNT(i2.id)
                     FROM Ingresso AS i2
+                    INNER JOIN Reserva AS r2
+                            ON i2.cod_reserva = r2.cod_reserva
                     WHERE i2.cod_aluno = i.cod_aluno
+                      AND (? IS NULL OR r2.dia_bistro = ?)
                   ) AS qtd_ingressos,
                   i.id AS n_ingresso,
                   i.nome AS nome_cliente,
                   i.telefone AS telefone_comprador,
                   i.observacoes AS restricoes_texto,
                   strftime('%d/%m/%Y %H:%M', i.data_compra) AS data_hora_compra,
+                  strftime('%d/%m/%Y', r.dia_bistro) AS dia_bistro,
                   CASE
                     WHEN i.foi_pago = 1 THEN 'Pago'
                     ELSE 'Não pago'
@@ -100,9 +112,12 @@ def obter_detalhes_participante(numero_ingresso):
            FROM Ingresso AS i
            INNER JOIN Aluno AS a
                   ON i.cod_aluno = a.cod_aluno
+           INNER JOIN Reserva AS r
+                  ON i.cod_reserva = r.cod_reserva
            WHERE i.id = ?
+             AND (? IS NULL OR r.dia_bistro = ?)
         ''',
-        (numero_ingresso,)
+        (dia_bistro, dia_bistro, numero_ingresso, dia_bistro, dia_bistro)
     )
 
     resultado = cursor.fetchone()

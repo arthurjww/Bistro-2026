@@ -1,32 +1,36 @@
 from ..banco_de_dados import get_db
 from .cursos import obter_curso_por_nome
 
-def obter_resumo_participantes():
+def obter_resumo_participantes(dia_bistro=None):
     db = get_db()
 
     cursor = db.execute(
         '''SELECT i.cod_aluno,
                   a.nome_aluno AS aluno,
-                  i.nome AS comprador,
+                  i.nome AS participante,
                   i.valor_pago,
                   strftime('%d/%m/%Y %H:%M', i.data_compra) AS data_compra,
+                  strftime('%d/%m/%Y', r.dia_bistro) AS dia_bistro,
                   CASE
                       WHEN i.observacoes IS NOT NULL
                           AND TRIM(i.observacoes) != ''
                       THEN 'Sim'
                       ELSE 'Não'
                   END AS restricao,
-                  SUBSTR(r.cod_lugar, 1, 1) AS n_mesa
+                  'Mesa ' || SUBSTR(r.cod_lugar, 1, 1)
+                      || ' / Lugar ' || SUBSTR(r.cod_lugar, 2) AS mesa_lugar
            FROM Ingresso AS i
            INNER JOIN Aluno AS a
                   ON i.cod_aluno = a.cod_aluno
            INNER JOIN Reserva AS r
                   ON i.cod_reserva = r.cod_reserva
            WHERE i.foi_pago = 1
+             AND (? IS NULL OR r.dia_bistro = ?)
            ORDER BY
                   a.nome_aluno,
                   i.nome;
-        '''
+        ''',
+        (dia_bistro, dia_bistro)
     )
 
     linhas = cursor.fetchall()

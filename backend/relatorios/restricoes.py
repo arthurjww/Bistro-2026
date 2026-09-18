@@ -2,7 +2,7 @@ from ..banco_de_dados import get_db
 # Importa a função get_db do módulo banco_de_dados.
 # Essa função é responsável por obter uma conexão com o banco de dados.
 
-def obter_lista_restricoes():
+def obter_lista_restricoes(dia_bistro=None):
 # Define uma função chamada obter_lista_restricoes.
 # Essa função será usada para buscar no banco todas as pessoas
 # que possuem alguma restrição alimentar.
@@ -17,6 +17,7 @@ def obter_lista_restricoes():
             i.nome AS participante,
             i.id AS ingresso,
             'Lugar ' || r.cod_lugar || ' / Salão ' || l.salao AS mesa_lugar,
+            strftime('%d/%m/%Y', r.dia_bistro) AS dia_bistro,
             i.observacoes AS restricao
         FROM Ingresso AS i
         INNER JOIN Reserva AS r
@@ -25,10 +26,13 @@ def obter_lista_restricoes():
             ON r.cod_lugar = l.cod_lugar
         WHERE i.observacoes IS NOT NULL
           AND i.observacoes != ''
+          AND (? IS NULL OR r.dia_bistro = ?)
         ORDER BY
+            r.dia_bistro,
             l.salao,
             r.cod_lugar;
-        '''
+        ''',
+        (dia_bistro, dia_bistro)
     )
 
     resultado = cursor.fetchall()
