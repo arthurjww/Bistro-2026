@@ -9,6 +9,13 @@
 <body>
   <header>📊 RELATÓRIOS BISTRO 2026</header>
 
+  {% if current_user.is_authenticated %}
+  <div class="acoes-administrador" style="display: flex; justify-content: flex-end; gap: 12px; align-items: center; margin: 10px 0;">
+    <span>Administrador: {{ current_user.nome }}</span>
+    <a href="{{ url_for('auth_relatorios.logout') }}">Sair</a>
+  </div>
+  {% endif %}
+
   <nav>
     <button class="nav-btn ativo" data-secao="resumo-compradores">Resumo de Participantes</button>
     <button class="nav-btn" data-secao="visao-geral">Visão Geral</button>
