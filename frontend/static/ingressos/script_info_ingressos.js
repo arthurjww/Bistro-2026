@@ -1,50 +1,100 @@
+let intervalTimer = null;
+let intervalVerificar = null;
+let reservaExpirada = false;
+let isExiting = false;
+let historicoProtegido = false;
+
 const div = document.getElementById('divIngressos');
-const forms = div.querySelectorAll('form');
-const telefones = div.querySelectorAll('input[name="telefone"]');
+const forms = div ? div.querySelectorAll('form') : [];
+const telefones = div ? div.querySelectorAll('input[name="telefone"]') : [];
 
-// Aplica máscara para pessoa só digitar números
+// ============================
+// Proteção de Navegação (Voltar / F5)
+// ============================
+const eventosInteracao = ['click', 'focusin', 'keydown', 'touchstart'];
+
+function ativarProtecaoVoltar() {
+    if (historicoProtegido) return;
+    historicoProtegido = true;
+    history.pushState(null, null, location.href);
+
+    // Limpa todos os escutadores de interação para liberar memória
+    eventosInteracao.forEach(evento => {
+        window.removeEventListener(evento, ativarProtecaoVoltar);
+    });
+}
+
+eventosInteracao.forEach(evento => {
+    window.addEventListener(evento, ativarProtecaoVoltar);
+});
+
+// Intercepta a seta "Voltar" -> Redireciona para /lugares
+window.addEventListener('popstate', function () {
+    if (isExiting || !historicoProtegido) return;
+
+    if (confirm("Você tem certeza? Você perderá todo o seu progresso e retornará à seleção de lugares.")) {
+        isExiting = true;
+        window.location.replace(urls.lugares);
+    } else {
+        history.pushState(null, null, location.href);
+    }
+});
+
+// Intercepta F5 / Recarregar / Fechar Aba
+window.addEventListener('beforeunload', function (e) {
+    if (isExiting) return;
+    e.preventDefault();
+    e.returnValue = '';
+});
+
+// Navegação por histórico (Back/Forward) força retorno para /lugares
+window.addEventListener('pageshow', function (event) {
+    const navEntries = performance.getEntriesByType?.('navigation');
+    const isBackForward = navEntries && navEntries[0]?.type === 'back_forward';
+
+    if (event.persisted || isBackForward) {
+        isExiting = true;
+        window.location.replace(urls.lugares);
+    }
+});
+
+// ============================
+// Formatação e Eventos de Formulário
+// ============================
 telefones.forEach(input => {
-    IMask(input, {
-        mask: '(00) 00000-0000'
-    });
+    IMask(input, { mask: '(00) 00000-0000' });
 });
 
-
-// Prevenir envio de forms com ENTER
 forms.forEach(form => {
-    form.addEventListener('submit', (event) => {
-        event.preventDefault();
-    });
+    form.addEventListener('submit', (event) => event.preventDefault());
 });
 
-
-/**
- * Mostra ao usuário a mensagem de erro vinda do backend (campo "erro" do JSON
- * retornado pelo Flask) e, por padrão, devolve para a tela de seleção de lugares.
-*/
-async function tratarErroResposta(resposta, redirecionar = true) {
+async function tratarErroResposta(resposta, redirecionar = null) {
     let mensagem = 'Ocorreu um erro inesperado. Tente novamente.';
 
-    try {
-        const dados = await resposta.json();
-        if (dados && dados.erro) {
-            mensagem = dados.erro;
-        } else if (dados && dados.mensagem) {
-            mensagem = dados.mensagem;
+    if (redirecionar === null) {
+        redirecionar = (resposta.status === 409 || resposta.status === 410);
+    }
+
+    if (resposta.status === 500) {
+        mensagem = 'Erro interno no servidor.';
+    } else {
+        try {
+            const dados = await resposta.json();
+            mensagem = dados.erro || dados.mensagem || mensagem;
+        } catch (e) {
+            // Mantém mensagem padrão em respostas não-JSON
         }
-    } catch (e) {
-        // Corpo da resposta não veio em JSON — mantém mensagem genérica.
     }
 
     alert(mensagem);
 
     if (redirecionar) {
-        window.location.href = urls.lugares;
+        isExiting = true;
+        window.location.replace(urls.lugares);
     }
 }
 
-
-// Envia os dados do ingresso. Se sucesso, avança para o pagamento
 async function enviarDadosESeguirPagamento() {
     for (const form of forms) {
         if (!form.checkValidity()) {
@@ -53,44 +103,27 @@ async function enviarDadosESeguirPagamento() {
         }
     }
 
-    const ingressos = [];
-
-    forms.forEach(form => {
+    const ingressos = Array.from(forms).map(form => {
         const dados = {};
-
         form.querySelectorAll('input, select, textarea').forEach(input => {
+            if (!input.name || (input.type === 'radio' && !input.checked)) return;
 
-            if (input.type === 'radio' && !input.checked) {
-                return;
-            }
-
-            if (input.name === 'telefone') {
-                dados[input.name] = input.value.replace(/\D/g, '');
-            } else {
-                dados[input.name] = input.value;
-            }
+            const valor = input.value;
+            dados[input.name] = (input.name === 'telefone') ? valor.replace(/\D/g, '') : valor;
         });
-
-        if (dados.telefone) {
-            dados.telefone = dados.telefone.replace(/\D/g, '');
-        }
-
-        ingressos.push(dados);
+        return dados;
     });
-
-    const payload = {
-        ingressos: ingressos
-    };
 
     try {
         const resposta = await fetch(urls.criar_ingressos, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({ ingressos })
         });
 
         if (resposta.ok) {
-            window.location.href = urls.pagamento;
+            isExiting = true;
+            window.location.replace(urls.pagamento);
             return;
         }
 
@@ -102,20 +135,22 @@ async function enviarDadosESeguirPagamento() {
     }
 }
 
+// ============================
+// Cronômetro da Reserva
+// ============================
+function pararCronometros() {
+    clearInterval(intervalTimer);
+    clearInterval(intervalVerificar);
+}
 
-async function cronometroAtualizado() {
-    const agora = new Date();
-
-    const diff = reservado - agora;
+function cronometroAtualizado() {
+    const diff = reservado - new Date();
 
     if (diff <= 0) {
-        document.getElementById('timer').textContent = '00:00';
-
-        clearInterval(intervalo);
-        clearInterval(verificarIntervalo);
-
-        await verificarCronometro();
-
+        const timerEl = document.getElementById('timer');
+        if (timerEl) timerEl.textContent = '00:00';
+        pararCronometros();
+        verificarCronometro();
         return;
     }
 
@@ -123,50 +158,35 @@ async function cronometroAtualizado() {
     const minutos = Math.floor(segundos / 60);
     segundos = segundos % 60;
 
-    document.getElementById('timer').textContent =
-        `${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`;
+    const timerEl = document.getElementById('timer');
+    if (timerEl) {
+        timerEl.textContent = `${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`;
+    }
 }
 
-const intervalo = setInterval(cronometroAtualizado, 1000);
-cronometroAtualizado();
-
-
-let reservaExpirada = false;
-
 async function verificarCronometro() {
-    if (reservaExpirada) {
-        return;
-    }
+    if (reservaExpirada) return;
 
     try {
-        const resposta = await fetch(urls.verificar_cronometro, {
-            method: 'GET'
-        });
+        const resposta = await fetch(urls.verificar_cronometro);
 
-        if (reservaExpirada) {
-            return;
-        }
+        if (reservaExpirada) return;
 
         if (resposta.status === 410) {
             reservaExpirada = true;
+            pararCronometros();
 
             const dados = await resposta.json();
-
-            clearInterval(intervalo);
-            clearInterval(verificarIntervalo);
-
             alert(dados.mensagem || 'O tempo da reserva expirou.');
-
-            window.location.href = urls.lugares;
-
+            isExiting = true;
+            window.location.replace(urls.lugares);
             return;
         }
 
         if (!resposta.ok) {
             reservaExpirada = true;
-            clearInterval(intervalo);
-            clearInterval(verificarIntervalo);
-            await tratarErroResposta(resposta);
+            pararCronometros();
+            await tratarErroResposta(resposta, true);
             return;
         }
     } catch (erro) {
@@ -174,4 +194,7 @@ async function verificarCronometro() {
     }
 }
 
-const verificarIntervalo = setInterval(verificarCronometro, 30001);
+// Inicialização do Cronômetro
+intervalTimer = setInterval(cronometroAtualizado, 1000);
+intervalVerificar = setInterval(verificarCronometro, 30001);
+cronometroAtualizado();

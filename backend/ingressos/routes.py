@@ -55,6 +55,18 @@ def _resetar_cronometro(reservas, db):
     return cronometro
 
 
+@routes.after_request
+def adicionar_cabecalhos_no_cache(response):
+    """
+    Impede que o navegador armazene as páginas em cache,
+    evitando que o usuário volte pelo histórico para telas antigas.
+    """
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
+
+
 @routes.get('/')
 def index():
     return render_template('ingressos/index.html')
@@ -70,14 +82,18 @@ def informacoes():
 
     placeholders = ','.join('?' for _ in reservas)
 
-    reservas_db = db.execute(
-        f'''
-        SELECT cod_lugar, dia_bistro
-        FROM Reserva
-        WHERE cod_reserva IN ({placeholders})
-        ''',
-        reservas
-    ).fetchall()
+    try:
+        reservas_db = db.execute(
+            f'''
+            SELECT cod_lugar, dia_bistro
+            FROM Reserva
+            WHERE cod_reserva IN ({placeholders})
+            ''',
+            reservas
+        ).fetchall()
+    except Exception as e:
+        print(f'Erro ao pegar reservas do db: {e}')
+        return redirect(url_for('lugares.rota_mapa'))
 
     if len(reservas_db) != len(reservas):
         return redirect(url_for('lugares.rota_mapa'))
@@ -98,7 +114,11 @@ def informacoes():
 CHARS_TOKEN = 'ACDEFGHJKLMNPQRTUVWXYZabcdefghjkmnpqrstuvwxyz234679'
 
 def _gerar_token_unico(db):
-    """Gera um token de 6 caracteres alfanuméricos único na tabela Ingresso."""
+    """Gera um token de 6 caracteres alfanuméricos único na tabela Ingresso.
+
+    Chamada de dentro do try/except de criar_ingressos(), então uma falha de
+    banco aqui já é capturada por quem chama — não precisa de try próprio.
+    """
     while True:
         token = ''.join(
             secrets.choice(CHARS_TOKEN)
@@ -227,7 +247,12 @@ def criar_ingressos():
 
     session['a_pagar'] = a_pagar
     session['tokens_criados'] = tokens_criados
-    _resetar_cronometro(reservas_sessao, db)
+
+    try:
+        _resetar_cronometro(reservas_sessao, db)
+    except Exception as e:
+        db.rollback()
+        print(f'Erro ao resetar cronômetro em criar_ingressos: {e}')
 
     return jsonify({'sucesso': 'Ingressos criados.'}), 201
 
@@ -310,14 +335,19 @@ def processar_pagamento():
     referencia_externa = f"pedido_{uuid.uuid4().hex}"
 
     db = get_db()
-    db.execute(
-        '''
-        INSERT INTO Pedido (referencia_externa, tokens, cod_aluno, valor, status, criado_em)
-        VALUES (?, ?, ?, ?, ?, ?)
-        ''',
-        (referencia_externa, json.dumps(tokens_criados), codigo_aluno, a_pagar, 'pending', datetime.now())
-    )
-    db.commit()
+
+    try:
+        db.execute(
+            '''
+            INSERT INTO Pedido (referencia_externa, tokens, cod_aluno, valor, status, criado_em)
+            VALUES (?, ?, ?, ?, ?, ?)
+            ''',
+            (referencia_externa, json.dumps(tokens_criados), codigo_aluno, a_pagar, 'pending', datetime.now())
+        )
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        return jsonify({'erro': f'Erro ao registrar o pedido: {e}.'}), 500
 
     request_options = mercadopago.config.RequestOptions()
     request_options.custom_headers = {
@@ -347,28 +377,40 @@ def processar_pagamento():
     try:
         resultado = sdk.order().create(order_data, request_options)
     except Exception as e:
-        db.execute(
-            'UPDATE Pedido SET status = ? WHERE referencia_externa = ?',
-            ('error', referencia_externa)
-        )
-        db.commit()
+        try:
+            db.execute(
+                'UPDATE Pedido SET status = ? WHERE referencia_externa = ?',
+                ('error', referencia_externa)
+            )
+            db.commit()
+        except Exception as e_db:
+            db.rollback()
+            print(f'Erro ao marcar Pedido como error após falha na Mercado Pago: {e_db}')
         return jsonify({'erro': f'Falha ao comunicar com o Mercado Pago: {e}'}), 502
 
     order = resultado.get('response', {})
 
     if resultado.get('status') not in (200, 201):
-        db.execute(
-            'UPDATE Pedido SET status = ? WHERE referencia_externa = ?',
-            ('error', referencia_externa)
-        )
-        db.commit()
+        try:
+            db.execute(
+                'UPDATE Pedido SET status = ? WHERE referencia_externa = ?',
+                ('error', referencia_externa)
+            )
+            db.commit()
+        except Exception as e_db:
+            db.rollback()
+            print(f'Erro ao marcar Pedido como error (status inesperado da Mercado Pago): {e_db}')
         return jsonify({'erro': 'Não foi possível gerar o Pix.', 'detalhes': order}), 400
 
-    db.execute(
-        'UPDATE Pedido SET order_id = ? WHERE referencia_externa = ?',
-        (order.get('id'), referencia_externa)
-    )
-    db.commit()
+    try:
+        db.execute(
+            'UPDATE Pedido SET order_id = ? WHERE referencia_externa = ?',
+            (order.get('id'), referencia_externa)
+        )
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        print(f'Erro ao salvar order_id do Pedido {referencia_externa}: {e}')
 
     # Guardamos a referência pra /pagamento/status saber qual Pedido consultar
     session['referencia_externa_pagamento'] = referencia_externa
@@ -387,7 +429,12 @@ def processar_pagamento():
     if status in ('expired', 'canceled', 'rejected'):
         return jsonify({'erro': 'Pix não pôde ser gerado.', 'status': status}), 400
 
-    novo_cronometro = _resetar_cronometro(reservas, db)
+    try:
+        novo_cronometro = _resetar_cronometro(reservas, db)
+    except Exception as e:
+        db.rollback()
+        print(f'Erro ao resetar cronômetro em processar_pagamento: {e}')
+        novo_cronometro = session.get('cronometro_reservado')
 
     # Pix nunca vem "processed" na criação — fica em action_required/pending
     # até o pagador escanear e pagar. A confirmação definitiva vem do webhook.
@@ -408,9 +455,13 @@ def pagamento_status():
         return jsonify({'erro': 'Nenhum pagamento pendente nesta sessão.'}), 400
 
     db = get_db()
-    pedido = db.execute(
-        'SELECT status FROM Pedido WHERE referencia_externa = ?', (referencia_externa,)
-    ).fetchone()
+
+    try:
+        pedido = db.execute(
+            'SELECT status FROM Pedido WHERE referencia_externa = ?', (referencia_externa,)
+        ).fetchone()
+    except Exception as e:
+        return jsonify({'erro': f'Erro ao consultar status do pagamento: {e}.'}), 500
 
     if pedido is None:
         return jsonify({'erro': 'Pedido não encontrado.'}), 404
@@ -428,28 +479,37 @@ def pagamento_status():
 
 
 def _confirmar_ingressos_pagos(tokens):
-    """Marca os ingressos como pagos e envia por e-mail. Idempotente por token."""
+    """Marca os ingressos como pagos e envia por e-mail. Idempotente por token.
+
+    Cada token é processado isoladamente: se o banco falhar pra um token
+    específico, não abortamos o processamento dos demais.
+    """
     db = get_db()
-    falhas_envio = []
+    falhas = []
 
     for token in tokens:
-        ingresso = db.execute(
-            'SELECT foi_pago, cod_reserva FROM Ingresso WHERE token_QR = ?', (token,)
-        ).fetchone()
+        try:
+            ingresso = db.execute(
+                'SELECT foi_pago, cod_reserva FROM Ingresso WHERE token_QR = ?', (token,)
+            ).fetchone()
 
-        if ingresso is None or ingresso['foi_pago'] == 1:
-            continue  # já processado ou não existe — não reenvia e-mail de novo
+            if ingresso is None or ingresso['foi_pago'] == 1:
+                continue  # já processado ou não existe — não reenvia e-mail de novo
 
-        db.execute('UPDATE Ingresso SET foi_pago = 1 WHERE token_QR = ?', (token,))
-        db.execute('UPDATE Reserva SET ocupado = 1 WHERE cod_reserva = ?', (ingresso['cod_reserva'],))
-        db.commit()
+            db.execute('UPDATE Ingresso SET foi_pago = 1 WHERE token_QR = ?', (token,))
+            db.execute('UPDATE Reserva SET ocupado = 1 WHERE cod_reserva = ?', (ingresso['cod_reserva'],))
+            db.commit()
+        except Exception as e:
+            db.rollback()
+            falhas.append({'token': token, 'erro': f'Erro ao confirmar pagamento no banco: {e}'})
+            continue
 
         try:
             enviar_ingresso_por_email(token)
         except Exception as e:
-            falhas_envio.append({'token': token, 'erro': str(e)})
+            falhas.append({'token': token, 'erro': str(e)})
 
-    return falhas_envio
+    return falhas
 
 
 # Webhook — fonte de verdade sobre aprovação/recusa do PIX
@@ -478,17 +538,8 @@ def webhook_mercadopago():
         return jsonify({'erro': 'assinatura inválida'}), 401
 
     corpo = request.get_json(silent=True) or {}
-    # aparentemente, order está em type e não topic
     topico = request.args.get('type') or corpo.get('type')
 
-    # O pagamento é criado pela Orders API (sdk.order().create()).
-    # Para esse fluxo, processamos apenas notificações do tópico 'order',
-    # pois o data.id recebido nesse tópico é o ID da Order e pode ser
-    # consultado com sdk.order().get().
-    #
-    # Notificações do tópico 'payment' possuem o ID de um pagamento,
-    # que deve ser consultado pela API de pagamentos, não pela API de orders.
-    # Como este fluxo usa a Order como fonte de verdade, ignoramos 'payment'.
     if topico != 'order':
         return '', 200  # confirma recebimento, senão o Mercado Pago reenvia
 
@@ -496,16 +547,27 @@ def webhook_mercadopago():
     if not recurso_id:
         return '', 200
 
-    resultado = sdk.order().get(recurso_id)
+    try:
+        resultado = sdk.order().get(recurso_id)
+    except Exception as e:
+        print(f'Erro ao consultar order {recurso_id} na Mercado Pago: {e}')
+        # 500 faz a Mercado Pago reenviar a notificação mais tarde.
+        return '', 500
+
     order = resultado.get('response', {})
 
     status = order.get('status')
     referencia_externa = order.get('external_reference')
 
     db = get_db()
-    pedido = db.execute(
-        'SELECT * FROM Pedido WHERE referencia_externa = ?', (referencia_externa,)
-    ).fetchone()
+
+    try:
+        pedido = db.execute(
+            'SELECT * FROM Pedido WHERE referencia_externa = ?', (referencia_externa,)
+        ).fetchone()
+    except Exception as e:
+        print(f'Erro ao consultar Pedido {referencia_externa} no webhook: {e}')
+        return '', 500
 
     if pedido is None:
         return '', 200  # não é um pedido nosso ou já foi limpo
@@ -518,11 +580,20 @@ def webhook_mercadopago():
     if status == 'processed':
         _confirmar_ingressos_pagos(tokens)
 
-    db.execute(
-        'UPDATE Pedido SET status = ? WHERE referencia_externa = ?',
-        (status, referencia_externa)
-    )
-    db.commit()
+    try:
+        db.execute(
+            'UPDATE Pedido SET status = ? WHERE referencia_externa = ?',
+            (status, referencia_externa)
+        )
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        print(f'Erro ao atualizar status do Pedido {referencia_externa}: {e}')
+        # Os ingressos já podem ter sido confirmados acima (_confirmar_ingressos_pagos
+        # é idempotente por token). Retornamos 500 pra MP reenviar; na próxima
+        # tentativa "pedido['status'] == status" ainda vai ser False, então o
+        # UPDATE será tentado de novo sem duplicar e-mails já enviados.
+        return '', 500
 
     return jsonify({'status': status}), 200
 
@@ -537,14 +608,18 @@ def pagamento_sucesso():
     db = get_db()
     placeholders = ','.join('?' for _ in reservas_sessao)
 
-    reservas = db.execute(
-        f'SELECT dia_bistro, ocupado FROM Reserva WHERE cod_reserva in ({placeholders})',
-        reservas_sessao
-    ).fetchall()
-    ingressos = db.execute(
-        f'SELECT foi_pago FROM Ingresso WHERE cod_reserva IN ({placeholders})',
-        reservas_sessao
-    ).fetchall()
+    try:
+        reservas = db.execute(
+            f'SELECT dia_bistro, ocupado FROM Reserva WHERE cod_reserva in ({placeholders})',
+            reservas_sessao
+        ).fetchall()
+        ingressos = db.execute(
+            f'SELECT foi_pago FROM Ingresso WHERE cod_reserva IN ({placeholders})',
+            reservas_sessao
+        ).fetchall()
+    except Exception as e:
+        print(f'Erro ao consultar dados em /pagamento/sucesso: {e}')
+        return redirect(url_for('lugares.rota_mapa'))
 
     if not all(r['ocupado'] == 1 for r in reservas):
         return redirect(url_for('lugares.rota_mapa'))
