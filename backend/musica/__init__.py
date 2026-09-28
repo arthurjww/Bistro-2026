@@ -73,12 +73,12 @@ with app.app_context():
     )
 
     print(
-        "index existe:",
+        "musica.html existe:",
         (
             main_folder
             / "frontend"
             / "templates"
             / "ingressos"
-            / "index.html"
+            / "musica.html"
         ).exists()
     )
