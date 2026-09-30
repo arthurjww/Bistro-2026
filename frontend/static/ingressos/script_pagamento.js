@@ -106,7 +106,7 @@ if (formPagamento) {
             if (response.ok && data.sucesso) {
 
                 // Ingressos gratuitos/isentos confirmados direto
-                if (data.status === 'processed') {
+                if (data.status === 'approved') {
                     pagamentoConfirmado = true;
                     isExiting = true;
                     pararTodosIntervalos();
