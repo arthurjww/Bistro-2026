@@ -179,9 +179,7 @@ def criar_ingressos():
 
             tipo_ingresso= item.get('tipo_ingresso')
             try:
-                # melhor int do que float, pois valor não tem casas decimais
-                # e float costuma ser instável em cálculos e.g. 0.1 + 0.2 != 0.3
-                tipo_ingresso = int(tipo_ingresso)
+                tipo_ingresso = float(tipo_ingresso)
             except (TypeError, ValueError):
                 return jsonify({
                     'erro': f'tipo_ingresso inválido para o ingresso de "{nome}".'

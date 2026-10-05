@@ -5,7 +5,6 @@ let reservaExpirada = false;
 let pagamentoConfirmado = false;
 let isExiting = false;
 let historicoProtegido = false;
-
 // ============================
 // Proteção de Navegação (Voltar / F5)
 // ============================
@@ -115,6 +114,7 @@ if (formPagamento) {
                 }
 
                 // Exibe o QR Code e chave PIX
+                reservado = data.cronometro;
                 document.getElementById('qr-code-img').src = `data:image/png;base64,${data.pix.qr_code_base64}`;
                 document.getElementById('qr-code-text').value = data.pix.qr_code;
 
