@@ -7,6 +7,7 @@ import json
 import hmac
 import hashlib
 import uuid
+import logging
 
 from ..banco_de_dados import get_db
 from flask import Blueprint, request, session, redirect, url_for, render_template, jsonify
@@ -15,6 +16,7 @@ from .gerador_pdf import enviar_ingresso_por_email
 from . import sdk
 
 routes = Blueprint('routes', __name__)
+logger = logging.getLogger(__name__)
 
 # Configuração do Mercado Pago
 
@@ -24,7 +26,7 @@ MP_WEBHOOK_SECRET = os.environ["MP_WEBHOOK_SECRET"]
 sdk = mercadopago.SDK(MP_ACCESS_TOKEN)
 
 # TODO: preço definido — R$130, crianças de 0 a 3 anos (tipo_ingresso == 0) não pagam
-PRECO_INGRESSO = 130  # tipo_ingresso == 2
+PRECO_INGRESSO = 130.00  # tipo_ingresso == 2
 
 # Tempo que o QR code do Pix fica válido (ISO 8601 duration).
 PIX_EXPIRACAO = "PT30M"  # 30 minutos
@@ -439,7 +441,7 @@ def pagamento_status():
 
     status = pedido['status']
 
-    if status == 'processed':
+    if status == 'approved':
         return jsonify({'pago': True}), 200
 
     if status in ('expired', 'canceled', 'rejected', 'error'):
@@ -450,35 +452,75 @@ def pagamento_status():
 
 
 def _confirmar_ingressos_pagos(tokens):
-    """Marca os ingressos como pagos e envia por e-mail. Idempotente por token.
+    """Marca os ingressos como pagos no banco e envia por e-mail.
 
-    Cada token é processado isoladamente: se o banco falhar pra um token
-    específico, não abortamos o processamento dos demais.
+    Garante atualização do banco antes de iniciar o envio de e-mails.
     """
     db = get_db()
     falhas = []
+    tokens_processados_com_sucesso = []
 
-    for token in tokens:
+    # 1. Normaliza a lista de tokens (trata caso venha string ou dicionário)
+    tokens_limpos = []
+    for item in tokens:
+        if isinstance(item, dict):
+            t_str = item.get('token_QR') or item.get('token')
+        else:
+            t_str = str(item)
+
+        if t_str:
+            tokens_limpos.append(t_str)
+
+    # 2. Etapa de Banco de Dados: Atualiza TODOS os ingressos primeiro
+    for token in tokens_limpos:
         try:
+            # Tenta buscar por 'token_QR' ou 'token' conforme o schema
             ingresso = db.execute(
-                'SELECT foi_pago, cod_reserva FROM Ingresso WHERE token_QR = ?', (token,)
+                'SELECT foi_pago, cod_reserva FROM Ingresso WHERE token_QR = ?',
+                (token,),
             ).fetchone()
 
-            if ingresso is None or ingresso['foi_pago'] == 1:
-                continue  # já processado ou não existe — não reenvia e-mail de novo
+            if ingresso is None:
+                # Loga o aviso explícito para debugar se o token não existe no banco
+                logger.error(
+                    f'Ingresso com token_QR "{token}" não foi encontrado no banco.'
+                )
+                falhas.append({
+                    'token': token,
+                    'erro': 'Token não localizado na tabela Ingresso',
+                })
+                continue
 
-            db.execute('UPDATE Ingresso SET foi_pago = 1 WHERE token_QR = ?', (token,))
-            db.execute('UPDATE Reserva SET ocupado = 1 WHERE cod_reserva = ?', (ingresso['cod_reserva'],))
+            if ingresso['foi_pago'] == 1:
+                tokens_processados_com_sucesso.append(token)
+                continue
+
+            # Atualiza Ingresso e Reserva
+            db.execute(
+                'UPDATE Ingresso SET foi_pago = 1 WHERE token_QR = ?', (token,)
+            )
+            db.execute(
+                'UPDATE Reserva SET ocupado = 1 WHERE cod_reserva = ?',
+                (ingresso['cod_reserva'],),
+            )
             db.commit()
+
+            tokens_processados_com_sucesso.append(token)
+
         except Exception as e:
             db.rollback()
-            falhas.append({'token': token, 'erro': f'Erro ao confirmar pagamento no banco: {e}'})
-            continue
+            logger.exception(f'Erro de banco ao processar token {token}: {e}')
+            falhas.append(
+                {'token': token, 'erro': f'Erro ao confirmar no banco: {e}'}
+            )
 
+    # 3. Etapa de E-mail: Roda após garantir que o banco de dados foi atualizado
+    for token in tokens_processados_com_sucesso:
         try:
             enviar_ingresso_por_email(token)
         except Exception as e:
-            falhas.append({'token': token, 'erro': str(e)})
+            logger.exception(f'Erro ao enviar e-mail do token {token}: {e}')
+            falhas.append({'token': token, 'erro': f'Erro de e-mail: {e}'})
 
     return falhas
 
@@ -540,69 +582,93 @@ def _validar_assinatura_webhook(req) -> bool:
 
 
 @routes.post('/webhook/mercadopago')
+@routes.post('/webhook/mercadopago')
 def webhook_mercadopago():
     if not _validar_assinatura_webhook(request):
         return jsonify({'erro': 'assinatura inválida'}), 401
 
     corpo = request.get_json(silent=True) or {}
-    topico = request.args.get('type') or corpo.get('type')
+    # 1. Identificação flexível do tópico (suporta payment e order)
+    topico = (
+        request.args.get('type')
+        or corpo.get('type')
+        or corpo.get('action', '').split('.')[0]
+    )
 
-    if topico != 'order':
-        return '', 200  # confirma recebimento, senão o Mercado Pago reenvia
-
-    recurso_id = corpo.get('data', {}).get('id')
+    # 2. Captura do ID tanto pelo corpo quanto pela URL (query args)
+    recurso_id = (
+        corpo.get('data', {}).get('id')
+        or request.args.get('id')
+        or request.args.get('data.id')
+    )
     if not recurso_id:
         return '', 200
 
+    # Descarta notificações que não sejam de pagamentos ou pedidos
+    if topico not in ('payment', 'order', 'merchant_order'):
+        return '', 200
+
+    status = None
+    referencia_externa = None
+
+    # 3. Consulta o recurso no endpoint correto do SDK
     try:
-        resultado = sdk.order().get(recurso_id)
+        if topico == 'payment':
+            resultado = sdk.payment().get(recurso_id)
+            dados = resultado.get('response', {})
+            status = dados.get('status')  # 'approved', 'pending', 'cancelled'
+            referencia_externa = dados.get('external_reference')
+        else:
+            resultado = sdk.order().get(recurso_id)
+            dados = resultado.get('response', {})
+            # Em Merchant Orders, status de conclusão é 'closed'
+            status = (
+                'approved'
+                if dados.get('status') == 'closed'
+                else dados.get('status')
+            )
+            referencia_externa = dados.get('external_reference')
     except Exception as e:
-        print(f'Erro ao consultar order {recurso_id} na Mercado Pago: {e}')
-        # 500 faz a Mercado Pago reenviar a notificação mais tarde.
+        print(f'Erro ao consultar {topico} {recurso_id} no Mercado Pago: {e}')
         return '', 500
 
-    order = resultado.get('response', {})
-
-    status = order.get('status')
-    referencia_externa = order.get('external_reference')
+    if not referencia_externa:
+        return '', 200
 
     db = get_db()
 
     try:
         pedido = db.execute(
-            'SELECT * FROM Pedido WHERE referencia_externa = ?', (referencia_externa,)
+            'SELECT * FROM Pedido WHERE referencia_externa = ?',
+            (referencia_externa,),
         ).fetchone()
     except Exception as e:
         print(f'Erro ao consultar Pedido {referencia_externa} no webhook: {e}')
         return '', 500
 
     if pedido is None:
-        return '', 200  # não é um pedido nosso ou já foi limpo
+        return '', 200
 
+    # Idempotência: se o banco já reflete o status retornado, finaliza
     if pedido['status'] == status:
-        return '', 200  # idempotência: já processamos essa mudança de status
+        return '', 200
 
     tokens = json.loads(pedido['tokens'])
 
-    if status == 'processed':
+    # 4. Trata 'approved' ou 'processed' como pagamentos concluídos
+    if status in ('approved', 'processed'):
         _confirmar_ingressos_pagos(tokens)
-    elif status in ('expired', 'canceled', 'rejected'):
+    elif status in ('expired', 'canceled', 'cancelled', 'rejected'):
         _liberar_ingressos_nao_pagos(tokens, pedido['cod_aluno'])
-    # qualquer outro status (pending, action_required etc.) -> só aguarda
-
     try:
         db.execute(
             'UPDATE Pedido SET status = ? WHERE referencia_externa = ?',
-            (status, referencia_externa)
+            (status, referencia_externa),
         )
         db.commit()
     except Exception as e:
         db.rollback()
         print(f'Erro ao atualizar status do Pedido {referencia_externa}: {e}')
-        # Os ingressos já podem ter sido confirmados acima (_confirmar_ingressos_pagos
-        # é idempotente por token). Retornamos 500 pra MP reenviar; na próxima
-        # tentativa "pedido['status'] == status" ainda vai ser False, então o
-        # UPDATE será tentado de novo sem duplicar e-mails já enviados.
         return '', 500
 
     return jsonify({'status': status}), 200
@@ -620,42 +686,46 @@ def pagamento_sucesso():
 
     try:
         reservas = db.execute(
-            f'SELECT dia_bistro, ocupado FROM Reserva WHERE cod_reserva in ({placeholders})',
-            reservas_sessao
+            f'SELECT dia_bistro, ocupado FROM Reserva WHERE cod_reserva IN ({placeholders})',
+            reservas_sessao,
         ).fetchall()
         ingressos = db.execute(
             f'SELECT foi_pago FROM Ingresso WHERE cod_reserva IN ({placeholders})',
-            reservas_sessao
+            reservas_sessao,
         ).fetchall()
     except Exception as e:
         print(f'Erro ao consultar dados em /pagamento/sucesso: {e}')
         return redirect(url_for('lugares.rota_mapa'))
 
-    if not all(r['ocupado'] == 1 for r in reservas):
-        print("if not all(r['ocupado'] == 1 for r in reservas)")
+    # Valida se as consultas retornaram registros no banco
+    if not reservas or not ingressos:
+        print('Erro: Nenhuma reserva ou ingresso encontrado no banco de dados.')
         return redirect(url_for('lugares.rota_mapa'))
 
-    if not all(i['foi_pago'] == 1 for i in ingressos):
-        print("if not all(i['foi_pago'] == 1 for i in ingressos)") #TODO
+    # Avaliação flexível de truthiness (aceita 1, True e '1')
+    if not all(bool(r['ocupado']) for r in reservas):
+        print('Erro: Uma ou mais reservas não constam como ocupadas.')
         return redirect(url_for('lugares.rota_mapa'))
 
-    dias = []
-    for r in reservas:
-        if r['dia_bistro'] not in dias:
-            dias.append(r['dia_bistro'])
+    if not all(bool(i['foi_pago']) for i in ingressos):
+        print(
+            'Erro: Ingressos ainda constam como foi_pago = 0. Verifique se _confirmar_ingressos_pagos atualizou a tabela Ingresso.'
+        )
+        return redirect(url_for('lugares.rota_mapa'))
+
+    # Remove duplicados mantendo a ordem
+    dias = list({r['dia_bistro'] for r in reservas})
 
     for chave in (
-        "cronometro_reservado",
-        "tokens_criados",
-        "a_pagar",
-        "referencia_externa_pagamento"
+        'cronometro_reservado',
+        'tokens_criados',
+        'a_pagar',
+        'referencia_externa_pagamento',
     ):
         session.pop(chave, None)
 
     return render_template(
-        'votacao/musica.html',
-        total_ingressos=len(ingressos),
-        dias=dias
+        'votacao/musica.html', total_ingressos=len(ingressos), dias=dias
     )
 
 
