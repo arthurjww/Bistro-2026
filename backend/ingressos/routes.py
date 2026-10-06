@@ -425,28 +425,33 @@ def pagamento_status():
     referencia_externa = session.get('referencia_externa_pagamento')
 
     if not referencia_externa:
+        print('here_not')
         return jsonify({'erro': 'Nenhum pagamento pendente nesta sessão.'}), 400
 
     db = get_db()
-
+    print('here')
     try:
         pedido = db.execute(
             'SELECT status FROM Pedido WHERE referencia_externa = ?', (referencia_externa,)
         ).fetchone()
     except Exception as e:
+        print('not_there')
         return jsonify({'erro': f'Erro ao consultar status do pagamento: {e}.'}), 500
-
+    print('there')
     if pedido is None:
+        print('nope')
         return jsonify({'erro': 'Pedido não encontrado.'}), 404
-
+    print('everywhere')
     status = pedido['status']
-
+    print(status)
     if status == 'approved':
+        print('a')
         return jsonify({'pago': True}), 200
 
     if status in ('expired', 'canceled', 'rejected', 'error'):
+        print('b')
         return jsonify({'pago': False, 'falhou': True, 'status': status}), 200
-
+    print('c')
     # ainda 'pending' / 'action_required' — o webhook não confirmou nada ainda
     return jsonify({'pago': False}), 200
 
