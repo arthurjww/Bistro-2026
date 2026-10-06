@@ -177,8 +177,9 @@ function iniciarPollingStatus() {
         try {
             const response = await fetch(urls.pagamento_status);
             const data = await response.json();
-
+            console.log(data);
             if (data.pago) {
+                console.log('here');
                 pagamentoConfirmado = true;
                 isExiting = true;
                 pararTodosIntervalos();
@@ -192,14 +193,16 @@ function iniciarPollingStatus() {
                     statusTexto.parentElement.style.backgroundColor = "#d3f9d8";
                     statusTexto.parentElement.style.color = "#2b8a3e";
                 }
-
+                console.log('got here');
                 setTimeout(() => {
                     window.location.replace(urls.pagamento_sucesso);
                 }, 1500);
+                console.log('failed here');
                 return;
             }
 
             if (data.falhou) {
+                console.log('falha');
                 clearInterval(intervalPolling);
                 intervalPolling = null;
 
@@ -214,6 +217,7 @@ function iniciarPollingStatus() {
 
                 mostrarErro('O pagamento não foi aprovado (status: ' + data.status + '). Tente novamente.');
             }
+            console.log('nenhum nem outro');
         } catch (err) {
             console.error("Erro na verificação de status:", err);
         }
