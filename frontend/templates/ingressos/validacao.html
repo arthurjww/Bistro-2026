@@ -1,4 +1,3 @@
-HTML_VALIDACAO = """
 <!DOCTYPE html>
 <html>
 
@@ -6,6 +5,7 @@ HTML_VALIDACAO = """
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Validação de Ingresso</title>
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -37,6 +37,20 @@ HTML_VALIDACAO = """
       margin-bottom: 15px;
     }
 
+    .confirmado {
+      color: #1565c0;
+      font-size: 26px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    .utilizado {
+      color: #e65100;
+      font-size: 26px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
     .info {
       text-align: left;
       font-size: 16px;
@@ -44,25 +58,166 @@ HTML_VALIDACAO = """
       border-top: 1px solid #ddd;
       padding-top: 15px;
     }
+
+    .staff {
+      margin-top: 25px;
+      padding-top: 20px;
+      border-top: 1px solid #ddd;
+    }
+
+    .staff input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+      text-align: center;
+    }
+
+    .staff button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 8px;
+      background-color: #581418;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .staff button:hover {
+      background-color: #3B0D10;
+    }
+
+    .erro {
+      color: #c62828;
+      font-weight: bold;
+      margin-top: 10px;
+    }
   </style>
 </head>
 
 <body>
+
   <div class="card">
+
     {% if status == 'valido' %}
-    <div class="valido">✅ Ingresso Válido!</div>
-    <div class="info">
-      <p><strong>Titular:</strong> {{ nome }}</p>
-      <p><strong>Mesa/Lugar:</strong> {{ lugar }}</p>
-      <p><strong>Tipo:</strong> {{ tipo }}</p>
-      <p><strong>Data da Compra:</strong> {{ data_compra }}</p>
-    </div>
+
+      <div class="valido">✅ Ingresso Válido!</div>
+
+      <div class="info">
+        <p><strong>Titular:</strong> {{ nome }}</p>
+        <p><strong>Mesa/Lugar:</strong> {{ lugar }}</p>
+        <p><strong>Tipo:</strong> {{ tipo }}</p>
+        <p><strong>Data da Compra:</strong> {{ data_compra }}</p>
+      </div>
+
+      {% if not staff_autenticado %}
+
+        <div class="staff">
+          <strong>🔐 Acesso da Portaria</strong>
+
+          <form method="POST" action="{{ url_for('gerador_pdf.confirmar_entrada') }}">
+
+            <input
+              type="hidden"
+              name="token"
+              value="{{ token }}"
+            >
+
+            <input
+              type="password"
+              name="pin"
+              placeholder="Digite o PIN da equipe"
+              required
+            >
+
+            <button type="submit">
+              Confirmar entrada
+            </button>
+
+          </form>
+
+          {% if erro_pin %}
+            <div class="erro">
+              {{ erro_pin }}
+            </div>
+          {% endif %}
+
+        </div>
+
+      {% else %}
+
+        <div class="staff">
+          <strong>🔐 Portaria autenticada</strong>
+
+          <form method="POST" action="{{ url_for('gerador_pdf.confirmar_entrada') }}">
+
+            <input
+              type="hidden"
+              name="token"
+              value="{{ token }}"
+            >
+
+            <button type="submit">
+              Confirmar entrada
+            </button>
+
+          </form>
+        </div>
+
+      {% endif %}
+
+
+    {% elif status == 'confirmado' %}
+
+      <div class="confirmado">
+        ✅ Entrada Confirmada!
+      </div>
+
+      <div class="info">
+        <p><strong>Titular:</strong> {{ nome }}</p>
+        <p><strong>Mesa/Lugar:</strong> {{ lugar }}</p>
+        <p><strong>Tipo:</strong> {{ tipo }}</p>
+      </div>
+
+      <p>O ingresso foi marcado como utilizado.</p>
+
+
+    {% elif status == 'ja_utilizado' %}
+
+      <div class="utilizado">
+        ⚠️ Ingresso Já Utilizado
+      </div>
+
+      <div class="info">
+        <p><strong>Titular:</strong> {{ nome }}</p>
+        <p><strong>Mesa/Lugar:</strong> {{ lugar }}</p>
+        <p><strong>Tipo:</strong> {{ tipo }}</p>
+        <p><strong>Utilizado em:</strong> {{ data_utilizado }}</p>
+      </div>
+
+      <p>Este ingresso já foi utilizado na entrada do evento.</p>
+
+
     {% else %}
-    <div class="invalido">❌ Ingresso Inválido</div>
-    <p>Este ingresso não foi encontrado ou o pagamento não está aprovado.</p>
+
+      <div class="invalido">
+        ❌ Ingresso Inválido
+      </div>
+
+      <p>
+        Este ingresso não foi encontrado ou o pagamento não está aprovado.
+      </p>
+
     {% endif %}
+
   </div>
+
 </body>
 
 </html>
-"""

@@ -576,7 +576,17 @@ def pagamento_status():
                 f'{pedido["order_id"]} no Mercado Pago: {e}'
             )
 
+    # Já aprovado no banco
     if status == STATUS_APROVADO:
+        try:
+            tokens = json.loads(pedido['tokens'])
+            _confirmar_ingressos_pagos(tokens)
+        except Exception as e:
+            print(
+                f'Erro ao processar ingressos do pedido '
+                f'{referencia_externa}: {e}'
+            )
+
         return jsonify({'pago': True}), 200
 
     if status in STATUS_FALHOU or status == 'error':
@@ -614,45 +624,78 @@ def _liberar_ingressos_nao_pagos(tokens, codigo_aluno):
         print(f'Erro ao liberar ingressos não pagos (cod_aluno={codigo_aluno}): {e}')
 
 def _confirmar_ingressos_pagos(tokens):
-    """Marca os ingressos como pagos e envia por e-mail.
-    Idempotente por token.
-    """
+    """Marca ingressos como pagos e envia os PDFs por e-mail."""
+
     db = get_db()
     falhas = []
 
     for token in tokens:
         try:
             ingresso = db.execute(
-                'SELECT foi_pago, cod_reserva FROM Ingresso WHERE token_QR = ?',
+                '''
+                SELECT foi_pago
+                FROM Ingresso
+                WHERE token_QR = ?
+                ''',
                 (token,)
             ).fetchone()
 
-            if ingresso is None or ingresso['foi_pago'] == 1:
+            if ingresso is None:
+                falhas.append({
+                    'token': token,
+                    'erro': 'Ingresso não encontrado.'
+                })
                 continue
 
-            db.execute(
-                'UPDATE Ingresso SET foi_pago = 1 WHERE token_QR = ?',
-                (token,)
-            )
+            # Marca como pago apenas se ainda não estiver pago
+            if ingresso['foi_pago'] == 0:
+                db.execute(
+                    '''
+                    UPDATE Ingresso
+                    SET foi_pago = 1
+                    WHERE token_QR = ?
+                    ''',
+                    (token,)
+                )
 
-            db.execute(
-                'UPDATE Reserva SET ocupado = 1 WHERE cod_reserva = ?',
-                (ingresso['cod_reserva'],)
-            )
+                # Busca a reserva através do próprio ingresso
+                reserva = db.execute(
+                    '''
+                    SELECT cod_reserva
+                    FROM Ingresso
+                    WHERE token_QR = ?
+                    ''',
+                    (token,)
+                ).fetchone()
 
-            db.commit()
+                if reserva and reserva['cod_reserva']:
+                    db.execute(
+                        '''
+                        UPDATE Reserva
+                        SET ocupado = 1
+                        WHERE cod_reserva = ?
+                        ''',
+                        (reserva['cod_reserva'],)
+                    )
+
+                db.commit()
+
+            # Envia o e-mail mesmo se o ingresso já estiver pago.
+            # Isso permite tentar novamente caso o envio anterior tenha falhado.
+            try:
+                enviar_ingresso_por_email(token)
+                print(f'✅ E-mail enviado para o ingresso {token}')
+
+            except Exception as e:
+                print(f'❌ Erro ao enviar e-mail para {token}: {e}')
+                falhas.append({
+                    'token': token,
+                    'erro': str(e)
+                })
 
         except Exception as e:
             db.rollback()
-            falhas.append({
-                'token': token,
-                'erro': f'Erro ao confirmar pagamento no banco: {e}'
-            })
-            continue
-
-        try:
-            enviar_ingresso_por_email(token)
-        except Exception as e:
+            print(f'❌ Erro ao confirmar ingresso {token}: {e}')
             falhas.append({
                 'token': token,
                 'erro': str(e)

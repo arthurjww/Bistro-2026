@@ -1,4 +1,3 @@
-HTML_INGRESSO = """
 <!DOCTYPE html>
 <html>
 
@@ -7,14 +6,29 @@ HTML_INGRESSO = """
   <style>
     @page {
       size: A4 portrait;
-      margin: 20px;
+      margin: 24px;
     }
 
     body {
       font-family: Helvetica, Arial, sans-serif;
-      background-color: #581418;
+      background-color: #1c0506;
       color: #FAF2DF;
-      padding: 20px;
+      padding: 10px;
+    }
+
+    .seal {
+      width: 100%;
+      text-align: center;
+      margin-bottom: 18px;
+    }
+
+    .seal-pill {
+      border: 1px solid #CFA86E;
+      border-radius: 10px;
+      padding: 6px 16px;
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: #CFA86E;
     }
 
     .ticket {
@@ -26,39 +40,61 @@ HTML_INGRESSO = """
     }
 
     .main-info {
-      width: 68%;
-      padding: 25px;
+      width: 66%;
+      padding: 26px 24px;
       vertical-align: top;
       border-right: 2px dashed #CFA86E;
     }
 
     .stub-info {
-      width: 32%;
-      padding: 20px;
+      width: 34%;
+      padding: 22px 16px;
       vertical-align: middle;
       text-align: center;
       background-color: #2b090b;
     }
 
+    .badge-row {
+      width: 100%;
+    }
+
     .brand-title {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: bold;
-      letter-spacing: 4px;
+      letter-spacing: 3px;
       color: #FAF2DF;
       text-transform: uppercase;
     }
 
     .brand-subtitle {
-      font-size: 11px;
-      letter-spacing: 2px;
+      font-size: 10px;
+      letter-spacing: 1.5px;
       color: #CFA86E;
-      margin-top: 4px;
+      margin-top: 3px;
       font-style: italic;
+    }
+
+    .badge-valido {
+      background-color: #CFA86E;
+      color: #3b0d10;
+      font-weight: bold;
+      font-size: 9px;
+      letter-spacing: 1px;
+      padding: 3px 9px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .headline {
+      margin-top: 18px;
+      font-size: 16px;
+      line-height: 1.4;
+      color: #FAF2DF;
     }
 
     .divider {
       border-bottom: 1px dashed #CFA86E;
-      margin: 15px 0;
+      margin: 16px 0;
     }
 
     .label {
@@ -76,14 +112,19 @@ HTML_INGRESSO = """
       color: #FAF2DF;
     }
 
-    .badge {
-      background-color: #CFA86E;
-      color: #581418;
-      font-weight: bold;
-      font-size: 10px;
-      padding: 2px 6px;
-      border-radius: 4px;
+    .footer-note {
+      margin-top: 16px;
+      font-size: 8.5px;
+      color: #CFA86E;
+      line-height: 1.4;
+    }
+
+    .stub-label {
+      font-size: 9px;
       text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #CFA86E;
+      margin-bottom: 10px;
     }
 
     .qr-code-img {
@@ -96,56 +137,181 @@ HTML_INGRESSO = """
       margin-bottom: 8px;
     }
 
+    .token-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #CFA86E;
+      margin-top: 8px;
+    }
+
     .token-text {
-      font-family: monospace;
+      font-family: Courier, monospace;
+      font-size: 11px;
+      font-weight: bold;
+      color: #FAF2DF;
+      word-wrap: break-word;
+      margin-top: 4px;
+    }
+
+    .stub-note {
+      margin-top: 12px;
       font-size: 8px;
       color: #CFA86E;
-      word-wrap: break-word;
+      line-height: 1.4;
+    }
+
+    .contact {
+      width: 100%;
+      text-align: center;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px dashed #CFA86E;
+      font-size: 8px;
+      color: #CFA86E;
+      line-height: 1.5;
+    }
+
+    .contact a {
+      color: #FAF2DF;
+      text-decoration: none;
+    }
+
+    .contact strong {
+      font-size: 8px;
+    }
+
+    .page-footer {
+      width: 100%;
+      text-align: center;
+      margin-top: 10px;
+      font-size: 8px;
+      color: #CFA86E;
     }
   </style>
 </head>
 
 <body>
+
+  <div class="seal">
+    <span class="seal-pill">Compra confirmada</span>
+  </div>
+
   <table class="ticket">
     <tr>
+
       <td class="main-info">
-        <div class="brand-title">SINESTESIA</div>
-        <div class="brand-subtitle">gastronomia em harmonia</div>
+
+        <table class="badge-row" cellpadding="0" cellspacing="0">
+          <tr>
+
+            <td width="70%">
+              <div class="brand-title">Sinestesia</div>
+              <div class="brand-subtitle">gastronomia em harmonia</div>
+            </td>
+
+            <td width="30%" align="right" valign="top">
+              <span class="badge-valido">Válido</span>
+            </td>
+
+          </tr>
+        </table>
+
+        <div class="headline">
+          O seu ingresso para uma noite em que os sentidos se encontram.
+        </div>
 
         <div class="divider"></div>
 
-        <table width="100%">
+        <table width="100%" cellpadding="0" cellspacing="0">
+
           <tr>
-            <td width="60%">
+
+            <td width="55%">
               <div class="label">Titular do Ingresso</div>
               <div class="value">{{ nome }}</div>
             </td>
-            <td width="40%">
+
+            <td width="45%">
               <div class="label">Tipo</div>
-              <div class="value"><span class="badge">{{ tipo }}</span></div>
+              <div class="value">{{ tipo }}</div>
             </td>
+
           </tr>
+
           <tr>
-            <td width="60%">
+
+            <td width="55%">
               <div class="label">E-mail</div>
               <div class="value">{{ email }}</div>
             </td>
-            <td width="40%">
-              <div class="label">Data de Compra</div>
+
+            <td width="45%">
+              <div class="label">Emitido em</div>
               <div class="value">{{ data_compra }}</div>
             </td>
+
           </tr>
+
         </table>
+
+        <div class="footer-note">
+          Ingresso individual, intransferível e válido para uma entrada.
+        </div>
+
       </td>
 
       <td class="stub-info">
-        <img src="data:image/png;base64,{{ qr_code }}" class="qr-code-img" />
-        <div class="label">Validação</div>
-        <div class="token-text">{{ token }}</div>
+
+        <div class="stub-label">
+          Código de Acesso
+        </div>
+
+        <img
+          src="data:image/png;base64,{{ qr_code }}"
+          class="qr-code-img"
+        />
+
+        <div class="token-label">
+          Token
+        </div>
+
+        <div class="token-text">
+          {{ token }}
+        </div>
+
+        <div class="stub-note">
+          Apresente este código na entrada para validar seu ingresso.
+        </div>
+
       </td>
+
     </tr>
   </table>
+
+  <div class="contact">
+    Qualquer dúvida, entre em contato conosco:
+    <br>
+
+    <strong>
+      <a href="https://wa.me/5554991121192?text=Ol%C3%A1%2C%20tenho%20uma%20d%C3%BAvida%20sobre%20o%20Bistr%C3%B4">
+        Fone: +55 (54) 99112-1192
+      </a>
+    </strong>
+
+    <br>
+
+    <strong>
+      <a href="mailto:sacsinestesiabistro@gmail.com?subject=D%C3%BAvida&body=Ol%C3%A1%2C%20tenho%20uma%20d%C3%BAvida%3A">
+        E-mail: sacsinestesiabistro@gmail.com
+      </a>
+    </strong>
+  </div>
+
+  <div class="page-footer">
+    emitido por Sinestesia
+  </div>
+
 </body>
 
 </html>
-"""

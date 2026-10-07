@@ -1,14 +1,20 @@
 import base64
 import io
+import os
 import re
 import unicodedata
 import qrcode
-from flask import Blueprint, request, render_template, send_file, url_for
+from datetime import datetime
+from flask import Blueprint, request, render_template, send_file, url_for, session
 from xhtml2pdf import pisa
 from ..banco_de_dados import get_db
 from .email_envio import enviar_email
 
 gerador_pdf = Blueprint('gerador_pdf', __name__)
+
+# PIN simples pra proteger "Confirmar entrada" (só o staff na portaria sabe).
+# Independente de qualquer login de admin que já exista no projeto.
+STAFF_PIN = os.environ.get('STAFF_PIN', '')
 
 def _gerar_nome_arquivo(nome):
     """Sanitiza o nome do titular para um formato seguro em SO e HTTP."""
@@ -21,10 +27,11 @@ def _gerar_nome_arquivo(nome):
 def _gerar_pdf_bytes(ingresso):
     """Gera o PDF do ingresso em memória e retorna um BytesIO."""
 
-    # O QR Code abre um site que diz se o ingresso é Válido ou Não.
-    ip_servidor = "192.168.0.116:5000"
-    url_validacao = url_for('gerador_pdf.validar_ingresso', token=ingresso['token'], _external=True)
-    qr_img = qrcode.make(url_validacao) #TODO:REVER!
+    url_validacao = (
+        "https://sinestesiabistro.com.br/validar"
+        f"?token={ingresso['token']}"
+    )
+    qr_img = qrcode.make(url_validacao)
 
     qr_buffer = io.BytesIO()
     qr_img.save(qr_buffer, format='PNG')
@@ -61,7 +68,9 @@ def buscar_ingresso_pago(token):
                 i.email_envio AS email,
                 i.data_compra,
                 i.token_QR AS token,
-                i.cod_lugar,
+                i.utilizado,
+                i.data_utilizado,
+                r.cod_lugar,
                 r.dia_bistro,
                 CASE
                     WHEN i.tipo_ingresso = 0 THEN 'Gratuito'
@@ -70,8 +79,7 @@ def buscar_ingresso_pago(token):
                 END AS tipo
             FROM Ingresso i
             INNER JOIN Reserva r
-                ON i.cod_lugar = r.cod_lugar 
-                AND i.cod_aluno = r.cod_aluno
+                ON i.cod_reserva = r.cod_reserva
             WHERE i.token_QR = ? AND i.foi_pago = 1
         """,
           (token,),
@@ -116,13 +124,18 @@ def enviar_ingresso_por_email(token):
     enviar_email(
         destinatario=ingresso['email'],
         assunto="Seu ingresso - Sinestesia 2026",
-        mensagem=(
+
+        mensagem_texto=(
             f"Olá, {ingresso['nome']}!\n\n"
             "Seu ingresso para o Sinestesia 2026 está confirmado. "
             "Ele segue em anexo neste email, em PDF.\n\n"
             "Apresente o QR code do ingresso na entrada do evento.\n\n"
-            "Até lá!\nEquipe Sinestesia"
+            "Até lá!\n"
+            "Equipe Sinestesia"
         ),
+
+        mensagem_html=None,
+
         anexo=[(nome_arquivo, pdf_buffer)],
     )
 
@@ -148,6 +161,11 @@ def generate_pdf():
 
 @gerador_pdf.route('/validar', methods=['GET'])
 def validar_ingresso():
+  """
+  Só CONSULTA o ingresso — nunca marca como utilizado aqui. O convidado
+  pode abrir o QR em casa quantas vezes quiser sem queimar a entrada.
+  A confirmação de verdade acontece em /validar/confirmar, na portaria.
+  """
 
   token = request.args.get('token')
 
@@ -157,11 +175,84 @@ def validar_ingresso():
   ingresso = buscar_ingresso_pago(token)
 
   if not ingresso:
-    return render_template('ingressos/templates/validacao.html', status='invalido'), 404
+    return render_template('ingressos/validacao.html', status='invalido'), 404
+
+  if ingresso['utilizado']:
+    return render_template(
+      'ingressos/validacao.html',
+      status='ja_utilizado',
+      nome=ingresso['nome'],
+      lugar=ingresso['cod_lugar'],
+      tipo=ingresso['tipo'],
+      data_utilizado=ingresso['data_utilizado'],
+    )
 
   return render_template(
-    'validacao.html',
+    'ingressos/validacao.html',
     status='valido',
+    token=token,
+    staff_autenticado=bool(session.get('staff_autenticado')),
+    nome=ingresso['nome'],
+    lugar=ingresso['cod_lugar'],
+    tipo=ingresso['tipo'],
+    data_compra=ingresso['data_compra'],
+  )
+
+
+@gerador_pdf.route('/validar/confirmar', methods=['POST'])
+def confirmar_entrada():
+  """
+  Ação separada, só pra portaria: exige o PIN do staff (uma vez por
+  dispositivo/sessão) e só então marca o ingresso como utilizado.
+  """
+
+  token = request.form.get('token')
+  pin = request.form.get('pin', '')
+
+  if not token:
+    return render_template('ingressos/validacao.html', status='invalido'), 400
+
+  if not session.get('staff_autenticado'):
+    if not STAFF_PIN or pin != STAFF_PIN:
+      ingresso = buscar_ingresso_pago(token)
+      return render_template(
+        'ingressos/validacao.html',
+        status='valido',
+        token=token,
+        staff_autenticado=False,
+        erro_pin='PIN incorreto.',
+        nome=ingresso['nome'] if ingresso else None,
+        lugar=ingresso['cod_lugar'] if ingresso else None,
+        tipo=ingresso['tipo'] if ingresso else None,
+        data_compra=ingresso['data_compra'] if ingresso else None,
+      ), 403
+    session['staff_autenticado'] = True
+
+  ingresso = buscar_ingresso_pago(token)
+
+  if not ingresso:
+    return render_template('ingressos/validacao.html', status='invalido'), 404
+
+  if ingresso['utilizado']:
+    return render_template(
+      'ingressos/validacao.html',
+      status='ja_utilizado',
+      nome=ingresso['nome'],
+      lugar=ingresso['cod_lugar'],
+      tipo=ingresso['tipo'],
+      data_utilizado=ingresso['data_utilizado'],
+    )
+
+  db = get_db()
+  db.execute(
+    'UPDATE Ingresso SET utilizado = 1, data_utilizado = ? WHERE token_QR = ?',
+    (datetime.now(), token)
+  )
+  db.commit()
+
+  return render_template(
+    'ingressos/validacao.html',
+    status='confirmado',
     nome=ingresso['nome'],
     lugar=ingresso['cod_lugar'],
     tipo=ingresso['tipo'],
