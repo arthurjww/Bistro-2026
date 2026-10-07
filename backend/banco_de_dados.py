@@ -80,7 +80,7 @@ def create_all():
                 REFERENCES Aluno(cod_aluno)
        )
    """)
-
+    
     #admin 
     cursor.execute("""
        CREATE TABLE IF NOT EXISTS Administradores(

@@ -1,12 +1,16 @@
 from backend.banco_de_dados import get_db
 from backend.ingressos.email_envio import enviar_email
 
+from dotenv import load_dotenv
 from flask import render_template
 from pathlib import Path
+
+import os
 import secrets
 
 
-file = Path(__file__).resolve().parents[2] / 'nomes_emails.csv'
+load_dotenv()
+file = Path(__file__).resolve().parents[2] / os.getenv('CSV_ALUNOS', '')
 
 
 CHARS_TOKEN = 'ACDEFGHJKLMNPQRTUVWXYZabcdefghjkmnpqrstuvwxyz234679'
@@ -23,13 +27,17 @@ Você pode usá-lo até {usos} vezes.
 Abaixo seguem as instruções:
 
 - Este código é usado para validar a compra dos ingressos.
+
 - Apenas o compartilhe com pessoas de confiança.
-- Após a escolha do código e dos lugares, você terá 15 minutos para
-  escrever as informações dos ingressos e pagar.
-- Caso necessário, é possível comprar ingressos com o mesmo código
-  em diferentes sessões.
+
+- Após a escolha do código e dos lugares, você terá 30 minutos* para escrever as informações dos ingressos e pagar.
+  * Esses 30 minutos serão resetados após avançar para o pagamento e ao gerar o PIX.
+
+- Caso necessário, é possível comprar ingressos com o mesmo código em diferentes sessões.
+
 - Qualquer dúvida, entre em contato conosco:
-  Fone: +55 (54) 99112-1192
+  Site: sinestesiabistro.com.br
+  Telefone: +55 (54) 99112-1192
   E-mail: sacsinestesiabistro@gmail.com
 
 '''.strip()
@@ -70,9 +78,6 @@ def criar_alunos():
 
                 if igual is not None:
                     continue
-                # TODO: TESTE
-                if nome != 'Guilherme Matté':
-                    continue
 
                 pk = _gerar_token_unico(db)
 
@@ -99,9 +104,6 @@ def enviar_cod():
                 nome, email, quant = linha.strip().split(',')
                 nome, email, quant = nome.strip(), email.strip(), quant.strip()
 
-                # TODO: TESTE
-                if nome != 'Guilherme Matté':
-                    continue
                 aluno = db.execute(
                     '''
                     SELECT *

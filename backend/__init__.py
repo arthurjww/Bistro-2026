@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 from datetime import timedelta
 from flask import Flask
-from flask_login import LoginManager
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -42,48 +41,15 @@ app.config["MAIL_USE_SSL"] = app.config["MAIL_PORT"] == 465
 app.config["MAIL_USE_TLS"] = app.config["MAIL_PORT"] == 587
 
 
-from .banco_de_dados import create_all, close_connection
+from .banco_de_dados import close_connection
 
 app.teardown_appcontext(close_connection)
-
-#FLASK LOGIN
-login_manager = LoginManager(app)
-login_manager.login_view = "auth.login"
-login_manager.login_message = (
-    "Somente admins têm autorização para acessar essa página"
-)
 
 #BluePrints
 
 from .ingressos.routes import routes
-from .ingressos.auth import auth
 from .ingressos.gerador_pdf import gerador_pdf
 from .mapa_mesas.routes import bp_lugares
 app.register_blueprint(gerador_pdf)
 app.register_blueprint(bp_lugares)
-
 app.register_blueprint(routes)
-app.register_blueprint(auth)
-
-with app.app_context():
-    #create_all()
-
-    # testes para pastas
-    print("main_folder:", main_folder)
-    print("template_folder:", app.template_folder)
-
-    print(
-        "template existe:",
-        (main_folder / "frontend" / "templates").exists()
-    )
-
-    print(
-        "index existe:",
-        (
-            main_folder
-            / "frontend"
-            / "templates"
-            / "ingressos"
-            / "index.html"
-        ).exists()
-    )
