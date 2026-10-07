@@ -11,7 +11,7 @@ def verificar_db():
     data_exp = int(time() * 1000)
 
     expiradas = db.execute("""
-        SELECT cod_reserva
+        SELECT cod_reserva, cod_aluno
         FROM Reserva
         WHERE ocupado = ?
           AND cronometro_reservado IS NOT NULL
@@ -52,6 +52,20 @@ def verificar_db():
             (quantidade, cod_aluno)
         )
 
+    usos_reservas_por_aluno = {}
+
+    for reserva in expiradas:
+        cod_aluno = reserva["cod_aluno"]
+        usos_reservas_por_aluno[cod_aluno] = (
+            usos_reservas_por_aluno.get(cod_aluno, 0) + 1
+        )
+
+    for cod_aluno, quantidade in usos_reservas_por_aluno.items():
+        db.execute(
+            "UPDATE Aluno SET usos_restantes = usos_restantes + ?   WHERE cod_aluno = ?",
+            (quantidade, cod_aluno)
+        )       
+
     db.commit()
 
     reservas_sessao = set(session.get("reservas", []))
@@ -71,7 +85,6 @@ def verificar_db():
 def rota_mapa():
     verificar_db()
     usos_restantes = None
-    saloes = listar_saloes_disponiveis()
 
     cod_aluno = session.get("codigo")
     usos_restantes = 0
@@ -86,7 +99,7 @@ def rota_mapa():
         if aluno:
             usos_restantes = aluno["usos_restantes"]
 
-    return render_template('mapa-mesas/bistrot.html', saloes_disponiveis=[salao.NUMERO_SALAO for salao in saloes], usos_restantes=usos_restantes) #saloes disponiveis = informação para javascript
+    return render_template('mapa-mesas/bistrot.html', usos_restantes=usos_restantes) #saloes disponiveis = informação para javascript
 
 @bp_lugares.route("/lugares/datas", methods=["GET"])
 def listar_datas():
@@ -114,12 +127,18 @@ def listar_mapa():
 
     verificar_db()
 
-    lugares = []
+    mapa = MapaLugares().listar_mapa(dia)
+    lugares = [
+        lugar
+        for lugares_mesa in mapa.values()
+        for lugar in lugares_mesa
+    ]
 
-    for salao in listar_saloes_disponiveis():
-        mapa = salao().listar_mapa(dia)
-        for lugares_mesa in mapa.values():
-            lugares.extend(lugares_mesa)
+    return jsonify({
+        "dia": dia,
+        "lugares": lugares
+    }), 200
+
 
     return jsonify({
         "dia": dia,
@@ -168,15 +187,9 @@ def rota_escolher(cod_lugar):
         return jsonify({"erro": "dia_bistro não informado"}), 400
 
     try:
-        salao = qual_salao(cod_lugar)
-    except LugarInvalidoError as e:
-        return jsonify({"erro": str(e)}), 400
-
-    if salao is Salao2 and salao2_esta_oculto():
-        return jsonify({"erro": "Salão 2 não disponível para este evento"}), 403
-
-    try:
-        sucesso, resultado = salao().escolher_lugar(cod_lugar, cod_aluno, dia_bistro)
+        sucesso, resultado = MapaLugares().escolher_lugar(
+            cod_lugar, cod_aluno, dia_bistro
+        )
     except LugarInvalidoError as e:
         return jsonify({"erro": str(e)}), 400
 
