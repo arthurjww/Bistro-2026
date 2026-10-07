@@ -24,7 +24,8 @@ MP_WEBHOOK_SECRET = os.environ["MP_WEBHOOK_SECRET"]
 sdk = mercadopago.SDK(MP_ACCESS_TOKEN)
 
 # TODO: preço definido — R$130, crianças de 0 a 3 anos (tipo_ingresso == 0) não pagam
-PRECO_INGRESSO = 130  # tipo_ingresso == 2
+PRECO_INGRESSO = 0.01  # tipo_ingresso == 2
+#TODO: preço do ingresso definido como 0.01 para fins de teste !!! alterar após testar.
 
 # Tempo que o QR code do Pix fica válido.
 # A Payments API não aceita duração ISO 8601 ("PT30M") em date_of_expiration —
