@@ -843,7 +843,7 @@ def pagamento_sucesso():
     return render_template(
         'votacao/musica.html',
         total_ingressos=len(ingressos),
-        dias=dias
+        dias=sorted(dias)
     )
 
 
