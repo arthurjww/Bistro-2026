@@ -16,16 +16,6 @@
         svg.setAttribute('viewBox', '0 0 1280 853');
         svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
 
-        /* Destaque da mesa ativa (o CSS antigo não conhece o novo desenho) */
-        {
-            const st = document.createElement('style');
-            st.textContent = `
-                #mapa .table-group { cursor: pointer; }
-                #mapa .table-group.active .table-shape { stroke: #d71920 !important; stroke-width: 4 !important; }
-            `;
-            document.head.appendChild(st);
-        }
-
         /* ---------- Geometria das mesas (novo mapa: salão único) ---------- */
 
     const allTables = [
@@ -123,6 +113,9 @@
         }
 
         const seatIdByLugarCode = new Map(allSeatIds.map(id => [getLugarCode(id), id]));
+        const lugaresIndisponiveisPorRegra = new Set(
+            allSeatIds.filter(id => getLugarCode(id).startsWith('H'))
+        );
 
         /* ---------- Planta fixa: paredes, portas, bar, banheiros, etc. ---------- */
 
@@ -271,7 +264,6 @@
         /* ---------- Desenho das mesas e cadeiras ---------- */
 
         const seatEls = {};
-        const tableGroupEls = {};
 
         tables.forEach(t => {
 
@@ -291,11 +283,7 @@
             lbl.textContent = t.label.replace('Mesa ', '');
             tg.appendChild(lbl);
 
-            tg.addEventListener('click', () => selectTable(t.id));
-
             svg.appendChild(tg);
-            tableGroupEls[t.id] = tg;
-
             getSeatPositions(t).forEach(s => {
 
                 const r = el('rect', {
@@ -309,7 +297,9 @@
                 });
 
                 const title = el('title', {});
-                title.textContent = `${t.label} — cadeira ${s.id.split('-s')[1]}`;
+                title.textContent = getLugarCode(s.id).startsWith('H')
+                    ? `${t.label} — cadeira ${s.id.split('-s')[1]} (indisponível)`
+                    : `${t.label} — cadeira ${s.id.split('-s')[1]}`;
                 r.appendChild(title);
 
                 svg.appendChild(r);
@@ -326,16 +316,10 @@
 
         /* ---------- Estado ---------- */
 
-        let reservedSet = new Set();
+        let reservedSet = new Set(lugaresIndisponiveisPorRegra);
         let pendingSet = new Set();
-        let activeTableId = null;
         let codigoConfirmado = false;
         let usosRestantes = Number(document.body.dataset.usosRestantes || 0);
-
-        function tableFreeCount(tableId) {
-            const seats = allSeatIds.filter(id => seatToTable[id] === tableId);
-            return seats.filter(id => !reservedSet.has(id)).length;
-        }
 
         function repaintSeats() {
 
@@ -353,8 +337,6 @@
                 r.style.fill = isPending ? 'var(--selected)' : isReserved ? 'var(--reserved)' : 'var(--available)';
                 r.style.stroke = isPending ? '#8a6a0f' : isReserved ? 'var(--reserved-line)' : 'var(--available-line)';
                 r.style.strokeWidth = '1.3';
-                r.style.opacity = (activeTableId && seatToTable[id] !== activeTableId) ? '0.55' : '1';
-
             });
 
             document.getElementById('occNum').textContent = TOTAL_SEATS - reservedSet.size;
@@ -366,17 +348,14 @@
 
             document.getElementById('confirmBtn').disabled = pendingSet.size === 0;
 
-            renderTableList();
         }
 
         function onSeatClick(id) {
 
             if (reservedSet.has(id)) {
-                showToast('Essa cadeira já foi comprada.');
+                showToast('Esse lugar está indisponível.');
                 return;
             }
-
-            activeTableId = seatToTable[id];
 
             if(!codigoConfirmado) {
                 setCodeStatus('Valide o código do aluno antes de escolher lugares', 'error');
@@ -397,65 +376,6 @@
             }
 
             repaintSeats();
-            highlightActiveTable();
-        }
-
-        function selectTable(id) {
-            activeTableId = id;
-            repaintSeats();
-            highlightActiveTable();
-        }
-
-        function highlightActiveTable() {
-
-            Object.keys(tableGroupEls).forEach(id => {
-                tableGroupEls[id].classList.toggle('active', id === activeTableId);
-            });
-
-            const box = document.getElementById('selectedTableLabel');
-            const sub = document.getElementById('selectedTableSub');
-
-            if (!activeTableId) {
-                box.textContent = 'Nenhuma';
-                sub.textContent = 'Escolha uma mesa para começar.';
-                return;
-            }
-
-            const t = tables.find(x => x.id === activeTableId);
-            const free = tableFreeCount(activeTableId);
-
-            box.textContent = t.label;
-            sub.textContent = `${free} de ${t.seats} lugares livres`;
-        }
-
-        function renderTableList() {
-
-            const list = document.getElementById('tableList');
-            list.innerHTML = '';
-
-            const sortedTables = [...tables].sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'));
-
-            sortedTables.forEach(t => {
-
-                const free = tableFreeCount(t.id);
-
-                const btn = document.createElement('button');
-                btn.className = 'table-btn' + (t.id === activeTableId ? ' active' : '');
-
-                btn.innerHTML = `
-                    <span>
-                        <span class="tname">${t.label}</span>
-                        <span class="tcap">${t.seats} lugares</span>
-                    </span>
-                    <span class="tfree${free === 0 ? ' full' : ''}">
-                        ${free === 0 ? 'lotada' : free + ' livre' + (free === 1 ? '' : 's')}
-                    </span>
-                `;
-
-                btn.addEventListener('click', () => selectTable(t.id));
-
-                list.appendChild(btn);
-            });
         }
 
         /* ---------- Limpar seleção ---------- */
@@ -545,9 +465,8 @@
                     reservedSet.add(id);
                     pendingSet.delete(id);
                 });
-
                 repaintSeats();
-                highlightActiveTable();
+                repaintSeats();
                 showToast('Lugares reservados. Continuando para o pagamento.');
                 window.location.assign(`${API_BASE}/lugares/seguir`);
             } catch (error) {
@@ -555,9 +474,8 @@
                     reservedSet.add(id);
                     pendingSet.delete(id);
                 });
-
                 repaintSeats();
-                highlightActiveTable();
+                repaintSeats();
                 showToast(error.message);
             }
 
@@ -599,12 +517,12 @@
                         .map(lugar => seatIdByLugarCode.get(lugar.cod_lugar))
                         .filter(Boolean)
                 );
+                lugaresIndisponiveisPorRegra.forEach(id => novasReservas.add(id));
                 const selecoesIndisponiveis = [...pendingSet].filter(id => novasReservas.has(id));
 
                 selecoesIndisponiveis.forEach(id => pendingSet.delete(id));
                 reservedSet = novasReservas;
                 repaintSeats();
-                highlightActiveTable();
 
                 if (selecoesIndisponiveis.length && !silencioso) {
                     showToast('Uma cadeira selecionada acabou de ficar indisponível.');
@@ -658,15 +576,34 @@
             url.searchParams.set('dia', diaBistroSelect.value);
             window.location.assign(url);
         });
+        
+        async function liberarReservasAntesDoMapa() {
+            const resposta = await fetch(`${API_BASE}/lugares/liberar-reservas`, {
+                method: 'POST',
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            });
 
+            const dados = await resposta.json().catch(() => ({}));
+
+            if (!resposta.ok) {
+                throw new Error(dados.erro || 'Não foi possível liberar as reservas.');
+            }
+        }
         async function init() {
+            await liberarReservasAntesDoMapa()
             await carregarDatas();
             repaintSeats();
-            highlightActiveTable();
             await atualizarMapa();
             window.setInterval(() => atualizarMapa({ silencioso: true }), 15000);
         }
 
         init().catch(error => showToast(error.message));
+
+        window.addEventListener('pageshow', event => {
+            if (event.persisted) {
+                init().catch(error => showToast(error.message));
+            }
+        });
 
     })();
