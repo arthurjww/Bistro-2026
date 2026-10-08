@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Validação de Ingresso</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 30px;
+      background-color: #f4f4f9;
+    }
+
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    .valido {
+      color: #2e7d32;
+      font-size: 26px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    .invalido {
+      color: #c62828;
+      font-size: 26px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    .confirmado {
+      color: #1565c0;
+      font-size: 26px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    .utilizado {
+      color: #e65100;
+      font-size: 26px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    .info {
+      text-align: left;
+      font-size: 16px;
+      line-height: 1.6;
+      border-top: 1px solid #ddd;
+      padding-top: 15px;
+    }
+
+    .staff {
+      margin-top: 25px;
+      padding-top: 20px;
+      border-top: 1px solid #ddd;
+    }
+
+    .staff input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+      text-align: center;
+    }
+
+    .staff button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 8px;
+      background-color: #581418;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .staff button:hover {
+      background-color: #3B0D10;
+    }
+
+    .erro {
+      color: #c62828;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="card">
+
+    {% if status == 'valido' %}
+
+      <div class="valido">✅ Ingresso Válido!</div>
+
+      <div class="info">
+        <p><strong>Titular:</strong> {{ nome }}</p>
+        <p><strong>Mesa/Lugar:</strong> {{ lugar }}</p>
+        <p><strong>Tipo:</strong> {{ tipo }}</p>
+        <p><strong>Data da Compra:</strong> {{ data_compra }}</p>
+      </div>
+
+      {% if not staff_autenticado %}
+
+        <div class="staff">
+          <strong>🔐 Acesso da Portaria</strong>
+
+          <form method="POST" action="{{ url_for('gerador_pdf.confirmar_entrada') }}">
+
+            <input
+              type="hidden"
+              name="token"
+              value="{{ token }}"
+            >
+
+            <input
+              type="password"
+              name="pin"
+              placeholder="Digite o PIN da equipe"
+              required
+            >
+
+            <button type="submit">
+              Confirmar entrada
+            </button>
+
+          </form>
+
+          {% if erro_pin %}
+            <div class="erro">
+              {{ erro_pin }}
+            </div>
+          {% endif %}
+
+        </div>
+
+      {% else %}
+
+        <div class="staff">
+          <strong>🔐 Portaria autenticada</strong>
+
+          <form method="POST" action="{{ url_for('gerador_pdf.confirmar_entrada') }}">
+
+            <input
+              type="hidden"
+              name="token"
+              value="{{ token }}"
+            >
+
+            <button type="submit">
+              Confirmar entrada
+            </button>
+
+          </form>
+        </div>
+
+      {% endif %}
+
+
+    {% elif status == 'confirmado' %}
+
+      <div class="confirmado">
+        ✅ Entrada Confirmada!
+      </div>
+
+      <div class="info">
+        <p><strong>Titular:</strong> {{ nome }}</p>
+        <p><strong>Mesa/Lugar:</strong> {{ lugar }}</p>
+        <p><strong>Tipo:</strong> {{ tipo }}</p>
+      </div>
+
+      <p>O ingresso foi marcado como utilizado.</p>
+
+
+    {% elif status == 'ja_utilizado' %}
+
+      <div class="utilizado">
+        ⚠️ Ingresso Já Utilizado
+      </div>
+
+      <div class="info">
+        <p><strong>Titular:</strong> {{ nome }}</p>
+        <p><strong>Mesa/Lugar:</strong> {{ lugar }}</p>
+        <p><strong>Tipo:</strong> {{ tipo }}</p>
+        <p><strong>Utilizado em:</strong> {{ data_utilizado }}</p>
+      </div>
+
+      <p>Este ingresso já foi utilizado na entrada do evento.</p>
+
+
+    {% else %}
+
+      <div class="invalido">
+        ❌ Ingresso Inválido
+      </div>
+
+      <p>
+        Este ingresso não foi encontrado ou o pagamento não está aprovado.
+      </p>
+
+    {% endif %}
+
+  </div>
+
+</body>
+
+</html>

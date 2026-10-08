@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+
+    <!-- Fontes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- CSS -->
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #131010;
+            color: #332D27;
+            min-height: 100vh;
+            margin: 0;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        h1 {
+            font-family: 'Instrument Serif', serif;
+            font-style: italic;
+            font-size: 48px;
+            font-weight: normal;
+            color: #F1EDDB;
+            text-align: center;
+            margin: 20px;
+            text-shadow: 0 0 30px rgba(241, 237, 219, 0.2);
+        }
+
+        form {
+            background-color: #F1EDDB;
+            padding: 35px;
+            width: 100%;
+            max-width: 380px;
+            border-radius: 6px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        form div {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #332D27;
+        }
+
+        input[type="email"],
+        input[type="text"],
+        input[type="password"] {
+            display: block;
+            width: 100%;
+            padding: 12px 14px;
+            margin-top: 6px;
+            border: 1px solid #c9c0af;
+            border-radius: 4px;
+            background-color: #fffdf7;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            color: #332D27;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input[type="email"]:focus,
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            border-color: #B8262D;
+            box-shadow: 0 0 0 3px rgba(184, 38, 45, 0.1);
+        }
+
+        input[type="submit"] {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            margin-top: 10px;
+            background-color: #B8262D;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 4px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #720C11;
+        }
+
+        body > div {
+            width: 100%;
+            max-width: 380px;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            font-size: 13px;
+        }
+
+        form div div {
+            color: #B42318;
+            font-size: 12px;
+            margin-top: 6px;
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 40px;
+            }
+
+            form {
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <h1>Login</h1>
+
+    <form method="POST">
+        {{ form.hidden_tag() }}
+
+        <div>
+            {{ form.email.label }}
+            {{ form.email() }}
+
+            {% for error in form.email.errors %}
+                <div>{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div>
+            {{ form.senha.label }}
+            {{ form.senha() }}
+
+            {% for error in form.senha.errors %}
+                <div>{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        {{ form.submit() }}
+    </form>
+
+</body>
+</html>
+

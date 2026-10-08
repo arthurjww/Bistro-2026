@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>RELATÓRIOS BISTRO 2026</title>
+
+  <!-- Fontes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  >
+
+  <!-- Biblioteca para gerar PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <style>
+
+    /* css */
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #131010;
+      color: #F1EDDB;
+
+      min-height: 100vh;
+      margin: 0;
+      padding: 30px 40px;
+
+      line-height: 1.5;
+    }
+    header {
+      font-family: 'Instrument Serif', serif;
+      font-style: italic;
+      font-size: 48px;
+      font-weight: normal;
+
+      color: #F1EDDB;
+
+      text-align: center;
+
+      margin: 10px 0 35px;
+
+      text-shadow:
+        0 0 30px rgba(241, 237, 219, 0.20);
+    }
+
+    .acoes-administrador {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 12px;
+
+      background-color: #1c1717;
+
+      padding: 12px 18px;
+
+      border: 1px solid rgba(241, 237, 219, 0.12);
+      border-radius: 5px;
+
+      color: #F1EDDB;
+
+      margin-bottom: 25px;
+    }
+
+    .acoes-administrador span {
+      font-size: 14px;
+    }
+
+    .acoes-administrador a {
+      color: #F1EDDB;
+
+      text-decoration: none;
+
+      border: 1px solid #B8262D;
+
+      padding: 7px 14px;
+
+      border-radius: 3px;
+
+      transition: 0.2s ease;
+    }
+
+    .acoes-administrador a:hover {
+      background-color: #B8262D;
+      color: white;
+    }
+
+    nav {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      gap: 8px;
+      flex-wrap: wrap;
+
+      margin-bottom: 25px;
+      padding: 8px;
+
+      background-color: #1c1717;
+
+      border: 1px solid rgba(241, 237, 219, 0.10);
+
+      border-radius: 5px;
+    }
+
+    .nav-btn {
+      font-family: 'Inter', sans-serif;
+
+      background: transparent;
+
+      color: #F1EDDB;
+
+      border: 1px solid transparent;
+
+      padding: 10px 15px;
+
+      border-radius: 3px;
+
+      cursor: pointer;
+
+      font-size: 13px;
+      font-weight: 500;
+
+      transition: all 0.2s ease;
+    }
+
+    .nav-btn:hover {
+      background-color: #332D27;
+      border-color: #4b4037;
+    }
+
+    .nav-btn.ativo {
+      background-color: #B8262D;
+
+      color: white;
+
+      border-color: #B8262D;
+    }
+
+
+    .filtro-dia-bistro {
+      display: flex;
+      align-items: center;
+
+      gap: 12px;
+      flex-wrap: wrap;
+
+      background-color: #F1EDDB;
+
+      color: #332D27;
+
+      padding: 18px 20px;
+
+      border-radius: 5px;
+
+      margin-bottom: 25px;
+    }
+
+    .filtro-dia-bistro label {
+      font-size: 14px;
+    }
+
+    input,
+    select,
+    textarea {
+      font-family: 'Inter', sans-serif;
+    }
+
+    select,
+    input[type="text"],
+    input[type="email"],
+    input[type="password"] {
+      padding: 10px 12px;
+
+      border: 1px solid #332D27;
+
+      border-radius: 3px;
+
+      background-color: white;
+
+      color: #332D27;
+
+      font-size: 14px;
+
+      outline: none;
+
+      transition: border-color 0.2s ease;
+    }
+
+    select:focus,
+    input:focus,
+    textarea:focus {
+      border-color: #B8262D;
+    }
+
+    .filtro-dia-bistro select {
+      min-width: 180px;
+    }
+
+    button {
+      font-family: 'Inter', sans-serif;
+    }
+
+    .filtro-dia-bistro button,
+    form button[type="submit"] {
+      background-color: #B8262D;
+
+      color: white;
+
+      border: none;
+
+      padding: 10px 16px;
+
+      border-radius: 3px;
+
+      cursor: pointer;
+
+      font-size: 13px;
+
+      font-weight: 500;
+
+      transition: background-color 0.2s ease;
+    }
+
+    .filtro-dia-bistro button:hover,
+    form button[type="submit"]:hover {
+      background-color: #720C11;
+    }
+
+    .secao {
+      background-color: #F1EDDB;
+
+      color: #332D27;
+
+      border-radius: 5px;
+
+      padding: 30px;
+
+      margin-bottom: 30px;
+
+      box-shadow:
+        0 4px 25px rgba(0, 0, 0, 0.25);
+    }
+
+    .secao h2 {
+      font-family: 'Instrument Serif', serif;
+
+      font-style: italic;
+
+      font-weight: normal;
+
+      font-size: 40px;
+
+      color: #332D27;
+
+      margin-top: 0;
+      margin-bottom: 25px;
+    }
+
+    .secao h3 {
+      font-size: 20px;
+
+      font-weight: 600;
+
+      margin-top: 25px;
+
+      color: #332D27;
+    }
+
+    .secao form {
+      background-color: #ffffff;
+
+      padding: 20px;
+
+      border-radius: 5px;
+
+      margin-bottom: 25px;
+    }
+
+    .filtros {
+      display: flex;
+
+      gap: 15px;
+
+      margin-bottom: 20px;
+
+      flex-wrap: wrap;
+    }
+
+    .filtro-item {
+      display: flex;
+
+      flex-direction: column;
+
+      gap: 6px;
+
+      min-width: 180px;
+    }
+
+    .filtro-item label {
+      font-size: 13px;
+    }
+
+
+    .cards-resumo,
+    .info-container {
+      display: grid;
+
+      grid-template-columns:
+        repeat(auto-fit, minmax(200px, 1fr));
+
+      gap: 15px;
+
+      margin-bottom: 25px;
+    }
+
+    .card {
+      background-color: white;
+
+      border: 1px solid #ddd6c8;
+
+      border-radius: 5px;
+
+      padding: 18px;
+
+      display: flex;
+
+      flex-direction: column;
+
+      gap: 8px;
+
+      min-height: 80px;
+    }
+
+    .card strong {
+      font-size: 12px;
+
+      text-transform: uppercase;
+
+      letter-spacing: 0.5px;
+
+      color: #6b6259;
+    }
+
+    .card .valor {
+      font-size: 22px;
+
+      font-weight: 600;
+
+      color: #332D27;
+    }
+
+    table {
+      width: 100%;
+
+      border-collapse: collapse;
+
+      background-color: white;
+
+      font-size: 13px;
+    }
+
+    thead {
+      background-color: #332D27;
+
+      color: #F1EDDB;
+    }
+
+    th {
+      padding: 13px 12px;
+
+      text-align: left;
+
+      font-weight: 600;
+
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 12px;
+
+      border-bottom: 1px solid #e2ddd3;
+
+      color: #332D27;
+    }
+
+    tbody tr:hover {
+      background-color: #f5f2ea;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .green {
+      color: #256029;
+    }
+
+    .red {
+      color: #B42318;
+    }
+
+    .destaque-musica {
+      background-color: #ebe5d6;
+
+      font-weight: 600;
+    }
+
+    .destaque-musica td:first-child {
+      color: #B8262D;
+    }
+
+    .observacoes {
+      margin-top: 20px;
+    }
+
+    .observacoes textarea {
+      width: 100%;
+
+      height: 100px;
+
+      padding: 12px;
+
+      border: 1px solid #ccc;
+
+      border-radius: 5px;
+
+      resize: vertical;
+
+      color: #332D27;
+
+      background-color: white;
+    }
+
+    .botoes-acao {
+      display: flex;
+
+      justify-content: flex-end;
+
+      margin-top: 25px;
+    }
+
+    .btn-pdf {
+      background-color: #B8262D;
+
+      color: white;
+
+      border: none;
+
+      padding: 11px 18px;
+
+      border-radius: 3px;
+
+      cursor: pointer;
+
+      font-size: 13px;
+
+      font-weight: 500;
+
+      transition: background-color 0.2s ease;
+    }
+
+    .btn-pdf:hover {
+      background-color: #720C11;
+    }
+
+    .secao > p {
+      background-color: white;
+
+      padding: 15px;
+
+      border-radius: 5px;
+
+      color: #6b6259;
+    }
+
+    @media (max-width: 768px) {
+
+      body {
+        padding: 20px 15px;
+      }
+
+      header {
+        font-size: 36px;
+      }
+
+      nav {
+        flex-direction: column;
+      }
+
+      .nav-btn {
+        width: 100%;
+      }
+
+      .filtro-dia-bistro {
+        align-items: stretch;
+
+        flex-direction: column;
+      }
+
+      .filtro-dia-bistro select,
+      .filtro-dia-bistro button {
+        width: 100%;
+      }
+
+      .secao {
+        padding: 20px;
+      }
+
+      .secao h2 {
+        font-size: 32px;
+      }
+
+      .botoes-acao {
+        justify-content: stretch;
+      }
+
+      .btn-pdf {
+        width: 100%;
+      }
+
+      .acoes-administrador {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .acoes-administrador a {
+        text-align: center;
+      }
+    }
+
+  </style>
+</head>
+
+
+<body>
+
+  <header>
+   RELATÓRIOS BISTRO 2026
+  </header>
+
+
+  {% if current_user.is_authenticated %}
+
+  <div class="acoes-administrador">
+
+    <span>
+      Administrador: {{ current_user.nome }}
+    </span>
+
+    <a href="{{ url_for('auth_relatorios.logout') }}">
+      Sair
+    </a>
+
+  </div>
+
+  {% endif %}
+
+
+  <!--NAVEGAÇÃO-->
+
+  <nav>
+
+    <button class="nav-btn ativo" data-secao="resumo-compradores">
+      Resumo de Participantes
+    </button>
+
+    <button class="nav-btn" data-secao="visao-geral">
+      Visão Geral
+    </button>
+
+    <button class="nav-btn" data-secao="financeiro">
+      Financeiro
+    </button>
+
+    <button class="nav-btn" data-secao="vendas">
+      Vendas
+    </button>
+
+    <button class="nav-btn" data-secao="restricoes">
+      Restrições Alimentares
+    </button>
+
+    <button class="nav-btn" data-secao="top5">
+      Top 5 Músicas
+    </button>
+
+  </nav>
+
+
+  <!-- =========================
+       FILTRO
+  ========================= -->
+
+  <form method="get" class="filtro-dia-bistro">
+
+    <input
+      type="hidden"
+      id="secao-ativa"
+      name="secao"
+      value="resumo-compradores"
+    >
+
+    <label for="dia_bistro">
+      <strong>Dia do Bistro:</strong>
+    </label>
+
+    <select id="dia_bistro" name="dia_bistro">
+
+      <option value="">
+        Todos os dias
+      </option>
+
+      {% for dia in dias_bistro %}
+
+      <option
+        value="{{ dia.valor }}"
+        {% if dia_bistro_selecionado == dia.valor %}selected{% endif %}
+      >
+        {{ dia.texto }}
+      </option>
+
+      {% endfor %}
+
+    </select>
+
+    <button type="submit">
+      Aplicar filtro
+    </button>
+
+  </form>
+
+
+  <main>
+
+
+    <!-- =========================
+         RESUMO
+    ========================= -->
+
+    <div id="resumo-compradores" class="secao ativa">
+
+      <h2> Resumo de Participantes</h2>
+
+      <div style="overflow-x: auto;">
+
+        <table>
+
+          <thead>
+
+            <tr>
+              <th>Técnico</th>
+              <th>Aluno</th>
+              <th>Participante</th>
+              <th>Valor Pago</th>
+              <th>Data da Compra</th>
+              <th>Dia do Bistro</th>
+              <th>Restrição?</th>
+              <th>Mesa / Lugar</th>
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            {% for resumo in lista_resumo %}
+
+            <tr>
+              <td>{{ resumo.tecnico }}</td>
+              <td>{{ resumo.aluno }}</td>
+              <td>{{ resumo.participante }}</td>
+              <td>{{ resumo.valor_pago }}</td>
+              <td>{{ resumo.data_compra }}</td>
+              <td>{{ resumo.dia_bistro }}</td>
+              <td>{{ resumo.restricao }}</td>
+              <td>{{ resumo.mesa_lugar }}</td>
+            </tr>
+
+            {% endfor %}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+      <div class="botoes-acao">
+
+        <button
+          class="btn-pdf"
+          onclick="gerarPDF(
+            'resumo-compradores',
+            'resumo_compradores.pdf'
+          )"
+        >
+          Gerar PDF
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <!-- =========================
+         VISÃO GERAL
+    ========================= -->
+
+    <div
+      id="visao-geral"
+      class="secao"
+      style="display: none;"
+    >
+
+      <h2>Visão Geral</h2>
+
+      <form method="get">
+
+        <input
+          type="hidden"
+          name="secao"
+          value="visao-geral"
+        >
+
+        {% if dia_bistro_selecionado %}
+
+        <input
+          type="hidden"
+          name="dia_bistro"
+          value="{{ dia_bistro_selecionado }}"
+        >
+
+        {% endif %}
+
+        <div class="filtros">
+
+          <div class="filtro-item">
+
+            <label for="tecnico">
+              <strong>Técnico:</strong>
+            </label>
+
+            <select id="tecnico" name="tecnico">
+
+              <option
+                value="todos"
+                {% if tecnico_selecionado == "todos" %}selected{% endif %}
+              >
+                Todos
+              </option>
+
+              <option
+                value="Administração"
+                {% if tecnico_selecionado == "Administração" %}selected{% endif %}
+              >
+                Administração
+              </option>
+
+              <option
+                value="Gastronomia"
+                {% if tecnico_selecionado == "Gastronomia" %}selected{% endif %}
+              >
+                Gastronomia
+              </option>
+
+              <option
+                value="Informática"
+                {% if tecnico_selecionado == "Informática" %}selected{% endif %}
+              >
+                Informática
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <div class="filtro-item">
+
+            <label for="aluno">
+              <strong>Alunos:</strong>
+            </label>
+
+            <select id="aluno" name="aluno">
+
+              <option value="">
+                Todos
+              </option>
+
+              {% for aluno in lista_alunos %}
+
+              <option value="{{ aluno.cod_aluno }}">
+                {{ aluno.nome }}
+              </option>
+
+              {% endfor %}
+
+            </select>
+
+          </div>
+
+
+          <div class="filtro-item">
+
+            <label for="comprador">
+              <strong>Participantes:</strong>
+            </label>
+
+            <select id="comprador" name="participante">
+
+              <option value="">
+                Selecione um participante
+              </option>
+
+              {% for comprador in lista_compradores %}
+
+              <option value="{{ comprador.id }}">
+                {{ comprador.nome }}
+              </option>
+
+              {% endfor %}
+
+            </select>
+
+          </div>
+
+        </div>
+
+        <button type="submit">
+          Aplicar filtro
+        </button>
+
+      </form>
+
+
+      {% if detalhes_participante %}
+
+      <h3>Informações do Participante</h3>
+
+      <div class="info-container">
+
+        <div class="card">
+          <strong>Aluno Responsável</strong>
+          <span class="valor">
+            {{ detalhes_participante.nome_aluno }}
+          </span>
+        </div>
+
+        <div class="card">
+          <strong>Nome do Participante</strong>
+          <span class="valor">
+            {{ detalhes_participante.nome_cliente }}
+          </span>
+        </div>
+
+        <div class="card">
+          <strong>Quantidade de Ingressos</strong>
+          <span class="valor">
+            {{ detalhes_participante.qtd_ingressos }}
+          </span>
+        </div>
+
+        <div class="card">
+          <strong>Número do Ingresso</strong>
+          <span class="valor">
+            {{ detalhes_participante.n_ingresso }}
+          </span>
+        </div>
+
+        <div class="card">
+          <strong>Telefone do Participante</strong>
+          <span class="valor">
+            {{ detalhes_participante.telefone_comprador }}
+          </span>
+        </div>
+
+        <div class="card">
+          <strong>Restrições Alimentícias</strong>
+          <span class="valor">
+            {{ detalhes_participante.restricoes_texto }}
+          </span>
+        </div>
+
+        <div class="card">
+          <strong>Data e Hora da Compra</strong>
+          <span class="valor">
+            {{ detalhes_participante.data_hora_compra }}
+          </span>
+        </div>
+
+        <div class="card">
+          <strong>Dia do Bistro</strong>
+          <span class="valor">
+            {{ detalhes_participante.dia_bistro }}
+          </span>
+        </div>
+
+        <div class="card">
+          <strong>Status do Pagamento</strong>
+          <span class="valor">
+            {{ detalhes_participante.status_compra }}
+          </span>
+        </div>
+
+      </div>
+
+
+      <div class="observacoes">
+
+        <h3>Observações</h3>
+
+        <textarea id="observacoes" readonly>Relatório gerado com os dados atualizados no sistema.</textarea>
+
+      </div>
+
+
+      <div class="botoes-acao">
+
+        <button
+          class="btn-pdf"
+          onclick="gerarPDF(
+            'visao-geral',
+            'relatorio_visao_geral.pdf'
+          )"
+        >
+        Gerar PDF
+        </button>
+
+      </div>
+
+
+      {% else %}
+
+      <p>
+        Selecione um participante para visualizar os detalhes.
+      </p>
+
+      {% endif %}
+
+    </div>
+
+
+    <!-- =========================
+         FINANCEIRO
+    ========================= -->
+
+    <div
+      id="financeiro"
+      class="secao"
+      style="display: none;"
+    >
+
+      <h2>Relatório Financeiro</h2>
+
+      <div class="cards-resumo">
+
+        <div class="card">
+
+          <strong>Faturamento Total</strong>
+
+          <span class="valor">
+            {{ "R$ %.2f"|format(
+              resumo_financeiro.faturamento_total
+            )|replace(".", ",") }}
+          </span>
+
+        </div>
+
+
+        <div class="card">
+
+          <strong>Vendas Confirmadas</strong>
+
+          <span class="valor">
+            {{ resumo_financeiro.vendas_confirmadas }}
+          </span>
+
+        </div>
+
+
+        <div class="card">
+
+          <strong>Ticket Médio</strong>
+
+          <span class="valor">
+            {{ "R$ %.2f"|format(
+              resumo_financeiro.ticket_medio
+            )|replace(".", ",") }}
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <div style="overflow-x: auto;">
+
+        <table>
+
+          <thead>
+
+            <tr>
+              <th>Aluno Responsável</th>
+              <th>Quantidade de Ingressos Vinculados</th>
+              <th>Número do Ingresso</th>
+              <th>Nome do Participante</th>
+              <th>Telefone</th>
+              <th>Restrições</th>
+              <th>Data e Horário da Compra</th>
+              <th>Dia do Bistro</th>
+              <th>Valor Pago</th>
+              <th>Status do Pagamento</th>
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            {% for item in lista_financeiro %}
+
+            <tr>
+
+              <td>{{ item.aluno }}</td>
+              <td>{{ item.quantidade_ingressos }}</td>
+              <td>{{ item.numero_ingresso }}</td>
+              <td>{{ item.nome_participante }}</td>
+              <td>{{ item.telefone }}</td>
+              <td>{{ item.restricoes }}</td>
+              <td>{{ item.horario_e_dia_compra }}</td>
+              <td>{{ item.dia_bistro }}</td>
+
+              <td>
+                {{ "R$ %.2f"|format(
+                  item.valor_pago
+                )|replace(".", ",") }}
+              </td>
+
+              <td>
+
+                <span
+                  class="{% if item.status == 'Pago' %}green{% else %}red{% endif %}"
+                >
+                  {{ item.status }}
+                </span>
+
+              </td>
+
+            </tr>
+
+            {% endfor %}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+
+      <div class="botoes-acao">
+
+        <button
+          class="btn-pdf"
+          onclick="gerarPDF(
+            'financeiro',
+            'relatorio_financeiro.pdf'
+          )"
+        >
+        Gerar PDF
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <!-- =========================
+         VENDAS
+    ========================= -->
+
+    <div
+      id="vendas"
+      class="secao"
+      style="display: none;"
+    >
+
+      <h2>Relatório de Vendas</h2>
+
+      <div class="cards-resumo">
+
+        <div class="card">
+          <strong>Total de Ingressos</strong>
+          <span class="valor">
+            {{ total_ingressos }}
+          </span>
+        </div>
+
+        <div class="card">
+          <strong>Ingressos Pagos</strong>
+          <span class="valor">
+            {{ ingressos_pagos }}
+          </span>
+        </div>
+
+        <div class="card">
+          <strong>Ingressos Não Pagos</strong>
+          <span class="valor">
+            {{ ingressos_naopagos }}
+          </span>
+        </div>
+
+        <div class="card">
+          <strong>Ingressos Restantes</strong>
+          <span class="valor">
+            {{ ingressos_restantes }}
+          </span>
+        </div>
+
+      </div>
+
+
+      <div style="overflow-x: auto;">
+
+        <table>
+
+          <thead>
+
+            <tr>
+              <th>Aluno Responsável</th>
+              <th>Quantidade de Ingressos por Aluno</th>
+              <th>Número do Ingresso</th>
+              <th>Lugares / Mesas</th>
+              <th>Dia do Bistro</th>
+              <th>Situação do Pagamento</th>
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            {% for venda in lista_vendas %}
+
+            <tr>
+              <td>{{ venda.nome_aluno }}</td>
+              <td>{{ venda.quant_por_aluno }}</td>
+              <td>{{ venda.numero_ingresso }}</td>
+              <td>{{ venda.lugar_e_mesa }}</td>
+              <td>{{ venda.dia_bistro }}</td>
+              <td>{{ venda.situacao_pagamento }}</td>
+            </tr>
+
+            {% endfor %}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+
+      <div class="botoes-acao">
+
+        <button
+          class="btn-pdf"
+          onclick="gerarPDF(
+            'vendas',
+            'relatorio_vendas.pdf'
+          )"
+        >
+          📥 Gerar PDF
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <!-- =========================
+         RESTRIÇÕES
+    ========================= -->
+
+    <div
+      id="restricoes"
+      class="secao"
+      style="display: none;"
+    >
+
+      <h2>Relatório de Restrições Alimentares</h2>
+
+      <div style="overflow-x: auto;">
+
+        <table>
+
+          <thead>
+
+            <tr>
+              <th>Participante</th>
+              <th>Ingresso</th>
+              <th>Mesa / Lugar</th>
+              <th>Dia do Bistro</th>
+              <th>Restrição</th>
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            {% for restricao in lista_restricoes %}
+
+            <tr>
+              <td>{{ restricao.participante }}</td>
+              <td>{{ restricao.ingresso }}</td>
+              <td>{{ restricao.mesa_lugar }}</td>
+              <td>{{ restricao.dia_bistro }}</td>
+              <td>{{ restricao.restricao }}</td>
+            </tr>
+
+            {% endfor %}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+
+      <div class="botoes-acao">
+
+        <button
+          class="btn-pdf"
+          onclick="gerarPDF(
+            'restricoes',
+            'relatorio_restricoes.pdf'
+          )"
+        >
+          📥 Gerar PDF
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <!-- =========================
+         TOP 5 MÚSICAS
+    ========================= -->
+
+    <div
+      id="top5"
+      class="secao"
+      style="display: none;"
+    >
+
+      <h2>Relatório Top 5 Músicas</h2>
+
+      <div style="overflow-x: auto;">
+
+        <table id="tabela-musicas">
+
+          <thead>
+
+            <tr>
+              <th>Número da Música</th>
+              <th>Música</th>
+              <th>Artista</th>
+              <th>Votos</th>
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            {% for musica in lista_musicas %}
+
+            <tr
+              class="{% if loop.index <= 5 %}destaque-musica{% endif %}"
+            >
+
+              <td>
+
+                {{ musica.posicao }}
+
+                {% if loop.index <= 5 %}
+                  ⭐
+                {% endif %}
+
+              </td>
+
+              <td>{{ musica.titulo }}</td>
+
+              <td>{{ musica.artista }}</td>
+
+              <td>{{ musica.votos }}</td>
+
+            </tr>
+
+            {% endfor %}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+
+      <div class="botoes-acao">
+
+        <button
+          class="btn-pdf"
+          onclick="gerarPDF(
+            'top5',
+            'relatorio_top_musicas.pdf'
+          )"
+        >
+          📥 Gerar PDF
+        </button>
+
+      </div>
+
+    </div>
+
+  </main>
+
+
+  <!-- =========================
+       JAVASCRIPT
+  ========================= -->
+
+  <script>
+
+    /* Navegação entre seções */
+
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+
+      btn.addEventListener('click', function() {
+
+        const secaoId =
+          this.getAttribute('data-secao');
+
+        const campoSecaoAtiva =
+          document.getElementById('secao-ativa');
+
+
+        if (campoSecaoAtiva) {
+          campoSecaoAtiva.value = secaoId;
+        }
+
+
+        document
+          .querySelectorAll('.nav-btn')
+          .forEach(b =>
+            b.classList.remove('ativo')
+          );
+
+
+        document
+          .querySelectorAll('.secao')
+          .forEach(s => {
+
+            s.classList.remove('ativa');
+
+            s.style.display = 'none';
+
+          });
+
+
+        this.classList.add('ativo');
+
+
+        const sec =
+          document.getElementById(secaoId);
+
+
+        if (sec) {
+
+          sec.classList.add('ativa');
+
+          sec.style.display = 'block';
+
+        }
+
+      });
+
+    });
+
+
+    /* Parâmetros da URL */
+
+    const parametros =
+      new URLSearchParams(
+        window.location.search
+      );
+
+
+    const secaoSelecionada =
+      parametros.get('secao');
+
+    const participanteSelecionado =
+      parametros.get('participante');
+
+    const alunoSelecionado =
+      parametros.get('aluno');
+
+
+    /* Participante */
+
+    if (participanteSelecionado) {
+
+      const filtroParticipante =
+        document.getElementById('comprador');
+
+
+      if (filtroParticipante) {
+
+        filtroParticipante.value =
+          participanteSelecionado;
+
+      }
+
+    }
+
+
+    /* Aluno */
+
+    if (alunoSelecionado) {
+
+      const filtroAluno =
+        document.getElementById('aluno');
+
+
+      if (filtroAluno) {
+
+        filtroAluno.value =
+          alunoSelecionado;
+
+      }
+
+    }
+
+
+    /* Seção */
+
+    if (secaoSelecionada) {
+
+      const botaoSecao =
+        Array.from(
+          document.querySelectorAll('.nav-btn')
+        ).find(
+          botao =>
+            botao.dataset.secao ===
+            secaoSelecionada
+        );
+
+
+      if (botaoSecao) {
+
+        botaoSecao.click();
+
+      }
+
+    }
+
+    else if (
+      parametros.has('participante')
+    ) {
+
+      const botaoVisaoGeral =
+        document.querySelector(
+          '[data-secao="visao-geral"]'
+        );
+
+
+      if (botaoVisaoGeral) {
+        botaoVisaoGeral.click();
+      }
+
+    }
+
+
+    /* =========================
+       GERAÇÃO DE PDF
+    ========================= */
+
+    async function gerarPDF(
+      idElemento,
+      nomeArquivo
+    ) {
+
+      const elemento =
+        document.getElementById(
+          idElemento
+        );
+
+
+      if (!elemento) return;
+
+
+      const botoes =
+        Array.from(
+          document.querySelectorAll(
+            '.btn-pdf'
+          )
+        );
+
+
+      const estados =
+        botoes.map(b => ({
+
+          opacity:
+            b.style.opacity || '',
+
+          pointerEvents:
+            b.style.pointerEvents || ''
+
+        }));
+
+
+      /* Esconder botões */
+
+      botoes.forEach(b => {
+
+        b.style.opacity = '0';
+
+        b.style.pointerEvents =
+          'none';
+
+      });
+
+
+      const opt = {
+
+        margin: 10,
+
+        filename: nomeArquivo,
+
+        image: {
+          type: 'jpeg',
+          quality: 0.98
+        },
+
+        html2canvas: {
+          scale: 2
+        },
+
+        jsPDF: {
+          unit: 'mm',
+          format: 'a4',
+          orientation: 'landscape'
+        }
+
+      };
+
+
+      try {
+
+        await html2pdf()
+          .set(opt)
+          .from(elemento)
+          .save();
+
+      }
+
+      catch (error) {
+
+        console.error(
+          'Erro ao gerar PDF:',
+          error
+        );
+
+      }
+
+      finally {
+
+        /* Restaurar botões */
+
+        botoes.forEach((b, i) => {
+
+          b.style.opacity =
+            estados[i].opacity;
+
+          b.style.pointerEvents =
+            estados[i].pointerEvents;
+
+        });
+
+      }
+
+    }
+
+  </script>
+
+</body>
+
+</html>
