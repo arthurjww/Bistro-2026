@@ -5,6 +5,94 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>RELATÓRIOS BISTRO 2026</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    /*
+      Estas regras são aplicadas somente à cópia usada para gerar o PDF.
+      Assim, o resultado não depende de um arquivo CSS externo.
+    */
+    .pdf-export {
+      width: 277mm;
+      box-sizing: border-box;
+      background: #fff;
+      color: #111;
+      font-family: Arial, sans-serif;
+      font-size: 10pt;
+    }
+
+    .pdf-export h2,
+    .pdf-export h3 {
+      margin: 0 0 8px;
+      break-after: avoid;
+      page-break-after: avoid;
+    }
+
+    .pdf-export h3 {
+      margin-top: 14px;
+    }
+
+    .pdf-export table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: auto;
+      font-size: 8.5pt;
+    }
+
+    .pdf-export thead {
+      display: table-header-group;
+    }
+
+    .pdf-export tr,
+    .pdf-export .card {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .pdf-export th,
+    .pdf-export td {
+      border: 1px solid #777;
+      padding: 4px;
+      vertical-align: top;
+      overflow-wrap: anywhere;
+    }
+
+    .pdf-export th {
+      background: #ececec;
+    }
+
+    .pdf-export .cards-resumo,
+    .pdf-export .info-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .pdf-export .card {
+      border: 1px solid #999;
+      padding: 8px;
+    }
+
+    .pdf-export .card strong,
+    .pdf-export .card .valor {
+      display: block;
+    }
+
+    .pdf-export .botoes-acao,
+    .pdf-export form {
+      display: none !important;
+    }
+
+    .pdf-export a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .pdf-export textarea {
+      width: 100% !important;
+      box-sizing: border-box;
+      resize: none;
+    }
+  </style>
 </head>
 <body>
   <header>📊 RELATÓRIOS BISTRO 2026</header>
@@ -83,7 +171,7 @@
     <!-- Visão Geral -->
     <div id="visao-geral" class="secao" style="display: none;">
       <h2>Visão Geral</h2>
-      <form method="get">
+      <form method="get" id="form-visao-geral">
       <input type="hidden" name="secao" value="visao-geral">
       {% if dia_bistro_selecionado %}
       <input type="hidden" name="dia_bistro" value="{{ dia_bistro_selecionado }}">
@@ -123,21 +211,35 @@
           <select id="aluno" name="aluno">
             <option value="">Todos</option>
             {% for aluno in lista_alunos %}
-            <option value="{{ aluno.cod_aluno }}">{{ aluno.nome }}</option>
+            <option
+              value="{{ aluno.cod_aluno }}"
+              {% if codigo_aluno_selecionado == aluno.cod_aluno %}selected{% endif %}
+            >
+              {{ aluno.nome }}
+            </option>
             {% endfor %}
           </select>
         </div>
         <div class="filtro-item">
           <label for="comprador"><strong>Participantes:</strong></label>
-          <select id="comprador" name="participante">
-            <option value="">Selecione um participante</option>
+          <select
+            id="comprador"
+            name="participante"
+            {% if not codigo_aluno_selecionado %}disabled{% endif %}
+          >
+            <option value="">
+              {% if codigo_aluno_selecionado %}
+                Selecione um participante
+              {% else %}
+                Selecione primeiro um aluno
+              {% endif %}
+            </option>
             {% for comprador in lista_compradores %}
             <option value="{{ comprador.id }}">{{ comprador.nome }}</option>
             {% endfor %}
           </select>
         </div>
       </div>
-      <button type="submit">Aplicar filtro</button>
       </form>
       {% if detalhes_participante %}
       <h3>Informações do Participante</h3>
@@ -415,6 +517,28 @@ Relatório gerado com os dados atualizados no sistema.
       }
     }
 
+    const formVisaoGeral = document.getElementById('form-visao-geral');
+    const filtroTecnico = document.getElementById('tecnico');
+    const filtroAluno = document.getElementById('aluno');
+    const filtroParticipante = document.getElementById('comprador');
+
+    if (formVisaoGeral) {
+      filtroTecnico.addEventListener('change', function() {
+        filtroAluno.value = '';
+        filtroParticipante.value = '';
+        formVisaoGeral.requestSubmit();
+      });
+
+      filtroAluno.addEventListener('change', function() {
+        filtroParticipante.value = '';
+        formVisaoGeral.requestSubmit();
+      });
+
+      filtroParticipante.addEventListener('change', function() {
+        formVisaoGeral.requestSubmit();
+      });
+    }
+
     if (secaoSelecionada) {
       const botaoSecao = Array.from(
         document.querySelectorAll('.nav-btn')
@@ -435,33 +559,65 @@ Relatório gerado com os dados atualizados no sistema.
     async function gerarPDF(idElemento, nomeArquivo) {
       const elemento = document.getElementById(idElemento);
       if (!elemento) return;
+
       const botoes = Array.from(document.querySelectorAll('.btn-pdf'));
-      // salvar estado atual dos botões
-      const estados = botoes.map(b => ({
-        opacity: b.style.opacity || '',
-        pointerEvents: b.style.pointerEvents || ''
-      }));
-      // esconder/desabilitar botões durante a geração
+
       botoes.forEach(b => {
-        b.style.opacity = '0';
+        b.disabled = true;
         b.style.pointerEvents = 'none';
       });
+
+      const areaTemporaria = document.createElement('div');
+      const copia = elemento.cloneNode(true);
+
+      areaTemporaria.style.position = 'absolute';
+      areaTemporaria.style.left = '-10000px';
+      areaTemporaria.style.top = '0';
+      areaTemporaria.style.width = '277mm';
+      areaTemporaria.style.background = '#fff';
+
+      copia.removeAttribute('id');
+      copia.classList.add('pdf-export');
+      copia.style.display = 'block';
+
+      copia.querySelectorAll('[style*="overflow-x"]').forEach(container => {
+        container.style.overflow = 'visible';
+      });
+
+      areaTemporaria.appendChild(copia);
+      document.body.appendChild(areaTemporaria);
+
       const opt = {
-        margin: 10,
+        margin: [10, 8, 10, 8],
         filename: nomeArquivo,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          scrollX: 0,
+          scrollY: 0
+        },
+        jsPDF: {
+          unit: 'mm',
+          format: 'a4',
+          orientation: 'landscape'
+        },
+        pagebreak: {
+          mode: ['css', 'legacy'],
+          avoid: ['tr', '.card']
+        }
       };
+
       try {
-        await html2pdf().set(opt).from(elemento).save();
+        await html2pdf().set(opt).from(copia).save();
       } catch (error) {
         console.error('Erro ao gerar PDF:', error);
       } finally {
-        // restaurar estado dos botões
-        botoes.forEach((b, i) => {
-          b.style.opacity = estados[i].opacity;
-          b.style.pointerEvents = estados[i].pointerEvents;
+        areaTemporaria.remove();
+
+        botoes.forEach(b => {
+          b.disabled = false;
+          b.style.pointerEvents = '';
         });
       }
     }
