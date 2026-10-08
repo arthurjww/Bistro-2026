@@ -43,6 +43,11 @@ def create_all():
         )
     """)
 
+    cursor.execute("""
+        INSERT OR IGNORE INTO Aluno (cod_aluno, nome_aluno, usos_restantes)
+        VALUES ('TESTE1', 'Davi Grison', 999999)
+    """)
+
     # lugares
     cursor.execute("""
        CREATE TABLE IF NOT EXISTS Lugares(
