@@ -46,7 +46,7 @@ class MapaLugares:
         codigos = [(codigo,) for codigo in self.codigos_validos()]
 
         db.executemany(
-            "INSERT OR IGNORE INTO Lugares (cod_lugar, salao) VALUES (?, 1)",
+            "INSERT OR IGNORE INTO Lugares (cod_lugar) VALUES (?)",
             codigos
         )
         db.commit()
