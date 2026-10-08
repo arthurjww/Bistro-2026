@@ -73,7 +73,8 @@ document.getElementById('form-pagamento').addEventListener('submit', async funct
       if (data.status === 'approved') {
         pagamentoConfirmado = true;
         pararTodosIntervalos();
-        window.location.href = urls.pagamento_sucesso;
+        isExiting = true;
+        window.location.replace(urls.pagamento_sucesso);
         return;
       }
 
@@ -158,7 +159,8 @@ function iniciarPollingStatus() {
         statusTexto.parentElement.style.color = "#2b8a3e";
 
         setTimeout(() => {
-          window.location.href = urls.pagamento_sucesso;
+          isExiting = true;
+          window.location.replace(urls.pagamento_sucesso);
         }, 1500);
         return;
       }
@@ -229,7 +231,8 @@ async function verificarCronometro() {
 
       pararTodosIntervalos();
       alert(dados.mensagem || 'O tempo da reserva expirou.');
-      window.location.href = urls.lugares;
+      isExiting = true;
+      window.location.replace(url.lugares);
       return;
     }
 
@@ -250,7 +253,8 @@ async function verificarCronometro() {
       }
 
       alert(mensagem);
-      window.location.href = urls.lugares;
+      isExiting = true;
+      window.location.replace(urls.lugares);
       return;
     }
 

@@ -176,6 +176,10 @@
       <p id="timer"></p>
   </div>
 
+  <div class="voltar">
+      <button type="button" id="btn-voltar">← Voltar</button>
+  </div>
+
   <div class="card">
     <h2>Pagamento via PIX</h2>
 
@@ -249,7 +253,19 @@
       let reservado = {{ cronometro }};
   </script>
   <script src="https://unpkg.com/imask"></script>
+  <script src="{{ url_for('static', filename='ingressos/script_impedir_reload.js') }}"></script>
+  <script src="{{ url_for('static', filename='ingressos/script_botao.js') }}"></script>
   <script src="{{ url_for('static', filename='ingressos/script_pagamento.js') }}"></script>
+  <script>
+    const btnVoltar = document.getElementById('btn-voltar');
+
+    btnVoltar.addEventListener('click', () => {
+        if (confirm("Você tem certeza? Você perderá todo o seu progresso e retornará à seleção de lugares.")) {
+            isExiting = true;
+            window.location.replace(urls.lugares);
+        }
+    });
+  </script>
 </body>
 
 </html>
