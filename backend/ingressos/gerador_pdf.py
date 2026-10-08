@@ -28,7 +28,7 @@ def _gerar_pdf_bytes(ingresso):
     """Gera o PDF do ingresso em memória e retorna um BytesIO."""
 
     url_validacao = (
-        "https://sinestesiabistro.com.br/validar"
+        "https://mesas.sinestesiabistro.com.br/validar"
         f"?token={ingresso['token']}"
     )
     qr_img = qrcode.make(url_validacao)
