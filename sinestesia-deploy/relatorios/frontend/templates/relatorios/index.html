@@ -7,7 +7,6 @@
 
   <title>RELATÓRIOS BISTRO 2026</title>
 
-  <!-- Fontes -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
@@ -16,12 +15,7 @@
     rel="stylesheet"
   >
 
-  <!-- Biblioteca para gerar PDF -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
   <style>
-
-    /* css */
 
     * {
       box-sizing: border-box;
@@ -539,6 +533,101 @@
       }
     }
 
+    @media print {
+      @page {
+        size: A4 landscape;
+        margin: 10mm;
+      }
+
+      html,
+      body.modo-impressao {
+        width: auto !important;
+        min-height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background-color: white !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      body.modo-impressao > header,
+      body.modo-impressao > .acoes-administrador,
+      body.modo-impressao > nav,
+      body.modo-impressao > .filtro-dia-bistro {
+        display: none !important;
+      }
+
+      body.modo-impressao main {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+
+      body.modo-impressao .secao {
+        display: none !important;
+      }
+
+      body.modo-impressao .secao.secao-impressao {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        overflow: visible !important;
+      }
+
+      .secao-impressao form,
+      .secao-impressao .botoes-acao {
+        display: none !important;
+      }
+
+      .secao-impressao [style*="overflow-x"] {
+        overflow: visible !important;
+      }
+
+      .secao-impressao table {
+        width: 100% !important;
+        table-layout: fixed;
+        font-size: 8.5pt;
+      }
+
+      .secao-impressao thead {
+        display: table-header-group;
+      }
+
+      .secao-impressao tfoot {
+        display: table-footer-group;
+      }
+
+      .secao-impressao tr,
+      .secao-impressao .card,
+      .secao-impressao .observacoes {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+
+      .secao-impressao h2,
+      .secao-impressao h3 {
+        break-after: avoid;
+        page-break-after: avoid;
+      }
+
+      .secao-impressao th,
+      .secao-impressao td {
+        padding: 7px;
+        white-space: normal !important;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+
+      .secao-impressao .cards-resumo,
+      .secao-impressao .info-container {
+        grid-template-columns: repeat(3, 1fr) !important;
+      }
+    }
+
   </style>
 </head>
 
@@ -566,8 +655,6 @@
 
   {% endif %}
 
-
-  <!--NAVEGAÇÃO-->
 
   <nav>
 
@@ -597,10 +684,6 @@
 
   </nav>
 
-
-  <!-- =========================
-       FILTRO
-  ========================= -->
 
   <form method="get" class="filtro-dia-bistro">
 
@@ -643,10 +726,6 @@
 
   <main>
 
-
-    <!-- =========================
-         RESUMO
-    ========================= -->
 
     <div id="resumo-compradores" class="secao ativa">
 
@@ -711,10 +790,6 @@
     </div>
 
 
-    <!-- =========================
-         VISÃO GERAL
-    ========================= -->
-
     <div
       id="visao-geral"
       class="secao"
@@ -723,7 +798,7 @@
 
       <h2>Visão Geral</h2>
 
-      <form method="get">
+      <form method="get" id="form-visao-geral">
 
         <input
           type="hidden"
@@ -798,7 +873,10 @@
 
               {% for aluno in lista_alunos %}
 
-              <option value="{{ aluno.cod_aluno }}">
+              <option
+                value="{{ aluno.cod_aluno }}"
+                {% if codigo_aluno_selecionado == aluno.cod_aluno %}selected{% endif %}
+              >
                 {{ aluno.nome }}
               </option>
 
@@ -815,10 +893,18 @@
               <strong>Participantes:</strong>
             </label>
 
-            <select id="comprador" name="participante">
+            <select
+              id="comprador"
+              name="participante"
+              {% if not codigo_aluno_selecionado %}disabled{% endif %}
+            >
 
               <option value="">
-                Selecione um participante
+                {% if codigo_aluno_selecionado %}
+                  Selecione um participante
+                {% else %}
+                  Selecione primeiro um aluno
+                {% endif %}
               </option>
 
               {% for comprador in lista_compradores %}
@@ -834,10 +920,6 @@
           </div>
 
         </div>
-
-        <button type="submit">
-          Aplicar filtro
-        </button>
 
       </form>
 
@@ -948,10 +1030,6 @@
 
     </div>
 
-
-    <!-- =========================
-         FINANCEIRO
-    ========================= -->
 
     <div
       id="financeiro"
@@ -1082,10 +1160,6 @@
     </div>
 
 
-    <!-- =========================
-         VENDAS
-    ========================= -->
-
     <div
       id="vendas"
       class="secao"
@@ -1183,10 +1257,6 @@
     </div>
 
 
-    <!-- =========================
-         RESTRIÇÕES
-    ========================= -->
-
     <div
       id="restricoes"
       class="secao"
@@ -1248,10 +1318,6 @@
 
     </div>
 
-
-    <!-- =========================
-         TOP 5 MÚSICAS
-    ========================= -->
 
     <div
       id="top5"
@@ -1330,13 +1396,7 @@
   </main>
 
 
-  <!-- =========================
-       JAVASCRIPT
-  ========================= -->
-
   <script>
-
-    /* Navegação entre seções */
 
     document.querySelectorAll('.nav-btn').forEach(btn => {
 
@@ -1392,8 +1452,6 @@
     });
 
 
-    /* Parâmetros da URL */
-
     const parametros =
       new URLSearchParams(
         window.location.search
@@ -1409,8 +1467,6 @@
     const alunoSelecionado =
       parametros.get('aluno');
 
-
-    /* Participante */
 
     if (participanteSelecionado) {
 
@@ -1428,8 +1484,6 @@
     }
 
 
-    /* Aluno */
-
     if (alunoSelecionado) {
 
       const filtroAluno =
@@ -1446,7 +1500,59 @@
     }
 
 
-    /* Seção */
+    const formVisaoGeral =
+      document.getElementById(
+        'form-visao-geral'
+      );
+
+    const filtroTecnico =
+      document.getElementById('tecnico');
+
+    const filtroAluno =
+      document.getElementById('aluno');
+
+    const filtroParticipante =
+      document.getElementById('comprador');
+
+
+    if (formVisaoGeral) {
+
+      filtroTecnico.addEventListener(
+        'change',
+        function() {
+
+          filtroAluno.value = '';
+          filtroParticipante.value = '';
+
+          formVisaoGeral.requestSubmit();
+
+        }
+      );
+
+
+      filtroAluno.addEventListener(
+        'change',
+        function() {
+
+          filtroParticipante.value = '';
+
+          formVisaoGeral.requestSubmit();
+
+        }
+      );
+
+
+      filtroParticipante.addEventListener(
+        'change',
+        function() {
+
+          formVisaoGeral.requestSubmit();
+
+        }
+      );
+
+    }
+
 
     if (secaoSelecionada) {
 
@@ -1485,114 +1591,56 @@
     }
 
 
-    /* =========================
-       GERAÇÃO DE PDF
-    ========================= */
-
     async function gerarPDF(
       idElemento,
       nomeArquivo
     ) {
-
       const elemento =
         document.getElementById(
           idElemento
         );
 
-
       if (!elemento) return;
 
+      const tituloAnterior = document.title;
 
-      const botoes =
-        Array.from(
-          document.querySelectorAll(
-            '.btn-pdf'
-          )
-        );
+      document.title = nomeArquivo.replace(
+        /\.pdf$/i,
+        ''
+      );
 
+      document.body.classList.add(
+        'modo-impressao'
+      );
 
-      const estados =
-        botoes.map(b => ({
-
-          opacity:
-            b.style.opacity || '',
-
-          pointerEvents:
-            b.style.pointerEvents || ''
-
-        }));
-
-
-      /* Esconder botões */
-
-      botoes.forEach(b => {
-
-        b.style.opacity = '0';
-
-        b.style.pointerEvents =
-          'none';
-
-      });
-
-
-      const opt = {
-
-        margin: 10,
-
-        filename: nomeArquivo,
-
-        image: {
-          type: 'jpeg',
-          quality: 0.98
-        },
-
-        html2canvas: {
-          scale: 2
-        },
-
-        jsPDF: {
-          unit: 'mm',
-          format: 'a4',
-          orientation: 'landscape'
-        }
-
-      };
-
+      elemento.classList.add(
+        'secao-impressao'
+      );
 
       try {
+        await document.fonts.ready;
 
-        await html2pdf()
-          .set(opt)
-          .from(elemento)
-          .save();
+        await new Promise(resolve =>
+          requestAnimationFrame(resolve)
+        );
 
-      }
-
-      catch (error) {
-
+        window.print();
+      } catch (error) {
         console.error(
           'Erro ao gerar PDF:',
           error
         );
+      } finally {
+        elemento.classList.remove(
+          'secao-impressao'
+        );
 
+        document.body.classList.remove(
+          'modo-impressao'
+        );
+
+        document.title = tituloAnterior;
       }
-
-      finally {
-
-        /* Restaurar botões */
-
-        botoes.forEach((b, i) => {
-
-          b.style.opacity =
-            estados[i].opacity;
-
-          b.style.pointerEvents =
-            estados[i].pointerEvents;
-
-        });
-
-      }
-
     }
 
   </script>
