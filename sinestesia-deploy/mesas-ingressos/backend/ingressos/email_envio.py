@@ -41,8 +41,11 @@ def enviar_email(
     assunto:
         Assunto do email.
 
-    mensagem:
+    mensagem_texto:
         Texto do email.
+
+    mensagem_html:
+        HTML do email.
 
     anexo:
         Pode ser:

@@ -13,7 +13,7 @@ from backend.banco_de_dados import get_db
 
 load_dotenv()
 
-# Vai dar caso não encontre a .env var, e isso é proposital
+# Vai dar erro caso não encontre a env var, e isso é proposital
 CSV_PATH = Path(__file__).resolve().parents[2] / os.getenv('CSV_ALUNOS', 'não_encontrada.erro')
 CHARS_TOKEN = 'ACDEFGHJKLMNPQRTUVWXYZabcdefghjkmnpqrstuvwxyz234679'
 
@@ -185,3 +185,25 @@ def enviar_cod():
 
     except Exception as e:
         print(f'Erro ao processar envios: {e}')
+
+
+def main(choice):
+    if choice not in (1, 2, 3):
+        return
+
+    if choice == 1 or choice == 3:
+        criar_alunos()
+
+    if choice == 2 or choice == 3:
+        enviar_cod()
+
+
+CHOICE = 0
+
+
+if __name__ == '__main__':
+    # Qualquer coisa que não é 1, 2, ou 3 - não executa o programa
+    # 1 - só cria os alunos
+    # 2 - só envia os emails
+    # 3 - cria os alunos e envia os emails
+    main(CHOICE)
