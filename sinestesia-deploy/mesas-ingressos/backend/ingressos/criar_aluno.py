@@ -1,3 +1,12 @@
+"""
+Para conseguir rodar:
+
+- Rode a partir da pasta pai de backend: python -m backend/ingressos/criar_aluno
+- Veja onde o arquivo .csv está e altere em CSV_PATH conforme
+
+Neste caso (.parents[2]), o script funciona se o .csv estiver na pasta pai de backend
+"""
+
 import os
 import secrets
 import smtplib
@@ -9,12 +18,13 @@ from pathlib import Path
 from dotenv import load_dotenv
 from flask import render_template
 
-from backend.banco_de_dados import get_db
+from .. import app
+from ..banco_de_dados import get_db
 
 load_dotenv()
 
 # Vai dar erro caso não encontre a env var, e isso é proposital
-CSV_PATH = Path(__file__).resolve().parents[2] / os.getenv('CSV_ALUNOS', 'não_encontrada.erro')
+CSV_PATH = Path(__file__).resolve().parents[2] / os.environ['CSV_ALUNOS']
 CHARS_TOKEN = 'ACDEFGHJKLMNPQRTUVWXYZabcdefghjkmnpqrstuvwxyz234679'
 
 MAIL_SERVER = os.getenv('MAIL_SERVER')
@@ -206,4 +216,5 @@ if __name__ == '__main__':
     # 1 - só cria os alunos
     # 2 - só envia os emails
     # 3 - cria os alunos e envia os emails
-    main(CHOICE)
+    with app.app_context():
+        main(CHOICE)
