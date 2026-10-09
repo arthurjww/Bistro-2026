@@ -1,0 +1,18 @@
+# Banco local do SQLite
+*.db
+**/*.db
+# Python
+__pycache__/
+*.py[cod]
+
+# IDE
+.idea/
+.vscode/
+
+# Ambiente virtual
+.venv/
+venv/
+env/
+
+# Variáveis de ambiente
+.env

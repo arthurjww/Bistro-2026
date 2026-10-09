@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enquete de Músicas</title>
+    <!-- Fontes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+    :root {
+        --bg: #131010;
+        --card: #F1EDDB;
+        --card-hover: #e8e1cf;
+        --accent: #B8262D;
+        --accent-hover: #720C11;
+        --text: #332D27;
+        --muted: #71685e;
+        --success: #256029;
+        --error: #B42318;
+        --border: #d5cdbb;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        line-height: 1.5;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 45px 28px 60px;
+    }
+
+    header {
+        text-align: center;
+        margin-bottom: 45px;
+    }
+
+    header h1 {
+        font-family: 'Instrument Serif', serif;
+        font-size: 52px;
+        font-weight: normal;
+        font-style: italic;
+        letter-spacing: 0;
+        margin-bottom: 10px;
+        color: var(--card);
+        background: none;
+        -webkit-text-fill-color: initial;
+    }
+
+    header p {
+        color: #b8b2a5;
+        font-size: 14px;
+    }
+
+    header strong {
+        color: var(--card);
+        font-weight: 600;
+    }
+
+    .mensagem {
+        text-align: center;
+        padding: 14px 18px;
+        border-radius: 5px;
+        margin-bottom: 28px;
+        font-size: 13px;
+        animation: fadeIn 0.4s ease;
+    }
+
+    .mensagem.sucesso {
+        background: #E8F5E9;
+        border: 1px solid #c5e5c8;
+        color: var(--success);
+    }
+
+    .mensagem.erro {
+        background: #FDECEC;
+        border: 1px solid #f5c6c6;
+        color: var(--error);
+    }
+
+    .estilo-section {
+        margin-bottom: 45px;
+    }
+
+    .estilo-titulo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 22px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(241, 237, 219, 0.25);
+    }
+
+    .estilo-titulo h2 {
+        font-family: 'Instrument Serif', serif;
+        font-size: 30px;
+        font-weight: normal;
+        color: var(--card);
+    }
+
+    .estilo-badge {
+        background: rgba(184, 38, 45, 0.18);
+        color: #e58b8e;
+        border: 1px solid rgba(184, 38, 45, 0.45);
+        font-size: 10px;
+        font-weight: 700;
+        padding: 5px 10px;
+        border-radius: 3px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+
+    .musicas-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 20px;
+    }
+
+    .musica-card {
+        background: var(--card);
+        border: 1px solid transparent;
+        border-radius: 6px;
+        overflow: hidden;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        position: relative;
+        min-width: 0;
+    }
+
+    .musica-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+    }
+
+    .musica-card.selecionada {
+        border: 2px solid var(--accent);
+        box-shadow: 0 0 0 2px rgba(184, 38, 45, 0.2);
+    }
+
+    .capa-wrapper {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 1;
+        background: #332D27;
+        overflow: hidden;
+    }
+
+    .capa-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .capa-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #332D27;
+        color: var(--card);
+        font-size: 3rem;
+    }
+
+    .votos-badge {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: rgba(19, 16, 16, 0.88);
+        color: var(--card);
+        font-size: 11px;
+        font-weight: 600;
+        padding: 6px 10px;
+        border-radius: 3px;
+    }
+
+    /* Informações dos cards */
+
+    .musica-info {
+        padding: 18px;
+    }
+
+    .musica-nome {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .musica-artista {
+        color: var(--muted);
+        font-size: 12px;
+        margin-bottom: 15px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .preview-audio {
+        width: 100%;
+        height: 36px;
+        margin-bottom: 14px;
+        border-radius: 4px;
+    }
+
+    .preview-audio::-webkit-media-controls-panel {
+        background: #e8e1cf;
+    }
+
+
+    .voto-label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        user-select: none;
+        padding: 11px 12px;
+        background: rgba(184, 38, 45, 0.05);
+        border: 1px solid rgba(184, 38, 45, 0.25);
+        border-radius: 4px;
+        transition: background 0.2s, border-color 0.2s;
+    }
+
+    .voto-label:hover {
+        background: rgba(184, 38, 45, 0.12);
+        border-color: var(--accent);
+    }
+
+    .voto-label input[type="radio"] {
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        border: 1px solid #94897b;
+        border-radius: 50%;
+        position: relative;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: background 0.2s;
+    }
+
+    .voto-label input[type="radio"]:checked {
+        border-color: var(--accent);
+        background: var(--accent);
+    }
+
+    .voto-label input[type="radio"]:checked::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 6px;
+        height: 6px;
+        background: white;
+        border-radius: 50%;
+    }
+
+    .voto-texto {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text);
+    }
+
+    /* Lista compacta das demais músicas */
+
+    .lista-outras-musicas {
+        margin-top: 25px;
+        background: rgba(241, 237, 219, 0.04);
+        border: 1px solid rgba(241, 237, 219, 0.16);
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    .lista-outras-titulo {
+        padding: 18px 20px;
+        border-bottom: 1px solid rgba(241, 237, 219, 0.16);
+    }
+
+    .lista-outras-titulo h3 {
+        font-family: 'Instrument Serif', serif;
+        font-size: 25px;
+        font-weight: normal;
+        color: var(--card);
+    }
+
+    .lista-outras-titulo p {
+        color: #b8b2a5;
+        font-size: 12px;
+        margin-top: 3px;
+    }
+
+    .musica-lista-item {
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr) minmax(150px, 220px) auto;
+        align-items: center;
+        gap: 15px;
+        padding: 11px 18px;
+        border-bottom: 1px solid rgba(241, 237, 219, 0.1);
+        transition: background 0.2s;
+    }
+
+    .musica-lista-item:last-child {
+        border-bottom: none;
+    }
+
+    .musica-lista-item:hover {
+        background: rgba(241, 237, 219, 0.07);
+    }
+
+    .musica-lista-item.selecionada {
+        background: rgba(184, 38, 45, 0.13);
+        box-shadow: inset 3px 0 0 var(--accent);
+    }
+
+    .musica-lista-capa,
+    .musica-lista-placeholder {
+        width: 44px;
+        height: 44px;
+        border-radius: 3px;
+        background: #332D27;
+    }
+
+    .musica-lista-capa {
+        display: block;
+        object-fit: cover;
+    }
+
+    .musica-lista-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--card);
+        font-size: 20px;
+    }
+
+    .musica-lista-info {
+        min-width: 0;
+    }
+
+    .musica-lista-nome,
+    .musica-lista-artista {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .musica-lista-nome {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--card);
+    }
+
+    .musica-lista-artista {
+        color: #b8b2a5;
+        font-size: 11px;
+        margin-top: 3px;
+    }
+
+    .musica-lista-item .preview-audio {
+        height: 32px;
+        margin: 0;
+    }
+
+    .musica-lista-item .voto-label {
+        padding: 8px 10px;
+        gap: 7px;
+        white-space: nowrap;
+        background: rgba(184, 38, 45, 0.1);
+        border-color: rgba(184, 38, 45, 0.3);
+    }
+
+    .musica-lista-item .voto-label input[type="radio"] {
+        width: 16px;
+        height: 16px;
+    }
+
+    .musica-lista-item .voto-texto {
+        font-size: 11px;
+        color: var(--card);
+    }
+
+    .lista-sem-musicas {
+        padding: 18px 20px;
+        color: #b8b2a5;
+        font-size: 12px;
+    }
+
+    /* Botão de envio */
+
+    .enviar-wrapper {
+        position: sticky;
+        bottom: 0;
+        background: linear-gradient(to top, var(--bg) 70%, transparent);
+        padding: 25px 0 15px;
+        margin-top: 20px;
+        text-align: center;
+        z-index: 10;
+    }
+
+    .btn-enviar {
+        background: var(--accent);
+        color: white;
+        border: none;
+        padding: 15px 45px;
+        font-family: 'Inter', sans-serif;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.15s;
+    }
+
+    .btn-enviar:hover {
+        background: var(--accent-hover);
+        transform: translateY(-2px);
+    }
+
+    .btn-enviar:active {
+        transform: translateY(0);
+    }
+
+    .resultados-info {
+        text-align: center;
+        color: #b8b2a5;
+        margin-top: 12px;
+        font-size: 12px;
+    }
+
+    .sem-musicas {
+        text-align: center;
+        color: #b8b2a5;
+        padding: 3rem 1rem;
+        font-size: 14px;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-8px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsividade */
+
+    @media (max-width: 850px) {
+        .musicas-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .musica-lista-item {
+            grid-template-columns: 40px minmax(0, 1fr) minmax(120px, 170px) auto;
+            gap: 10px;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .container {
+            padding: 30px 16px 45px;
+        }
+
+        header h1 {
+            font-size: 40px;
+        }
+
+        .estilo-titulo h2 {
+            font-size: 26px;
+        }
+
+        .musicas-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .musica-info {
+            padding: 12px;
+        }
+
+        .musica-nome {
+            font-size: 13px;
+        }
+
+        .musica-artista {
+            font-size: 11px;
+        }
+
+        .musica-lista-item {
+            grid-template-columns: 38px minmax(0, 1fr) auto;
+            gap: 10px;
+            padding: 10px;
+        }
+
+        .musica-lista-capa,
+        .musica-lista-placeholder {
+            width: 38px;
+            height: 38px;
+        }
+
+        .musica-lista-item .preview-audio {
+            grid-column: 2 / 4;
+            grid-row: 2;
+            width: 100%;
+        }
+
+        .musica-lista-item .voto-label {
+            grid-column: 3;
+            grid-row: 1;
+        }
+    }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>🎵 Enquete de Músicas</h1>
+            <p>Escolha <strong>uma música de cada estilo</strong> e envie seu voto</p>
+        </header>
+
+        {% if mensagem %}
+            <div class="mensagem {% if 'sucesso' in mensagem|lower %}sucesso{% else %}erro{% endif %}">
+                {{ mensagem }}
+            </div>
+        {% endif %}
+
+        {% if enquetes %}
+        <form method="POST" action="/" id="form-votacao">
+            {% for estilo, musicas in enquetes.items() %}
+            <section class="estilo-section">
+                <div class="estilo-titulo">
+                    <h2>{{ estilo }}</h2>
+                    <span class="estilo-badge">{{ musicas|length }} opções</span>
+                </div>
+
+                {# Ordena as músicas do gênero por votos, da maior para a menor #}
+                {% set musicas_ordenadas = musicas|sort(attribute='votos', reverse=true) %}
+                {% set musicas_destaque = musicas_ordenadas[:6] %}
+                {% set outras_musicas = musicas_ordenadas[6:] %}
+
+                <!-- Seis músicas mais votadas -->
+                <div class="musicas-grid">
+                    {% for musica in musicas_destaque %}
+                    <div class="musica-card" data-estilo="{{ estilo }}" data-id="{{ musica['num'] }}">
+                        <div class="capa-wrapper">
+                            {% if musica['capa'] %}
+                                <img src="{{ musica['capa'] }}" alt="Capa de {{ musica['nome'] }}" loading="lazy">
+                            {% else %}
+                                <div class="capa-placeholder">🎵</div>
+                            {% endif %}
+
+                            <span class="votos-badge">{{ musica['votos'] or 0 }} votos</span>
+                        </div>
+
+                        <div class="musica-info">
+                            <div class="musica-nome" title="{{ musica['nome'] }}">{{ musica['nome'] }}</div>
+                            <div class="musica-artista" title="{{ musica['artista'] }}">{{ musica['artista'] }}</div>
+
+                            {% if musica['link'] %}
+                                <audio class="preview-audio" controls preload="none">
+                                    <source src="{{ musica['link'] }}" type="audio/mpeg">
+                                    Seu navegador não suporta o player de áudio.
+                                </audio>
+                            {% else %}
+                                <div style="height:36px; margin-bottom:0.9rem; display:flex; align-items:center; color:var(--muted); font-size:0.85rem;">
+                                    Preview indisponível
+                                </div>
+                            {% endif %}
+
+                            <label class="voto-label">
+                                <input type="radio" name="{{ estilo }}" value="{{ musica['num'] }}" required>
+                                <span class="voto-texto">Votar nesta</span>
+                            </label>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Todas as outras músicas em formato compacto -->
+                <div class="lista-outras-musicas">
+                    <div class="lista-outras-titulo">
+                        <h3>Mais músicas</h3>
+                        <p>Outras opções deste estilo. Você também pode votar nelas.</p>
+                    </div>
+
+                    {% if outras_musicas %}
+                        {% for musica in outras_musicas %}
+                        <div class="musica-lista-item" data-estilo="{{ estilo }}" data-id="{{ musica['num'] }}">
+                            {% if musica['capa'] %}
+                                <img
+                                    class="musica-lista-capa"
+                                    src="{{ musica['capa'] }}"
+                                    alt="Capa de {{ musica['nome'] }}"
+                                    loading="lazy">
+                            {% else %}
+                                <div class="musica-lista-placeholder">🎵</div>
+                            {% endif %}
+
+                            <div class="musica-lista-info">
+                                <div class="musica-lista-nome" title="{{ musica['nome'] }}">
+                                    {{ musica['nome'] }}
+                                </div>
+                                <div class="musica-lista-artista" title="{{ musica['artista'] }}">
+                                    {{ musica['artista'] }} · {{ musica['votos'] or 0 }} votos
+                                </div>
+                            </div>
+
+                            {% if musica['link'] %}
+                                <audio class="preview-audio" controls preload="none" aria-label="Ouvir {{ musica['nome'] }}">
+                                    <source src="{{ musica['link'] }}" type="audio/mpeg">
+                                    Seu navegador não suporta o player de áudio.
+                                </audio>
+                            {% else %}
+                                <span style="color:var(--muted); font-size:0.8rem;">Sem preview</span>
+                            {% endif %}
+
+                            <label class="voto-label">
+                                <input type="radio" name="{{ estilo }}" value="{{ musica['num'] }}" required>
+                                <span class="voto-texto">Votar</span>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="lista-sem-musicas">
+                            Todas as músicas deste estilo estão entre as seis mais votadas.
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+            {% endfor %}
+
+            <div class="enviar-wrapper">
+                <button type="submit" class="btn-enviar">Enviar votos</button>
+                {% if mostrar_resultados %}
+                    <p class="resultados-info">Os resultados acima já refletem os votos mais recentes.</p>
+                {% endif %}
+            </div>
+        </form>
+        {% else %}
+            <div class="sem-musicas">
+                Nenhuma música cadastrada ainda. Execute <code>python baixar_musicas.py</code> na raiz do projeto.
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Destaca a música selecionada nos cards e na lista compacta
+        document.querySelectorAll('.voto-label input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', function () {
+                const estilo = this.name;
+
+                // Remove o destaque das outras músicas do mesmo gênero
+                document.querySelectorAll(
+                    `.musica-card[data-estilo="${estilo}"],
+                     .musica-lista-item[data-estilo="${estilo}"]`
+                ).forEach(item => {
+                    item.classList.remove('selecionada');
+                });
+
+                // Destaca a música selecionada
+                const itemSelecionado = this.closest(
+                    '.musica-card, .musica-lista-item'
+                );
+
+                if (itemSelecionado) {
+                    itemSelecionado.classList.add('selecionada');
+                }
+            });
+        });
+
+        // Pausa outros previews quando um áudio começa a tocar
+        document.querySelectorAll('audio').forEach(audio => {
+            audio.addEventListener('play', function () {
+                document.querySelectorAll('audio').forEach(other => {
+                    if (other !== this) {
+                        other.pause();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

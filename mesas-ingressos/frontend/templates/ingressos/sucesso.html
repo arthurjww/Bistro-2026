@@ -1,0 +1,17 @@
+{% if pendente %}
+  <p>Estamos confirmando seu pagamento...</p>
+  <script>
+    const t = setInterval(() => {
+      fetch("/pagamento/status")
+        .then(r => r.json())
+        .then(d => { if (d.pago) { clearInterval(t); location.reload(); } });
+    }, 3000);
+  </script>
+{% else %}
+  <p>Pagamento confirmado! Seus ingressos foram enviados por e-mail.</p>
+  <ul>
+    {% for i in ingressos %}
+      <li>{{ i.nome }} — {{ i.token_QR }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}

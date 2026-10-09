@@ -1,0 +1,8 @@
+.env
+__pycache__/
+*.py[cod]
+*.log
+*.sqlite-journal
+*.db-journal
+*.db-shm
+*.db-wal
