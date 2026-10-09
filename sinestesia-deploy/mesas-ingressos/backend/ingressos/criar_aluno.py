@@ -152,8 +152,8 @@ def enviar_cod():
         for nome, email, quant in alunos_csv:
             aluno = dict_alunos.get(nome)
 
-            if not aluno:
-                print(f'Aviso: Aluno {nome} não encontrado no banco de dados. Pulando.')
+            if not aluno or not aluno['usos_restantes']:
+                print(f'Aviso: Aluno {nome} não encontrado no banco de dados ou com 0 usos de seu código. Pulando.')
                 continue
 
             msg_texto = MENSAGEM_TEXTO.format(
