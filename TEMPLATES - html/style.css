@@ -1,0 +1,1408 @@
+/* Configurações Geriais */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: Inter, Instrument Serif;
+    background-color: #171717;
+    color: #ffffff;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+img{
+    max-width: 100%;
+    display: block;
+}
+
+        /* Cores */
+
+:root{
+
+    --vermelho-escuro: #720C11;
+    --vermelho: #B8262D;
+    --preto-cinza: #171717;
+    --preto: #131010;
+    --bege: #F1EDDB;
+    --branco: #ffff;
+}
+
+    /* Cabeçalho */ 
+
+.header {
+    height: 65px;
+    background-color: var(--vermelho-escuro);
+    
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+   
+    padding: 0.5%;
+
+    position: relative;
+    z-index: 10;
+}
+
+    /* Logo */
+
+.logo img {
+    margin-left: 30px;
+    width: 50px;
+}
+
+
+    /* Menu */
+
+.menu {
+    margin-right: 30px;
+    display: flex;
+    align-items: center;
+    gap: 35px;
+}
+
+.menu a{
+    font-size: 12px;
+    font-weight: bold;
+   
+    color:rgba(255, 255, 255, 0.5);
+
+    transition: 0.5s;
+}
+
+.menu a:hover {
+    color: white;
+}
+
+    /* Botão Reservar do Menu */
+
+.menu .btn-reservar {
+    background-color: var(--bege);
+    color: var(--vermelho-escuro);
+
+    padding: 10px 15px;
+
+    font-size: 12px;
+}
+
+.menu .btn-reservar:hover {
+    background-color: var(--vermelho-escuro);
+    border: 1px solid var(--bege);
+    color: var(--bege);
+}  
+
+
+    /* Hero */
+
+.hero {
+    min-height: 520px;
+
+    background-image:
+        linear-gradient(
+            rgba(0, 0, 0, 0.65),
+            #171717
+        ),
+        url("img/background_inicio.png");
+
+    background-size: cover;
+    background-position: center;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    text-align: center;
+}
+
+
+    /* Conteúdo do Hero */
+
+.hero-overlay {
+    width: 650px;
+    max-width: 90%;
+}
+
+
+    /* Texto do Hero */
+
+.hero p {
+    max-width: 750px;
+
+    margin: 0 auto 25px;
+
+    font-size: 15px;
+    line-height: 1.5;
+
+    color: var(--branco);
+}
+
+    /* Botão Reservar Mesa */
+
+.btn-reservar {
+    display: inline-block;
+
+    background-color: var(--vermelho-escuro);
+    color: var(--bege);
+
+    padding: 15px 25px;
+
+    font-size: 12px;
+    font-weight: bold;
+
+    transition: 0.5s;
+}
+
+.btn-reservar:hover {
+    background-color: transparent;
+    border: 2px solid var(--bege);
+    color: var(--bege);
+}
+
+    /* Experiências Sensorias */
+
+.experiencia {
+    min-height: 700px;
+
+    padding: 70px 10%;
+
+    background-color: var(--preto-cinza);
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 70px;
+}
+
+    /* Texto Experiências Sensoriais */
+
+.experiencia-texto {
+    flex: 1;
+}
+
+.experiencia-texto h2 {
+    font-family: Instrument Serif;
+
+    font-size: 100px;
+    font-style: italic;
+    font-weight: normal;
+    text-shadow: 0px 0px 30px rgba(241, 237, 219, 20%);
+
+    line-height: 0.95;
+
+    color: var(--bege);
+
+    margin-bottom: 30px;
+}
+
+.experiencia-texto p {
+    max-width: 430px;
+
+    color: var(--branco);
+
+    font-size: 18px;
+    line-height: 1.5;
+}
+
+    /* Imagem Pessoa Cozinhando */
+
+.experiencia-imagem {
+    flex: 1;
+    max-width: 430px;
+}
+
+.experiencia-imagem img {
+    width: 100%;
+    height: 450px;
+
+    object-fit: cover;
+}
+
+    /* Cardápio*/
+
+.cardapio {
+    background-color: var(--preto);
+
+    padding: 70px 10% 200px;
+}
+
+
+    /* Título */
+
+.cardapio > h2 {
+    font-family: Instrument Serif;
+
+    font-size: 100px;
+    font-style: italic;
+    font-weight: normal;
+    text-shadow: 0px 0px 30px rgba(255, 0, 0, 30%);
+
+    color: var(--vermelho);
+
+    margin-bottom: 15px;
+}
+
+    /* Categorias Pratos */
+
+.categorias {
+    display: flex;
+    justify-content: flex-end;
+
+    margin-bottom: 40px;
+}
+
+.categoria {
+    font-family: Inter;
+    font-weight: bold;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+
+    background-color: transparent;
+
+    color: rgba(255, 255, 255, 0.5);
+
+    padding: 12px 18px;
+
+    font-size: 12px;
+
+    cursor: pointer;
+}
+
+.categoria.ativa {
+    background-color: var(--vermelho);
+    border-color: var(--vermelho);
+    color: var(--bege);
+
+}
+
+    /*Pratos*/
+
+.pratos {
+    display: grid;
+
+    grid-template-columns: repeat(2, 1fr);
+
+    gap: 20px;
+}
+
+    /* Card dos Pratos */
+
+.prato {
+    background-color: var(--preto-cinza);
+
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+
+    /* Imagem dos Pratos*/
+
+.prato > img {
+    width: 100%;
+    height: 300px;
+
+    object-fit: cover;
+}
+
+    /* Informações Prato */
+
+.prato-info {
+    padding: 15px;
+}
+
+.prato-info h3 {
+    font-size: 15px;
+
+    margin-bottom: 10px;
+
+    color: white;
+}
+
+.prato-info p {
+    font-size: 12px;
+    font-weight: medium;
+
+    line-height: 1.5;
+
+    color: rgba(255, 255, 255, 0.5);
+}
+
+    /* Viva a Experiência */
+
+.reserva {
+    background-color: var(--vermelho-escuro);
+
+    min-height: 450px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    text-align: center;
+
+    padding: 150px 20px;
+}
+
+
+.reserva-conteudo {
+    max-width: 600px;
+}
+
+    /* Título */
+
+.reserva h2 {
+    font-family: Instrument Serif;
+
+    font-size: 100px;
+    font-style: italic;
+    font-weight: normal;
+    margin-top: -50px;
+
+    line-height: 0.9;
+
+    color: var(--bege);
+    text-shadow: 0px 0px 30px rgba(241, 237, 219, 20%);
+
+    margin-bottom: 25px;
+}
+
+    /* Texto */
+
+.reserva p {
+    max-width: 440px;
+
+    margin: 50px;
+
+    font-size: 15px;
+
+    line-height: 1.8;
+
+    color: #ffffff;
+}
+
+.btn-reservar {
+    display: inline-block;
+
+    background-color: var(--bege);
+
+    color: var(--vermelho-escuro);
+
+    padding: 25px 30px;
+
+    font-size: 15px;
+    font-weight: bold;
+
+    transition: 0.5s;
+}
+
+.btn-reservar:hover {
+    background-color: transparent;
+    border: 1px solid var(--bege);
+    color: var(--bege);
+}
+
+    /* Data e Horário */
+
+.evento {
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+
+    margin-top: 50px;
+    padding-top: 20px;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 8px;
+}
+
+.evento span {
+    color: var(--bege);
+    font-size: 12px;
+}
+
+.evento strong {
+    color: var(--bege);
+    font-size: 15px;
+}
+
+    /* Onde Estamos */
+
+.localizacao {
+    background-color: var(--preto-cinza);
+
+    min-height: 390px;
+
+    padding: 70px 10%;
+
+    display: flex;
+    align-items: center;
+
+    gap: 70px;
+}
+
+    /* Informações */
+
+.localizacao-info {
+    flex: 1;
+}
+
+
+    /* Título */
+
+.localizacao-info h2 {
+    font-family: Instrument Serif;
+
+    font-size: 100px;
+    font-style: italic;
+    font-weight: normal;
+    text-shadow: 0px 0px 30px rgba(241, 237, 219, 20%);
+
+    line-height: 0.9;
+
+    color: var(--bege);
+
+    margin-bottom: 40px;
+}
+
+.localizacao-info h2 span {
+    color: var(--vermelho);
+    text-shadow: 0px 0px 30px rgba(255, 0, 0, 30%);
+}
+
+    /* Cada informação */
+
+.informacao {
+    display: flex;
+
+    align-items: flex-start;
+
+    gap: 12px;
+
+    margin-bottom: 18px;
+}
+
+    /* Ícone */
+
+.icone {
+    width: 50px;
+    height: 50px;
+
+    background-color: var(--vermelho-escuro);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    font-size: 12px;
+}
+
+    /* Textos */
+
+.informacao small {
+    display: block;
+
+    color: rgba(255, 255, 255, 0.5);
+
+    font-size: 10px;
+
+    margin-bottom: 3px;
+}
+
+.informacao p {
+    color: rgba(255, 255, 255, 0.8);
+
+    font-size: 12px;
+
+    line-height: 1.4;
+}
+
+    /* Mapa */
+
+.mapa {
+    flex: 1;
+
+    height: 500px;
+
+    border: 2px solid var(--vermelho);
+
+    background-color: #171717;
+}
+
+
+    /* iframe do Google Maps */
+
+.mapa iframe {
+    width: 100%;
+    height: 100%;
+
+    border: none;
+}
+
+    /* Rodapé */
+
+.footer {
+    background-color: var(--preto-cinza);
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+.footer {
+    min-height: 80px;
+
+    background-color: #100e0f;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 20px 8%;
+
+    gap: 30px;
+}
+
+
+    /* Logo */
+
+.footer-logo img {
+    width: 55px;
+}
+
+    /* Copyright */
+
+.footer p {
+    font-size: 10px;
+
+    color: #777777;
+
+    text-align: center;
+}
+
+
+    /* Redes */
+
+.redes {
+    display: flex;
+
+    gap: 20px;
+}
+
+.redes a {
+    font-size: 10px;
+
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.redes a:hover {
+    color: white;
+}
+
+    /* ----------------Sobre Nós---------------- */
+
+.sobre {
+    background-color: var(--vermelho-escuro);
+    color: var(--branco);
+}
+
+    /* Introdução*/
+
+.sobre-intro {
+    min-height: 4ch;
+
+    padding: 30px 9% 80px;
+
+    position: relative;
+}
+
+    /* Seta */
+
+.voltar {
+    display: inline-block;
+
+    color: var(--bege);
+
+    font-family: Arial, sans-serif;
+
+    font-size: 65px;
+    font-weight: 200;
+
+    line-height: 1;
+
+    margin-bottom: 45px;
+
+    transition: 0.3s;
+}
+
+.voltar:hover {
+    transform: translateX(-8px);
+}
+
+    /* Título */
+
+.sobre-intro h1 {
+    font-family: "Instrument Serif", serif;
+
+    font-size: 90px;
+    font-style: italic;
+    font-weight: normal;
+
+    line-height: 0.9;
+
+    color: var(--bege);
+
+    text-shadow:
+        0 0 30px rgba(241, 237, 219, 0.2);
+
+    margin-bottom: 35px;
+}
+
+    /* Texto */
+
+.sobre-intro > p {
+    max-width: 850px;
+
+    font-family: "Inter", sans-serif;
+
+    font-size: 18px;
+
+    line-height: 1.5;
+
+    color: var(--branco);
+}
+
+    /* Seção dos Técnicos */
+
+.curso {
+    min-height: 480px;
+
+    padding: 50px 9%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 50px;
+}
+
+    /* Imagens*/
+
+.foto-ti {
+    width: 442px !important;
+    height: 447px !important;
+    object-fit: cover;
+}
+
+.curso-imagem {
+    width: 48%;
+
+    overflow: hidden;
+}
+
+
+.curso-imagem img {
+    width: 100%;
+
+    height: 320px;
+
+    object-fit: cover;
+}
+
+    /* Textos*/
+
+.curso-texto {
+    width: 48%;
+}
+
+
+.curso-texto h2 {
+    font-family: "Instrument Serif", serif;
+
+    font-size: 75px;
+
+    font-style: italic;
+
+    font-weight: normal;
+
+    line-height: 0.9;
+
+    color: var(--bege);
+
+    text-shadow:
+        0 0 30px rgba(241, 237, 219, 0.2);
+
+    margin-bottom: 25px;
+}
+
+
+.curso-texto p {
+    max-width: 450px;
+
+    font-family: "Inter", sans-serif;
+
+    font-size: 18px;
+
+    line-height: 1.5;
+
+    color: var(--branco);
+}
+
+    /* Gastronomia*/
+
+.gastronomia {
+    padding-top: 20px;
+    padding-bottom: 80px;
+}
+
+    /* Administração*/
+
+.administracao {
+    padding-top: 50px;
+    padding-bottom: 80px;
+}
+
+    /* Texto alinhado á direita*/
+
+.administracao .curso-texto {
+    text-align: right;
+}
+
+
+.administracao .curso-texto p {
+    margin-left: auto;
+}
+
+    /* Informática*/
+
+.informatica {
+    padding-top: 50px;
+    padding-bottom: 100px;
+}
+
+    /* ------------------------------------PÁGINA CADASTRO------------------------------------ */    
+
+.cadastro {
+    position: relative;
+
+    min-height: 661px;
+
+    background-color: var(--preto-cinza);
+
+    padding: 62px 0 62px;
+}
+
+    /*voltar*/
+
+.cadastro-voltar {
+    position: absolute;
+
+    top: 36px;
+    left: 47px;
+
+    color: var(--bege);
+
+    font-size: 65px;
+    font-weight: 300;
+
+    line-height: 1;
+
+    text-decoration: none;
+
+    transition: 0.3s;
+}
+
+.cadastro-voltar:hover {
+    transform: translateX(-8px);
+}
+
+    /* caixa principal */
+
+.cadastro-box {
+    width: 940px;
+    height: 537px;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+
+    margin: 0 auto;
+
+    border: 1px solid rgba(255, 255, 255, 0.4);
+
+    background-color: #191919;
+
+    box-sizing: border-box;
+
+    padding: 25px 43px 40px;
+}
+
+    /* título */
+
+.cadastro-box h1 {
+    font-family: "Instrument Serif", serif;
+
+    font-size: 100px;
+    font-style: italic;
+    font-weight: normal;
+
+    text-align: center;
+
+    line-height: 0.9;
+
+    color: var(--vermelho);
+
+    margin: 0 0 43px;
+
+    text-shadow: 0 0 30px rgba(184, 38, 45, 0.3);
+}
+
+    /* formulário */
+
+.formulario {
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    column-gap: 80px;
+
+    row-gap: 53px;
+}
+
+    /* campos */
+
+.campo {
+    display: flex;
+
+    flex-direction: column;
+}
+
+
+.campo-nome {
+    grid-column: 1 / 3;
+}
+
+
+.campo label {
+    font-family: "Inter", sans-serif;
+
+    color: var(--bege);
+
+    font-size: 21px;
+
+    font-weight: 600;
+
+    margin-bottom: 11px;
+}
+
+
+.campo input {
+    width: 100%;
+
+    height: 41px;
+
+    box-sizing: border-box;
+
+    border: none;
+
+    outline: none;
+
+    border-radius: 2px;
+
+    background-color: #c9c6b8;
+
+    padding: 0 10px;
+
+    font-family: "Inter", sans-serif;
+
+    font-size: 16px;
+
+    color: #171717;
+}
+
+    /* botão */
+
+.btn-reservar-lugares {
+    grid-column: 1 / 3;
+
+    justify-self: center;
+
+    margin-top: 17px;
+
+    padding: 15px 23px;
+
+    background-color: transparent;
+
+    border: 2px solid var(--bege);
+
+    color: var(--bege);
+
+    font-family: "Inter", sans-serif;
+
+    font-size: 24px;
+
+    cursor: pointer;
+
+    transition: 0.3s;
+}
+
+
+.btn-reservar-lugares:hover {
+    background-color: var(--bege);
+
+    color: var(--preto);
+}
+
+    /* rodapé*/
+
+.cadastro + .footer {
+    min-height: 151px;
+
+    box-sizing: border-box;
+
+    background-color: var(--preto);
+
+    padding: 25px 12%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    gap: 30px;
+}
+
+
+.cadastro + .footer .footer-logo img {
+    width: 55px;
+}
+
+
+.cadastro + .footer p {
+    flex: 1;
+
+    margin: 0;
+
+    color: rgba(255, 255, 255, 0.5);
+
+    font-family: "Inter", sans-serif;
+
+    font-size: 12px;
+
+    text-align: center;
+}
+
+
+.cadastro + .footer .footer-social {
+    display: flex;
+
+    gap: 30px;
+}
+
+
+.cadastro + .footer .footer-social a {
+    color: rgba(255, 255, 255, 0.5);
+
+    font-family: "Inter", sans-serif;
+
+    font-size: 11px;
+
+    font-weight: 600;
+
+    text-decoration: none;
+}
+
+
+
+@media (max-width: 1000px) {
+
+    .cadastro-box {
+        width: calc(100% - 120px);
+    }
+
+}
+
+
+@media (max-width: 768px) {
+
+    .cadastro {
+        padding: 80px 25px 50px;
+
+        min-height: auto;
+    }
+
+
+    .cadastro-voltar {
+        top: 25px;
+        left: 25px;
+
+        font-size: 50px;
+    }
+
+
+    .cadastro-box {
+        width: 100%;
+        height: auto;
+
+        padding: 30px 25px 40px;
+    }
+
+
+    .cadastro-box h1 {
+        font-size: 70px;
+
+        margin-bottom: 40px;
+    }
+
+
+    .formulario {
+        grid-template-columns: 1fr;
+
+        row-gap: 30px;
+    }
+
+
+    .campo-nome {
+        grid-column: auto;
+    }
+
+
+    .btn-reservar-lugares {
+        grid-column: auto;
+
+        font-size: 18px;
+
+        margin-top: 5px;
+    }
+
+
+    .cadastro + .footer {
+        flex-direction: column;
+
+        padding: 30px 20px;
+
+        text-align: center;
+    }
+
+
+    .cadastro + .footer p {
+        flex: none;
+    }
+
+}
+
+
+    /*---------------------------------RESPONSIVIDADE------------------------------------ */
+
+/* Tablets */
+
+@media (max-width: 768px) {
+
+    .header {
+        padding: 0 4%;
+    }
+
+    .menu {
+        gap: 15px;
+    }
+
+    .menu a {
+        font-size: 8px;
+    }
+
+
+    /* Hero */
+
+    .hero h1 {
+        font-size: 45px;
+    }
+
+
+    /* Experiência */
+
+    .experiencia {
+        flex-direction: column;
+
+        padding: 60px 8%;
+
+        gap: 40px;
+    }
+
+    .experiencia-texto {
+        width: 100%;
+    }
+
+    .experiencia-imagem {
+        width: 100%;
+        max-width: 500px;
+    }
+
+
+    /* Cardápio */
+
+    .cardapio {
+        padding-left: 8%;
+        padding-right: 8%;
+    }
+
+    .categorias {
+        justify-content: flex-start;
+    }
+
+
+    /* Localização */
+
+    .localizacao {
+        flex-direction: column;
+
+        padding: 60px 8%;
+    }
+
+    .localizacao-info {
+        width: 100%;
+    }
+
+    .mapa {
+        width: 100%;
+    }
+
+
+    /* Footer */
+
+    .footer {
+        flex-direction: column;
+
+        text-align: center;
+    }
+
+}
+
+
+/* Celular */
+
+@media (max-width: 500px) {
+
+    /* Header */
+
+    .header {
+        height: auto;
+
+        padding: 15px;
+
+        flex-direction: column;
+
+        gap: 15px;
+    }
+
+    .menu {
+        flex-wrap: wrap;
+
+        justify-content: center;
+
+        gap: 12px;
+    }
+
+
+    /* Hero */
+
+    .hero {
+        min-height: 400px;
+    }
+
+    .hero h1 {
+        font-size: 38px;
+    }
+
+    .hero p {
+        font-size: 10px;
+    }
+
+
+    /* Experiência */
+
+    .experiencia-texto h2 {
+        font-size: 38px;
+    }
+
+
+    /* Cardápio */
+
+    .cardapio > h2 {
+        font-size: 40px;
+    }
+
+    .categorias {
+        flex-wrap: wrap;
+    }
+
+    .pratos {
+        grid-template-columns: 1fr;
+    }
+
+
+    /* Reserva */
+
+    .reserva h2 {
+        font-size: 38px;
+    }
+
+
+    /* Localização */
+
+    .localizacao-info h2 {
+        font-size: 38px;
+    }
+
+
+    /* Footer */
+
+    .footer {
+        padding: 30px 15px;
+    }
+}
+
+    /* SOBRE NÓS */
+
+@media (max-width: 768px) {
+
+    .sobre-intro {
+        padding: 50px 8%;
+    }
+
+
+    .sobre-intro h1 {
+        font-size: 65px;
+    }
+
+
+    .sobre-intro > p {
+        font-size: 16px;
+    }
+
+
+    .curso {
+        flex-direction: column;
+
+        padding: 50px 8%;
+
+        gap: 35px;
+    }
+
+
+    .curso-imagem {
+        width: 100%;
+    }
+
+
+    .curso-imagem img {
+        height: 350px;
+    }
+
+
+    .curso-texto {
+        width: 100%;
+    }
+
+
+    .curso-texto h2 {
+        font-size: 60px;
+    }
+
+
+    .curso-texto p {
+        max-width: 100%;
+
+        font-size: 16px;
+    }
+
+
+    .administracao .curso-texto {
+        text-align: left;
+
+        order: 2;
+    }
+
+
+    .administracao .curso-imagem {
+        order: 1;
+    }
+
+}
+
+
+@media (max-width: 500px) {
+
+    .sobre-intro {
+        min-height: 350px;
+
+        padding: 40px 7%;
+    }
+
+
+    .voltar {
+        font-size: 50px;
+
+        margin-bottom: 30px;
+    }
+
+
+    .sobre-intro h1 {
+        font-size: 48px;
+    }
+
+
+    .sobre-intro > p {
+        font-size: 14px;
+    }
+
+
+    .curso {
+        padding: 40px 7%;
+    }
+
+
+    .curso-imagem img {
+        height: 250px;
+    }
+
+
+    .curso-texto h2 {
+        font-size: 48px;
+    }
+
+
+    .curso-texto p {
+        font-size: 14px;
+    }
+
+}
+
+    /* CADASTRO */
+
+ 
+@media (max-width: 500px) {
+
+    .cadastro-box h1 {
+        font-size: 55px;
+    }
+
+
+    .campo label {
+        font-size: 18px;
+    }
+
+
+    .btn-reservar-lugares {
+        font-size: 16px;
+    }
+
+}

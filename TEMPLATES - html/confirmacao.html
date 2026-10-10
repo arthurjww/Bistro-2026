@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Compra Confirmada | Sinestesia</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="ingressos.css">
+</head>
+
+<!-- OBS: nenhum elemento possui id. O JS seleciona os elementos pelos atributos data-js. -->
+
+<body data-pagina="confirmacao">
+
+        <!-- Cabeçalho -->
+
+    <header class="header">
+
+        <div class="logo">
+            <a href="index.html"><img src="img/logo.png" alt="Logo Sinestesia"></a>
+        </div>
+
+        <nav class="menu">
+            <a href="index.html#cardapio">CARDÁPIO</a>
+            <a href="index.html#localizacao">LOCALIZAÇÃO</a>
+            <a href="sobre.html">SOBRE</a>
+            <a href="https://mesas.sinestesiabistro.com.br" class="btn-reservar">RESERVAR</a>
+        </nav>
+
+    </header>
+
+        <!-- Conteúdo -->
+
+    <main class="ingressos">
+
+        <a href="index.html" class="ingressos-voltar" aria-label="Voltar ao início">←</a>
+
+        <div class="ingressos-conteudo">
+
+                <!-- Etapas -->
+
+            <ol class="etapas">
+                <li class="etapa concluida">01 INGRESSOS</li>
+                <li class="etapa concluida">02 PARTICIPANTES</li>
+                <li class="etapa concluida">03 PAGAMENTO</li>
+                <li class="etapa ativa">04 CONFIRMAÇÃO</li>
+            </ol>
+
+                <!-- Aparece se a página for aberta sem os dados da compra -->
+
+            <div class="caixa ingresso-invalido" data-js="sem-dados" hidden>
+                <h2 class="subtitulo">Nenhuma compra encontrada</h2>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Selecione seus ingressos para continuar.</p>
+                <a href="ingressos.html" class="btn-primario">ESCOLHER INGRESSOS</a>
+            </div>
+
+            <div data-js="conteudo">
+
+                <div class="nao-imprimir">
+
+                    <h1 class="titulo-pagina">Compra<br><span>Confirmada</span></h1>
+
+                    <p class="texto-intro">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pedido <strong data-js="pedido">—</strong>. Cada ingresso abaixo possui um QR code único: ao escaneá-lo, a página do ingresso é aberta.</p>
+
+                    <div class="acoes acoes-topo">
+                        <button type="button" class="btn-primario" data-js="imprimir">IMPRIMIR / SALVAR TODOS EM PDF</button>
+                        <a href="index.html" class="btn-link">VOLTAR AO INÍCIO</a>
+                    </div>
+
+                </div>
+
+                    <!-- Os bilhetes são gerados aqui a partir do modelo abaixo -->
+
+                <div class="bilhetes" data-js="lista-bilhetes"></div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+        <!-- Modelo do bilhete (clonado pelo JS para cada ingresso) -->
+
+    <template data-js="modelo-bilhete">
+
+        <div class="bilhete-item">
+
+            <article class="bilhete">
+
+                <header class="bilhete-topo">
+                    <img src="img/logo.png" alt="Logo Sinestesia" class="bilhete-logo">
+                    <div class="bilhete-marca">
+                        <small>INGRESSO · LOREM IPSUM DOLOR</small>
+                        <h2>Sinestesia</h2>
+                    </div>
+                    <span class="bilhete-tipo" data-js="tipo">ADULTO</span>
+                </header>
+
+                <div class="bilhete-corpo">
+
+                    <div class="bilhete-info">
+
+                        <div class="bilhete-grade">
+
+                            <div class="bilhete-dado">
+                                <small>DATA</small>
+                                <p>Lorem ipsum, 00/00/0000</p>
+                            </div>
+
+                            <div class="bilhete-dado">
+                                <small>HORÁRIO</small>
+                                <p>00h às 00h</p>
+                            </div>
+
+                            <div class="bilhete-dado inteiro">
+                                <small>LOCAL</small>
+                                <p>Lorem ipsum dolor sit amet, 000 - Consectetur, Adipiscing - RS</p>
+                            </div>
+
+                            <div class="bilhete-dado">
+                                <small>CONVIDADO</small>
+                                <p data-js="nome">—</p>
+                            </div>
+
+                            <div class="bilhete-dado">
+                                <small>E-MAIL</small>
+                                <p data-js="email">—</p>
+                            </div>
+
+                            <div class="bilhete-dado">
+                                <small>TIPO DE INGRESSO</small>
+                                <p data-js="tipo">—</p>
+                            </div>
+
+                            <div class="bilhete-dado">
+                                <small>PEDIDO</small>
+                                <p data-js="pedido">—</p>
+                            </div>
+
+                            <div class="bilhete-dado inteiro">
+                                <small>OBSERVAÇÕES (ALERGIAS / RESTRIÇÕES)</small>
+                                <p data-js="obs">—</p>
+                            </div>
+
+                        </div>
+
+                        <div class="bilhete-mapa">
+                            <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d1742.0489531304893!2d-51.1488994!3d-29.161787!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x951ebcf02ebe6837%3A0xccb0a798cb694b09!2sR.%20Francisco%20Get%C3%BAlio%20Vargas%2C%201130%20-%20Petr%C3%B3polis%2C%20Caxias%20do%20Sul%20-%20RS%2C%2095070-560!5e0!3m2!1spt-BR!2sbr!4v1790272057302!5m2!1spt-BR!2sbr" title="Mapa do local" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+                        </div>
+
+                    </div>
+
+                    <aside class="bilhete-canhoto">
+                        <div class="bilhete-qr" data-js="qr"></div>
+                        <small>CÓDIGO DO INGRESSO</small>
+                        <strong class="bilhete-codigo" data-js="codigo">—</strong>
+                        <p>Lorem ipsum dolor sit amet. Apresente este QR code na entrada.</p>
+                    </aside>
+
+                </div>
+
+                <footer class="bilhete-rodape">
+                    <span>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ingresso pessoal e intransferível.</span>
+                    <span>Sinestesia · 2026</span>
+                </footer>
+
+            </article>
+
+            <div class="acoes">
+                <a href="ingresso.html" class="btn-secundario" target="_blank" rel="noopener" data-js="link-ingresso">ABRIR ESTE INGRESSO ↗</a>
+            </div>
+
+        </div>
+
+    </template>
+
+        <!-- Rodapé -->
+
+    <footer class="footer">
+
+        <div class="footer-logo">
+            <img src="img/logo.png" alt="Logo Sinestesia">
+        </div>
+
+        <p>© 2026 Sinestesia Gastronomia Ltda. R. Francisco Getúlio Vargas, 1130 - Petrópolis, Caxias do Sul - RS</p>
+
+        <div class="redes">
+            <a target="_blank" href="https://www.instagram.com/ucscetectecnicos/">INSTAGRAM</a>
+            <a target="_blank" href="https://wa.me/5554999999999">WHATSAPP</a>
+        </div>
+
+    </footer>
+
+    <script src="js/vendor/qrcode.js"></script>
+    <script src="js/ingressos.js"></script>
+
+</body>
+</html>

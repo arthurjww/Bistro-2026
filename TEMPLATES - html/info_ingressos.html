@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Participantes | Sinestesia</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="ingressos.css">
+</head>
+
+<!-- OBS: nenhum elemento possui id. O JS seleciona os elementos pelos atributos data-js. -->
+
+<body data-pagina="participantes">
+
+        <!-- Cabeçalho -->
+
+    <header class="header">
+
+        <div class="logo">
+            <a href="index.html"><img src="img/logo.png" alt="Logo Sinestesia"></a>
+        </div>
+
+        <nav class="menu">
+            <a href="index.html#cardapio">CARDÁPIO</a>
+            <a href="index.html#localizacao">LOCALIZAÇÃO</a>
+            <a href="sobre.html">SOBRE</a>
+            <a href="https://mesas.sinestesiabistro.com.br" class="btn-reservar">RESERVAR</a>
+        </nav>
+
+    </header>
+
+        <!-- Conteúdo -->
+
+    <main class="ingressos">
+
+        <a href="ingressos.html" class="ingressos-voltar" aria-label="Voltar" data-js="voltar">←</a>
+
+        <div class="ingressos-conteudo">
+
+                <!-- Etapas -->
+
+            <ol class="etapas">
+                <li class="etapa concluida">01 INGRESSOS</li>
+                <li class="etapa ativa">02 PARTICIPANTES</li>
+                <li class="etapa">03 PAGAMENTO</li>
+                <li class="etapa">04 CONFIRMAÇÃO</li>
+            </ol>
+
+            <div class="compra-grid">
+
+                <div>
+
+                    <h1 class="titulo-pagina">Quem vai<br><span>Participar</span></h1>
+
+                    <p class="texto-intro">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+
+                        <!-- Código do aluno -->
+
+                    <div class="caixa">
+
+                        <h2 class="subtitulo">Código do Aluno</h2>
+
+                        <p class="texto-apoio">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.</p>
+
+                        <div class="codigo-aluno-linha">
+                            <input type="text" class="campo-texto" placeholder="LOREM-0000" autocomplete="off" spellcheck="false" aria-label="Código do aluno" data-js="codigo-aluno-input">
+                            <button type="button" class="btn-secundario" data-js="codigo-aluno-enviar">APLICAR</button>
+                        </div>
+
+                        <p class="aviso" data-js="codigo-aluno-aviso" hidden></p>
+
+                    </div>
+
+                        <!-- Formulário dos participantes -->
+
+                    <form class="caixa" action="pagamento.html" method="get" data-js="form-participantes">
+
+                        <h2 class="subtitulo">Dados dos Participantes</h2>
+
+                        <input type="hidden" name="qtd" value="1" data-js="campo-qtd">
+                        <input type="hidden" name="codigo_aluno" value="" data-js="campo-codigo-aluno">
+
+                            <!-- Os <details> são gerados aqui a partir do modelo abaixo -->
+
+                        <div data-js="lista-participantes"></div>
+
+                        <div class="acoes">
+                            <a href="ingressos.html" class="btn-link" data-js="voltar">← ALTERAR QUANTIDADE</a>
+                            <button type="submit" class="btn-primario">PROSSEGUIR PARA PAGAMENTO →</button>
+                        </div>
+
+                    </form>
+
+                </div>
+
+                    <!-- Resumo -->
+
+                <aside class="resumo">
+
+                    <h2>Resumo</h2>
+
+                    <div class="resumo-evento">
+                        <span>LOREM IPSUM 00/00</span>
+                        <strong>00h às 00h</strong>
+                        <span>Lorem ipsum dolor sit amet</span>
+                    </div>
+
+                    <div class="resumo-linha">
+                        <span>Adulto × <span data-js="qtd-ADULTO">0</span></span>
+                        <strong data-js="subtotal-ADULTO">R$ 0,00</strong>
+                    </div>
+
+                    <div class="resumo-linha">
+                        <span>Criança × <span data-js="qtd-CRIANCA">0</span></span>
+                        <strong data-js="subtotal-CRIANCA">R$ 0,00</strong>
+                    </div>
+
+                    <div class="resumo-linha" data-js="resumo-codigo" hidden>
+                        <span>Código do aluno</span>
+                        <strong data-js="resumo-codigo-valor"></strong>
+                    </div>
+
+                    <div class="resumo-total">
+                        <span>TOTAL</span>
+                        <strong data-js="total">R$ 0,00</strong>
+                    </div>
+
+                    <p class="resumo-nota">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.</p>
+
+                </aside>
+
+            </div>
+
+        </div>
+
+    </main>
+
+        <!-- Modelo de um participante (clonado pelo JS para cada ingresso) -->
+
+    <template data-js="modelo-participante">
+
+        <details class="participante">
+
+            <summary>
+                <span class="participante-numero" data-js="numero">1</span>
+                <span class="participante-titulo">
+                    <strong>Participante <span data-js="numero">1</span></strong>
+                    <small data-js="descricao">Lorem ipsum dolor sit amet</small>
+                </span>
+                <span class="participante-seta" aria-hidden="true">▾</span>
+            </summary>
+
+            <div class="participante-campos">
+
+                <label class="campo-ing">
+                    <span>Nome completo</span>
+                    <input type="text" class="campo-texto" data-campo="nome" placeholder="Lorem Ipsum Dolor" autocomplete="name" required>
+                </label>
+
+                <label class="campo-ing">
+                    <span>E-mail</span>
+                    <input type="email" class="campo-texto" data-campo="email" placeholder="lorem@ipsum.com" autocomplete="email" required>
+                </label>
+
+                <div class="campo-ing inteiro">
+                    <span>Tipo de ingresso</span>
+                    <div class="opcoes-tipo">
+                        <label class="opcao">
+                            <input type="radio" data-campo="tipo" value="ADULTO" required>
+                            <span>ADULTO<small>Lorem ipsum dolor sit amet</small></span>
+                        </label>
+                        <label class="opcao">
+                            <input type="radio" data-campo="tipo" value="CRIANCA">
+                            <span>CRIANÇA<small>Lorem ipsum dolor sit amet</small></span>
+                        </label>
+                    </div>
+                </div>
+
+                <label class="campo-ing inteiro">
+                    <span>Observações <small>(alergias ou restrições alimentares — opcional)</small></span>
+                    <textarea class="campo-texto" data-campo="obs" rows="3" maxlength="200" placeholder="Lorem ipsum dolor sit amet, consectetur adipiscing elit."></textarea>
+                </label>
+
+                <div class="chips">
+                    <button type="button" class="chip" data-js="chip">+ SEM GLÚTEN</button>
+                    <button type="button" class="chip" data-js="chip">+ SEM LACTOSE</button>
+                    <button type="button" class="chip" data-js="chip">+ VEGETARIANO</button>
+                    <button type="button" class="chip" data-js="chip">+ VEGANO</button>
+                    <button type="button" class="chip" data-js="chip">+ FRUTOS DO MAR</button>
+                </div>
+
+            </div>
+
+        </details>
+
+    </template>
+
+        <!-- Rodapé -->
+
+    <footer class="footer">
+
+        <div class="footer-logo">
+            <img src="img/logo.png" alt="Logo Sinestesia">
+        </div>
+
+        <p>© 2026 Sinestesia Gastronomia Ltda. R. Francisco Getúlio Vargas, 1130 - Petrópolis, Caxias do Sul - RS</p>
+
+        <div class="redes">
+            <a target="_blank" href="https://www.instagram.com/ucscetectecnicos/">INSTAGRAM</a>
+            <a target="_blank" href="https://wa.me/5554999999999">WHATSAPP</a>
+        </div>
+
+    </footer>
+
+    <script src="js/ingressos.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Pagamento | Sinestesia</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="ingressos.css">
+</head>
+
+<!-- OBS: nenhum elemento possui id. O JS seleciona os elementos pelos atributos data-js. -->
+
+<body data-pagina="pagamento">
+
+        <!-- Cabeçalho -->
+
+    <header class="header">
+
+        <div class="logo">
+            <a href="index.html"><img src="img/logo.png" alt="Logo Sinestesia"></a>
+        </div>
+
+        <nav class="menu">
+            <a href="index.html#cardapio">CARDÁPIO</a>
+            <a href="index.html#localizacao">LOCALIZAÇÃO</a>
+            <a href="sobre.html">SOBRE</a>
+            <a href="https://mesas.sinestesiabistro.com.br" class="btn-reservar">RESERVAR</a>
+        </nav>
+
+    </header>
+
+        <!-- Conteúdo -->
+
+    <main class="ingressos">
+
+        <a href="info_ingressos.html" class="ingressos-voltar" aria-label="Voltar" data-js="editar">←</a>
+
+        <div class="ingressos-conteudo">
+
+                <!-- Etapas -->
+
+            <ol class="etapas">
+                <li class="etapa concluida">01 INGRESSOS</li>
+                <li class="etapa concluida">02 PARTICIPANTES</li>
+                <li class="etapa ativa">03 PAGAMENTO</li>
+                <li class="etapa">04 CONFIRMAÇÃO</li>
+            </ol>
+
+                <!-- Aparece se a página for aberta sem os dados da compra -->
+
+            <div class="caixa ingresso-invalido" data-js="sem-dados" hidden>
+                <h2 class="subtitulo">Nenhum ingresso selecionado</h2>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Selecione seus ingressos para continuar.</p>
+                <a href="ingressos.html" class="btn-primario">ESCOLHER INGRESSOS</a>
+            </div>
+
+            <div class="compra-grid" data-js="conteudo">
+
+                <div>
+
+                    <h1 class="titulo-pagina">Forma de<br><span>Pagamento</span></h1>
+
+                    <p class="texto-intro">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+
+                    <form class="caixa pagamento" data-js="form-pagamento">
+
+                        <span class="selo-simulado">PAGAMENTO SIMULADO — PROTÓTIPO</span>
+
+                            <!-- Métodos -->
+
+                        <div class="metodos">
+                            <label class="opcao">
+                                <input type="radio" name="metodo" value="pix" checked>
+                                <span>PIX</span>
+                            </label>
+                            <label class="opcao">
+                                <input type="radio" name="metodo" value="cartao">
+                                <span>CARTÃO DE CRÉDITO</span>
+                            </label>
+                        </div>
+
+                            <!-- Pix -->
+
+                        <div class="painel painel-pix">
+
+                            <div class="pix">
+
+                                <div class="pix-qr" data-js="pix-qr"></div>
+
+                                <div>
+                                    <h2 class="subtitulo">Lorem ipsum Pix</h2>
+                                    <p class="texto-apoio">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore.</p>
+                                    <span class="rotulo">PIX COPIA E COLA</span>
+                                    <p class="pix-copia">00020126LOREMIPSUMDOLORSITAMET0000BR.GOV.BCB.PIX0136LOREM-IPSUM-0000-0000-DOLOR5204000053039865802BR</p>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                            <!-- Cartão (campos SEM name: os dados nunca vão para a URL) -->
+
+                        <div class="painel painel-cartao">
+
+                            <div class="cartao-campos">
+
+                                <label class="campo-ing inteiro">
+                                    <span>Número do cartão</span>
+                                    <input type="text" class="campo-texto" inputmode="numeric" placeholder="0000 0000 0000 0000" autocomplete="off">
+                                </label>
+
+                                <label class="campo-ing inteiro">
+                                    <span>Nome impresso no cartão</span>
+                                    <input type="text" class="campo-texto" placeholder="LOREM IPSUM" autocomplete="off">
+                                </label>
+
+                                <label class="campo-ing curto">
+                                    <span>Validade</span>
+                                    <input type="text" class="campo-texto" placeholder="MM/AA" autocomplete="off">
+                                </label>
+
+                                <label class="campo-ing curto">
+                                    <span>CVV</span>
+                                    <input type="text" class="campo-texto" inputmode="numeric" placeholder="000" autocomplete="off">
+                                </label>
+
+                                <label class="campo-ing">
+                                    <span>Parcelas</span>
+                                    <select class="campo-texto">
+                                        <option>1x — lorem ipsum</option>
+                                        <option>2x — lorem ipsum</option>
+                                        <option>3x — lorem ipsum</option>
+                                    </select>
+                                </label>
+
+                            </div>
+
+                        </div>
+
+                        <div class="acoes">
+                            <a href="info_ingressos.html" class="btn-link" data-js="editar">← EDITAR PARTICIPANTES</a>
+                            <button type="submit" class="btn-primario">CONFIRMAR PAGAMENTO →</button>
+                        </div>
+
+                    </form>
+
+                </div>
+
+                    <!-- Resumo -->
+
+                <aside class="resumo">
+
+                    <h2>Resumo</h2>
+
+                    <div class="resumo-evento">
+                        <span>LOREM IPSUM 00/00</span>
+                        <strong>00h às 00h</strong>
+                        <span>Lorem ipsum dolor sit amet</span>
+                    </div>
+
+                    <ul class="resumo-lista" data-js="lista-resumo"></ul>
+
+                    <div class="resumo-linha" data-js="resumo-codigo" hidden>
+                        <span>Código do aluno</span>
+                        <strong data-js="resumo-codigo-valor"></strong>
+                    </div>
+
+                    <div class="resumo-total">
+                        <span>TOTAL</span>
+                        <strong data-js="total">R$ 0,00</strong>
+                    </div>
+
+                    <p class="resumo-nota">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.</p>
+
+                </aside>
+
+            </div>
+
+        </div>
+
+    </main>
+
+        <!-- Rodapé -->
+
+    <footer class="footer">
+
+        <div class="footer-logo">
+            <img src="img/logo.png" alt="Logo Sinestesia">
+        </div>
+
+        <p>© 2026 Sinestesia Gastronomia Ltda. R. Francisco Getúlio Vargas, 1130 - Petrópolis, Caxias do Sul - RS</p>
+
+        <div class="redes">
+            <a target="_blank" href="https://www.instagram.com/ucscetectecnicos/">INSTAGRAM</a>
+            <a target="_blank" href="https://wa.me/5554999999999">WHATSAPP</a>
+        </div>
+
+    </footer>
+
+    <script src="js/vendor/qrcode.js"></script>
+    <script src="js/ingressos.js"></script>
+
+</body>
+</html>
