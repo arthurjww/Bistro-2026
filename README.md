@@ -120,7 +120,7 @@ Para testar pagamentos, use as credenciais de teste do Mercado Pago. Para o webh
 
 ## 👥 Equipe
 
-Projeto desenvolvido por alunos do CETEC/UCS. *(Adicionar integrantes e as áreas de cada um.)*
+Projeto desenvolvido por alunos do Curso Técnico de T.I - CETEC/UCS. 
 
 ---
 
