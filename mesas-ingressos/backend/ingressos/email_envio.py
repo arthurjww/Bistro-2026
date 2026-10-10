@@ -7,9 +7,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-
 load_dotenv()
-
 
 MAIL_SERVER = os.getenv("MAIL_SERVER")
 MAIL_PORT = int(os.getenv("MAIL_PORT", 465))
@@ -26,11 +24,11 @@ MAIL_SENDER_NAME = os.getenv(
 
 
 def enviar_email(
-    destinatario,
-    assunto,
-    mensagem_texto,
-    mensagem_html,
-    anexo=None,
+        destinatario,
+        assunto,
+        mensagem_texto,
+        mensagem_html,
+        anexo=None,
 ):
     """
     Envia um email utilizando o SMTP do Gmail.
@@ -41,8 +39,11 @@ def enviar_email(
     assunto:
         Assunto do email.
 
-    mensagem:
+    mensagem_texto:
         Texto do email.
+
+    mensagem_html:
+        HTML do email.
 
     anexo:
         Pode ser:
@@ -141,20 +142,18 @@ def enviar_email(
     # CONEXÃO COM O GMAIL
     # ========================================================
 
-
     try:
         with smtplib.SMTP_SSL(
-            MAIL_SERVER,
-            MAIL_PORT,
-            timeout=15
+                MAIL_SERVER,
+                MAIL_PORT,
+                timeout=15
         ) as servidor:
-
 
             servidor.login(
                 MAIL_USERNAME,
                 MAIL_PASSWORD
             )
-            
+
             servidor.send_message(msg)
 
     except smtplib.SMTPAuthenticationError as e:

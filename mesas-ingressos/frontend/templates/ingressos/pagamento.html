@@ -1,255 +1,93 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pagamento por PIX - Ingressos</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f4f6f9;
-      margin: 0;
-      padding: 20px;
-      display: flex;
-      justify-content: center;
-    }
-
-    .card {
-      background-color: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-      max-width: 480px;
-      width: 100%;
-      padding: 25px;
-      box-sizing: border-box;
-    }
-
-    h2 {
-      margin-top: 0;
-      color: #333;
-      text-align: center;
-    }
-
-    .resumo-pedido {
-      background-color: #f8f9fa;
-      border: 1px solid #e9ecef;
-      border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 20px;
-    }
-
-    .resumo-item {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 8px;
-      color: #555;
-    }
-
-    .resumo-total {
-      font-weight: bold;
-      font-size: 1.2em;
-      color: #2b8a3e;
-      border-top: 1px solid #ddd;
-      padding-top: 8px;
-      margin-top: 8px;
-    }
-
-    .form-group {
-      margin-bottom: 15px;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: 600;
-      color: #444;
-    }
-
-    input[type="text"],
-    input[type="email"] {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      box-sizing: border-box;
-      font-size: 14px;
-    }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      background-color: #009ee3;
-      /* Cor do Mercado Pago */
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    button:hover {
-      background-color: #0081ba;
-    }
-
-    button:disabled {
-      background-color: #cccccc;
-      cursor: not-allowed;
-    }
-
-    /* ÁREA DO PIX GERADO */
-    #area-pix {
-      display: none;
-      text-align: center;
-      margin-top: 15px;
-    }
-
-    .qr-code-img {
-      width: 220px;
-      height: 220px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 10px;
-      background: #fff;
-      margin: 15px 0;
-    }
-
-    .copia-cola-box {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 15px;
-    }
-
-    .copia-cola-box input {
-      flex: 1;
-      font-size: 12px;
-      color: #666;
-    }
-
-    .copia-cola-box button {
-      width: auto;
-      padding: 10px 15px;
-      background-color: #4db8ff;
-    }
-
-    .status-container {
-      margin-top: 15px;
-      padding: 10px;
-      border-radius: 6px;
-      background-color: #e7f5ff;
-      color: #1864ab;
-      font-weight: 600;
-    }
-
-    .spinner {
-      display: inline-block;
-      width: 12px;
-      height: 12px;
-      border: 2px solid #1864ab;
-      border-radius: 50%;
-      border-top-color: transparent;
-      animation: spin 1s linear infinite;
-      margin-right: 5px;
-    }
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    .alerta-erro {
-      background-color: #ffe3e3;
-      color: #c92a2a;
-      padding: 10px;
-      border-radius: 6px;
-      margin-bottom: 15px;
-      display: none;
-    }
-  </style>
+	<meta charset="UTF-8">
+	<title>Title</title>
 </head>
-
 <body>
-  <div class="cronometro">
-      <p id="timer"></p>
-  </div>
+	<div class="cronometro">
+    	<p id="timer"></p>
+	</div>
 
-  <div class="card">
-    <h2>Pagamento via PIX</h2>
+	<div class="voltar">
+		<button type="button" id="btn-voltar">← Voltar</button>
+	</div>
 
-    <!-- Resumo do Pedido enviado pelo Flask -->
-    <div class="resumo-pedido">
-      <div class="resumo-item">
-        <span>Total de reservas:</span>
-        <span>{{ reservas }} reserva(s)</span>
-      </div>
-      <div class="resumo-item resumo-total">
-        <span>Total a Pagar:</span>
-        <span>R$ {{ "%.2f"|format(a_pagar) }}</span>
-      </div>
-    </div>
+	<div id="divIngressos" class="detalhes-ingressos">
+		<summary>Preencher dados de {{ quant }} ingressos</summary>
 
-    <div id="alerta-erro" class="alerta-erro"></div>
+		{% for lugar, dia in ingressos %}
+		<form class="form-ingresso">
+			<h3>Ingresso {{ loop.index }} - Lugar {{ lugar }} - Dia {{ dia }}/10</h3>
 
-    <!-- FORMULÁRIO DO PAGADOR -->
-    <form id="form-pagamento">
-      <div class="form-group">
-        <label for="nome">Nome Completo (opcional)</label>
-        <input type="text" id="nome" placeholder="Digite seu nome">
-      </div>
+			<label>
+				Nome:
+				<input type="text" name="nome" required>
+			</label>
 
-      <div class="form-group">
-        <label for="email">E-mail (para extorno em caso de erro no pagamento do pix)</label>
-        <input type="email" id="email" required placeholder="seu@email.com">
-      </div>
+			<label>
+				Telefone para entrarmos em contato, caso necessário
+				<input type="tel" name="telefone" required>
+			</label>
 
-      <div class="form-group">
-        <label for="cpf">CPF (opcional)</label>
-        <input type="text" id="cpf" maxlength="14" placeholder="000.000.000-00">
-      </div>
+			<label>
+				Email para envio do ingresso:
+				<input type="email" name="email_envio" required>
+			</label>
 
-      <button type="submit" id="btn-submit">Gerar QR Code PIX</button>
-    </form>
+			<p>Idade:</p>
+			<label>
+				0-3 anos
+				<input type="radio" name="tipo_ingresso" value="0" required>
+			</label>
 
-    <!-- ÁREA DE EXIBIÇÃO DO PIX (Exibida após o envio do form) -->
-    <div id="area-pix">
-      <p style="margin: 0; font-size: 14px; color: #666;">Escaneie o QR Code abaixo com o app do seu banco:</p>
+			<label>
+				4-12 anos
+				<input type="radio" name="tipo_ingresso" value="1">
+			</label>
 
-      <img id="qr-code-img" class="qr-code-img" src="" alt="QR Code Pix">
+			<label>
+				13 ou mais anos
+				<input type="radio" name="tipo_ingresso" value="2">
+			</label>
 
-      <p style="font-size: 13px; color: #666; margin-bottom: 5px;">Ou copie a chave Pix Copia e Cola:</p>
-      <div class="copia-cola-box">
-        <input type="text" id="qr-code-text" readonly>
-        <button type="button" id="btn-copiar">Copiar</button>
-      </div>
+			<label>
+				<b>(Opcional)</b> Observações: Informe alergias, intolerâncias ou preferências alimentares.
+				<textarea
+						name="observacoes"
+						rows="4"
+						cols="100"
+						placeholder="Ex.: intolerância à lactose, glúten, não como banana ou camarão"
+				></textarea>
+			</label>
+		</form>
+		{% endfor %}
+	</div>
 
-      <div id="ticket-link-container" style="display:none; margin-bottom: 10px;">
-        <a id="ticket-url" href="#" target="_blank" style="font-size: 13px; color: #009ee3;">Ver comprovante no Mercado
-          Pago</a>
-      </div>
+	<button class="btn-prosseguir" onclick="enviarDadosESeguirPagamento()">Avançar / Prosseguir</button>
 
-      <div class="status-container">
-        <span class="spinner" id="spinner"></span>
-        <span id="texto-status">Aguardando confirmação do pagamento...</span>
-      </div>
-    </div>
-  </div>
-
-  <script>
-      const urls = {
-            lugares: {{ url_for('lugares.rota_mapa') | tojson }},
-			pagamento: {{ url_for('routes.processar_pagamento') | tojson }},
-            pagamento_status: {{ url_for('routes.pagamento_status') | tojson }},
-            pagamento_sucesso: {{ url_for('routes.pagamento_sucesso') | tojson }},
+	<script>
+		const urls = {
+			lugares: {{ url_for('lugares.rota_mapa') | tojson }},
+			criar_ingressos: {{ url_for('routes.criar_ingressos') | tojson }},
+			pagamento: {{ url_for('routes.pagamento') | tojson }},
 			verificar_cronometro: {{ url_for('routes.verificar_cronometro') | tojson }}
 		};
 
-      let reservado = {{ cronometro }};
-  </script>
-  <script src="https://unpkg.com/imask"></script>
-  <script src="{{ url_for('static', filename='ingressos/script_pagamento.js') }}"></script>
-</body>
+		let reservado = {{ cronometro }};
+	</script>
+	<script src="https://unpkg.com/imask"></script>
+	<script src="{{ url_for('static', filename='ingressos/script_impedir_reload.js') }}"></script>
+	<script src="{{ url_for('static', filename='ingressos/script_info_ingressos.js') }}"></script>
+	<script>
+		const btnVoltar = document.getElementById('btn-voltar');
 
+		btnVoltar.addEventListener('click', () => {
+			if (confirm("Você tem certeza? Você perderá todo o seu progresso e retornará à seleção de lugares.")) {
+				isExiting = true;
+				window.location.replace(urls.lugares);
+			}
+		});
+  </script>
+</body>
 </html>

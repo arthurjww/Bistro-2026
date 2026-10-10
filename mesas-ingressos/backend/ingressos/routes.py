@@ -7,7 +7,6 @@ import json
 import hmac
 import hashlib
 import uuid
-import requests
 from ..banco_de_dados import get_db
 from flask import Blueprint, request, session, redirect, url_for, render_template, jsonify
 
@@ -178,8 +177,6 @@ def criar_ingressos():
 
             tipo_ingresso= item.get('tipo_ingresso')
             try:
-                # melhor int do que float, pois valor não tem casas decimais
-                # e float costuma ser instável em cálculos e.g. 0.1 + 0.2 != 0.3
                 tipo_ingresso = int(tipo_ingresso)
             except (TypeError, ValueError):
                 return jsonify({
@@ -791,17 +788,37 @@ def webhook_mercadopago():
 
 @routes.get('/pagamento/sucesso')
 def pagamento_sucesso():
+    # Esquema para armazenar reservas na session para caso /pagamento/sucesso receba um request de novo,
+    # mas que impossibilite da pessoa continuar com a key 'reservas' na sessão, para que ela não possa
+    # passar por /lugares e depois para /info_ingressos,
+    # o que a faria ter que prencher os dados do ingresso novamente
+    reservas_confirmadas = session.get('reservas_musica', [])
     reservas_sessao = session.get('reservas', [])
 
-    if not reservas_sessao:
+    if not reservas_sessao and not reservas_confirmadas:
         return redirect(url_for('lugares.rota_mapa'))
+
+    if not reservas_confirmadas:
+        session['reservas_musica'] = reservas_sessao
+
+    if not reservas_sessao:
+        reservas_sessao = reservas_confirmadas
+
+    for chave in (
+        'reservas',
+        'cronometro_reservado',
+        'tokens_criados',
+        'a_pagar',
+        'referencia_externa_pagamento'
+    ):
+        session.pop(chave, None)
 
     db = get_db()
     placeholders = ','.join('?' for _ in reservas_sessao)
 
     try:
         reservas = db.execute(
-            f'SELECT dia_bistro, ocupado FROM Reserva WHERE cod_reserva in ({placeholders})',
+            f'SELECT ocupado FROM Reserva WHERE cod_reserva in ({placeholders})',
             reservas_sessao
         ).fetchall()
         ingressos = db.execute(
@@ -817,19 +834,6 @@ def pagamento_sucesso():
 
     if not all(i['foi_pago'] == 1 for i in ingressos):
         return redirect(url_for('lugares.rota_mapa'))
-
-    dias = []
-    for r in reservas:
-        if r['dia_bistro'] not in dias:
-            dias.append(r['dia_bistro'])
-
-    for chave in (
-        "cronometro_reservado",
-        "tokens_criados",
-        "a_pagar",
-        "referencia_externa_pagamento"
-    ):
-        session.pop(chave, None)
 
     return redirect(os.getenv('MUSICAS_REDIRECT_URL', 'https://musicas.sinestesiabistro.com.br'))
 
