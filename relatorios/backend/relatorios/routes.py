@@ -41,9 +41,13 @@ def painel_relatorios():
     dias_bistro = obter_dias_bistro()
     resumo_financeiro = obter_resumo_financeiro(dia_bistro)
     lista_alunos = obter_alunos_filtro(curso_tecnico)
-    lista_compradores = obter_participantes_filtro(
-        codigo_aluno, curso_tecnico, dia_bistro
-    )
+    lista_compradores = []
+
+    if codigo_aluno:
+        lista_compradores = obter_participantes_filtro(
+            codigo_aluno, curso_tecnico, dia_bistro
+        )
+
     lista_resumo = obter_resumo_participantes(dia_bistro)
     lista_musicas = obter_top_5_musicas()
 
@@ -69,6 +73,7 @@ def painel_relatorios():
         resumo_financeiro = resumo_financeiro,
         tecnico_selecionado=curso_tecnico or "todos",
         lista_alunos = lista_alunos,
+        codigo_aluno_selecionado = codigo_aluno or "",
         lista_compradores = lista_compradores,
         detalhes_participante = detalhes_participante,
         lista_resumo = lista_resumo,
