@@ -5,13 +5,17 @@ import sqlite3
 from pathlib import Path
 
 from dotenv import load_dotenv
-from flask import Flask, g, render_template, request
+from flask import Flask, g, redirect, render_template, request, url_for
 
 ROOT_DIR = Path(__file__).resolve().parent
 BUNDLE_DIR = ROOT_DIR.parent
 TEMPLATE_DIR = ROOT_DIR / "frontend" / "templates" / "musicas"
 
 load_dotenv(BUNDLE_DIR / ".env")
+
+# Domínio principal do site (fora dos subdomínios mesas./musicas.) — pra onde
+# o botão "Voltar ao início" da página de agradecimento leva.
+HOME_REDIRECT_URL = os.getenv("HOME_REDIRECT_URL", "https://www.sinestesiabistro.com.br/")
 
 
 def resolver_database_path() -> Path:
@@ -131,8 +135,7 @@ def votacao():
                         (musica_id,),
                     )
                 db.commit()
-                mensagem = "Seus votos foram registrados com sucesso!"
-                mostrar_resultados = True
+                return redirect(url_for("obrigado"))
             except sqlite3.Error:
                 db.rollback()
                 mensagem = "Não foi possível registrar os votos. Tente novamente."
@@ -144,6 +147,11 @@ def votacao():
         mensagem=mensagem,
         mostrar_resultados=mostrar_resultados,
     )
+
+
+@app.route("/obrigado")
+def obrigado():
+    return render_template("obrigado.html", home_url=HOME_REDIRECT_URL)
 
 
 inicializar_banco()

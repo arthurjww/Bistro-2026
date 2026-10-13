@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obrigado | Sinestesia</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+    :root {
+        --bg: #131010;
+        --card: #F1EDDB;
+        --accent: #B8262D;
+        --accent-hover: #720C11;
+        --text: #332D27;
+        --muted: #71685e;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    html, body {
+        height: 100%;
+    }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background: var(--bg);
+        color: var(--card);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 28px;
+        line-height: 1.6;
+    }
+
+    .caixa {
+        max-width: 560px;
+        text-align: center;
+    }
+
+    .selo {
+        display: inline-block;
+        border: 1px solid var(--accent);
+        color: var(--accent);
+        font-size: 11px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        padding: 6px 16px;
+        border-radius: 999px;
+        margin-bottom: 28px;
+    }
+
+    h1 {
+        font-family: 'Instrument Serif', serif;
+        font-style: italic;
+        font-weight: normal;
+        font-size: 48px;
+        line-height: 1.25;
+        color: var(--card);
+        margin-bottom: 18px;
+    }
+
+    h1 span {
+        color: var(--accent);
+    }
+
+    p.texto {
+        font-size: 16px;
+        color: #cfc8ba;
+        margin-bottom: 34px;
+    }
+
+    .btn-voltar {
+        display: inline-block;
+        background: var(--accent);
+        color: var(--card);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14px;
+        letter-spacing: 0.5px;
+        padding: 14px 32px;
+        border-radius: 6px;
+        transition: background 0.2s ease;
+    }
+
+    .btn-voltar:hover {
+        background: var(--accent-hover);
+    }
+
+    .rodape {
+        margin-top: 44px;
+        font-size: 12px;
+        color: #6d665c;
+    }
+
+    @media (max-width: 480px) {
+        h1 {
+            font-size: 36px;
+        }
+    }
+    </style>
+</head>
+<body>
+
+    <div class="caixa">
+        <span class="selo">Tudo pronto</span>
+
+        <h1>Obrigado por<br>fazer parte do<br><span>Sinestesia</span>.</h1>
+
+        <p class="texto">
+            Seu ingresso está confirmado e seus votos para a trilha da noite já foram registrados.<br>
+            Cada ingresso foi enviado ao e-mail cadastrado para ele — confira a caixa de entrada correspondente.<br>
+            Agora é só esperar — preparamos cada detalhe para que sua experiência seja inesquecível.
+        </p>
+
+        <a class="btn-voltar" href="{{ home_url }}">Voltar ao início</a>
+
+        <p class="rodape">Sinestesia · 2026</p>
+    </div>
+
+</body>
+</html>
