@@ -15,7 +15,7 @@ load_dotenv(BUNDLE_DIR / ".env")
 
 # Domínio principal do site (fora dos subdomínios mesas./musicas.) — pra onde
 # o botão "Voltar ao início" da página de agradecimento leva.
-HOME_REDIRECT_URL = os.getenv("HOME_REDIRECT_URL", "https://sinestesiabistro.com.br")
+HOME_REDIRECT_URL = os.getenv("HOME_REDIRECT_URL", "https://www.sinestesiabistro.com.br/")
 
 
 def resolver_database_path() -> Path:
