@@ -81,7 +81,7 @@ def verificar_db():
             session.pop(chave, None)
 
 
-@bp_lugares.route("/", methods=["GET"])
+@bp_lugares.route("/lugares", methods=["GET"])
 def rota_mapa():
     verificar_db()
     usos_restantes = None
@@ -138,13 +138,6 @@ def listar_mapa():
         "dia": dia,
         "lugares": lugares
     }), 200
-
-
-    return jsonify({
-        "dia": dia,
-        "lugares": lugares
-    }), 200
-    
 
 @bp_lugares.route("/lugares/confirmar_codigo", methods=['GET'])
 def confirmar_codigo():
@@ -240,3 +233,128 @@ def seguir():
     session['cronometro_reservado'] = cronometro
     session.permanent = True
     return redirect(url_for('routes.informacoes'))
+
+@bp_lugares.route("/lugares/liberar-reservas", methods=["POST"])
+def liberar_reservas_da_sessao():
+    cod_aluno = session.get("codigo")
+    codigos_reserva = list(dict.fromkeys(session.get("reservas", [])))
+
+    if not cod_aluno or not codigos_reserva:
+        return jsonify({"ok": True}), 200
+
+    db = get_db()
+    placeholders = ",".join("?" for _ in codigos_reserva)
+
+    try:
+        reservas_pendentes = db.execute(
+            f"""
+            SELECT cod_reserva
+            FROM Reserva
+            WHERE cod_reserva IN ({placeholders})
+              AND cod_aluno = ?
+              AND ocupado = ?
+            """,
+            (*codigos_reserva, cod_aluno, EM_PAGAMENTO)
+        ).fetchall()
+
+        pendentes = [r["cod_reserva"] for r in reservas_pendentes]
+
+        if not pendentes:
+            db.commit()
+            _limpar_dados_checkout_da_sessao()
+            return jsonify({"ok": True}), 200
+
+        placeholders_pendentes = ",".join("?" for _ in pendentes)
+
+        # Se uma reserva já tiver ingresso pago, ela não deve voltar a ficar livre.
+        ingressos_pagos = db.execute(
+            f"""
+            SELECT DISTINCT cod_reserva
+            FROM Ingresso
+            WHERE cod_reserva IN ({placeholders_pendentes})
+              AND foi_pago = 1
+            """,
+            pendentes
+        ).fetchall()
+
+        reservas_pagas = [r["cod_reserva"] for r in ingressos_pagos]
+        reservas_para_liberar = [
+            codigo for codigo in pendentes
+            if codigo not in reservas_pagas
+        ]
+
+        if reservas_pagas:
+            placeholders_pagos = ",".join("?" for _ in reservas_pagas)
+            db.execute(
+                f"""
+                UPDATE Reserva
+                SET ocupado = ?, cronometro_reservado = NULL
+                WHERE cod_reserva IN ({placeholders_pagos})
+                  AND ocupado = ?
+                """,
+                (OCUPADO, *reservas_pagas, EM_PAGAMENTO)
+            )
+
+        ingressos_removidos = 0
+
+        if reservas_para_liberar:
+            placeholders_liberar = ",".join(
+                "?" for _ in reservas_para_liberar
+            )
+
+            cursor = db.execute(
+                f"""
+                DELETE FROM Ingresso
+                WHERE cod_reserva IN ({placeholders_liberar})
+                  AND foi_pago = 0
+                """,
+                reservas_para_liberar
+            )
+            ingressos_removidos = cursor.rowcount
+
+            db.execute(
+                f"""
+                UPDATE Reserva
+                SET ocupado = ?, cronometro_reservado = NULL
+                WHERE cod_reserva IN ({placeholders_liberar})
+                  AND cod_aluno = ?
+                  AND ocupado = ?
+                """,
+                (
+                    LIVRE,
+                    *reservas_para_liberar,
+                    cod_aluno,
+                    EM_PAGAMENTO
+                )
+            )
+
+            # No código atual, há um débito ao escolher o lugar e outro
+            # ao criar o ingresso. Por isso, a limpeza devolve os dois.
+            usos_a_devolver = len(reservas_para_liberar) + ingressos_removidos
+            db.execute(
+                """
+                UPDATE Aluno
+                SET usos_restantes = usos_restantes + ?
+                WHERE cod_aluno = ?
+                """,
+                (usos_a_devolver, cod_aluno)
+            )
+
+        db.commit()
+        _limpar_dados_checkout_da_sessao()
+        return jsonify({"ok": True}), 200
+
+    except Exception:
+        db.rollback()
+        raise
+
+
+def _limpar_dados_checkout_da_sessao():
+    for chave in (
+        "reservas",
+        "cronometro_reservado",
+        "tokens_criados",
+        "a_pagar",
+        "referencia_externa_pagamento"
+    ):
+        session.pop(chave, None)

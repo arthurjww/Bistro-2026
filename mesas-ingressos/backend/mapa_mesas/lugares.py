@@ -43,11 +43,11 @@ class MapaLugares:
 
     def seed_lugares(self):
         db = get_db()
-        codigos = [(codigo,) for codigo in self.codigos_validos()]
+        lugares = [(codigo, 1) for codigo in self.codigos_validos()]
 
         db.executemany(
-            "INSERT OR IGNORE INTO Lugares (cod_lugar, salao) VALUES (?, 1)",
-            codigos
+            "INSERT OR IGNORE INTO Lugares (cod_lugar, salao) VALUES (?, ?)",
+            lugares
         )
         db.commit()
 
