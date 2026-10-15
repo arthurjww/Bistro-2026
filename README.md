@@ -9,13 +9,13 @@ Feito em Python/Flask, com banco SQLite compartilhado entre os serviços.
 ## ✨ O que o sistema faz
 
 ### 🎟️ Venda de ingressos (`mesas-ingressos`)
-- Mapa de lugares em dois salões, com reserva por dia do evento e cronômetro que segura o lugar enquanto o comprador preenche os dados.
+- Mapa de mesas e cadeiras, com reserva por dia do evento e cronômetro que segura o lugar enquanto o comprador preenche os dados.
 - Identificação do comprador por código de aluno de 6 caracteres, com controle de quantos ingressos ainda podem ser usados por aluno.
 - Três tipos de ingresso (gratuito, meia e inteira), com valor calculado pelo servidor.
 - Pagamento por **Pix** pela API de Pagamentos do Mercado Pago (Checkout Transparente): o sistema gera o QR code, a tela consulta o status do pagamento e a página de sucesso só abre depois da confirmação.
 - **Webhook do Mercado Pago** (`POST /webhook/mercadopago`) com validação da assinatura HMAC (`x-signature`) como fonte de verdade da aprovação.
 - Quando o Pix falha, expira ou é recusado, os lugares e os usos do código de aluno são liberados.
-- Ingresso em **PDF com QR code**, enviado por e-mail depois do pagamento.
+- Ingresso em **PDF com QR code, dia do evento e lugar** (mesa e cadeira), enviado por e-mail depois do pagamento.
 - **Validação na portaria**: o staff lê o QR code e confirma a entrada com um PIN, e o ingresso fica marcado como utilizado.
 
 ### 📊 Painel de relatórios (`relatorios`)
@@ -66,7 +66,8 @@ python -m venv .venv
 source .venv/bin/activate        # no Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
-cp .env.example .env             # depois preencha os valores (veja abaixo)
+cp .env.example .env             # no Windows: copy .env.example .env
+                                 # depois preencha os valores (veja abaixo)
 ```
 
 Iniciar cada serviço, cada um em um terminal:
@@ -99,6 +100,8 @@ Copie `.env.example` para `.env`. O arquivo `.env` está no `.gitignore` e **nun
 | `MAIL_SERVER`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_DEFAULT_SENDER` | Envio do ingresso por e-mail (SMTP) |
 | `STAFF_PIN` | PIN usado pela portaria para confirmar a entrada |
 | `CSV_ALUNOS` | Caminho, a partir de `mesas-ingressos/`, do CSV com os alunos e seus códigos |
+| `MUSICAS_REDIRECT_URL` | Endereço da votação de músicas, para onde o comprador é enviado depois do pagamento confirmado |
+| `HOME_REDIRECT_URL` | Endereço da página inicial do evento, usado no link da página de agradecimento da votação |
 
 Opcionais: `BISTRO_DATABASE_PATH`, `INGRESSOS_HOST`, `INGRESSOS_PORT`, `RELATORIOS_HOST`, `MUSICAS_HOST`, `MUSICAS_PORT` e `FLASK_DEBUG`.
 
@@ -127,4 +130,3 @@ Projeto desenvolvido por alunos do Curso Técnico de T.I - CETEC/UCS.
 ## 📄 Licença
 
 Veja os arquivos `LICENSE` dentro de cada módulo.
-
