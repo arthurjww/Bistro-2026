@@ -209,30 +209,70 @@ def rota_escolher(cod_lugar):
 
     return jsonify({"ok": True, 'reservas': reservas})
 
-@bp_lugares.route("/lugares/seguir", methods=['GET'])
+@bp_lugares.route("/lugares/seguir", methods=["GET"])
 def seguir():
-    cronometro = int(time() * 1000) + 30 * 60_000
-    reservas = session.get("reservas", [])
     cod_aluno = session.get("codigo")
-    ocupado = EM_PAGAMENTO
-    if not reservas:
-        return jsonify({"erro": "Nenhum lugar selecionado"}), 400
-    if not cod_aluno:
-        return jsonify({"erro": "Aluno não identificado"}), 401
+    reservas = list(dict.fromkeys(session.get("reservas", [])))
+
+    if not cod_aluno or not reservas:
+        return redirect(url_for("lugares.rota_mapa"))
 
     db = get_db()
+    placeholders = ",".join("?" for _ in reservas)
+
+    reservas_ativas = db.execute(
+        f"""
+        SELECT R.cod_reserva
+        FROM Reserva AS R
+        WHERE R.cod_reserva IN ({placeholders})
+          AND R.cod_aluno = ?
+          AND R.ocupado = ?
+          AND NOT EXISTS (
+              SELECT 1
+              FROM Ingresso AS I
+              WHERE I.cod_reserva = R.cod_reserva
+                AND I.foi_pago = 1
+          )
+        """,
+        (*reservas, cod_aluno, EM_PAGAMENTO)
+    ).fetchall()
+
+    reservas_ativas_ids = {
+        reserva["cod_reserva"] for reserva in reservas_ativas
+    }
+
+    reservas = [
+        cod_reserva
+        for cod_reserva in reservas
+        if cod_reserva in reservas_ativas_ids
+    ]
+
+    if not reservas:
+        session.pop("reservas", None)
+        session.pop("cronometro_reservado", None)
+        return redirect(url_for("lugares.rota_mapa"))
+
+    session["reservas"] = reservas
+
+    cronometro = int(time() * 1000) + 30 * 60_000
+
     for cod_reserva in reservas:
-        get_db().execute(
-            '''UPDATE Reserva 
-                SET cronometro_reservado = ?
-                WHERE cod_reserva = ?
-                AND cod_aluno = ?
-                AND ocupado = ?''', (cronometro, cod_reserva, cod_aluno, ocupado)
+        db.execute(
+            """
+            UPDATE Reserva
+            SET cronometro_reservado = ?
+            WHERE cod_reserva = ?
+              AND cod_aluno = ?
+              AND ocupado = ?
+            """,
+            (cronometro, cod_reserva, cod_aluno, EM_PAGAMENTO)
         )
+
     db.commit()
-    session['cronometro_reservado'] = cronometro
+    session["cronometro_reservado"] = cronometro
     session.permanent = True
-    return redirect(url_for('routes.informacoes'))
+
+    return redirect(url_for("routes.informacoes"))
 
 @bp_lugares.route("/lugares/liberar-reservas", methods=["POST"])
 def liberar_reservas_da_sessao():

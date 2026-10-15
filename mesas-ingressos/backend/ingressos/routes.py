@@ -161,6 +161,30 @@ def criar_ingressos():
         }), 400
 
     db = get_db()
+    #verificação de quais ingressos do aluno já foram pagos
+    placeholders = ",".join("?" for _ in reservas_sessao)
+
+    reservas_validas = db.execute(
+        f"""
+        SELECT R.cod_reserva
+        FROM Reserva AS R
+        WHERE R.cod_reserva IN ({placeholders})
+          AND R.cod_aluno = ?
+          AND R.ocupado = 2
+          AND NOT EXISTS (
+              SELECT 1
+              FROM Ingresso AS I
+              WHERE I.cod_reserva = R.cod_reserva
+                AND I.foi_pago = 1
+          )
+        """,
+        (*reservas_sessao, codigo_aluno)
+    ).fetchall()
+
+    if len(reservas_validas) != len(reservas_sessao):
+        return jsonify({
+            "erro": "Uma ou mais reservas não estão mais disponíveis para pagamento."
+        }), 409
     tokens_criados = []
     a_pagar = 0
 
