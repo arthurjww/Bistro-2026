@@ -45,6 +45,7 @@ def _gerar_pdf_bytes(ingresso):
         data_compra=ingresso['data_compra'],
         token=ingresso['token'],
         lugar=ingresso['cod_lugar'],  # Exibe o assento/mesa
+        dia_bistro=ingresso['dia_bistro'], #Dia do Bistrô escolhido
         qr_code=qr_base64,
     )
 
