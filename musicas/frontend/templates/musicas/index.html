@@ -7,7 +7,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
     <style>
     :root {
         --bg: #131010;
@@ -21,11 +20,8 @@
         --error: #B42318;
         --border: #d5cdbb;
     }
-
-    p1, p2 { color: #b8b2a5; font-size: 20px; margin: 4px 0; }
-
+    p1, p2 { color: #b8b2a5; font-size: 20px; margin: 4px 0; display: block; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     body {
         font-family: 'Inter', sans-serif;
         background: var(--bg);
@@ -34,18 +30,11 @@
         line-height: 1.5;
         padding-bottom: 110px;
     }
-
-    .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 45px 28px 40px;
-    }
-
+    .container { max-width: 1200px; margin: 0 auto; padding: 45px 28px 40px; }
     header { text-align: center; margin-bottom: 45px; }
-
     header h1 {
         font-family: 'Instrument Serif', serif;
-        font-size: 52px;
+        font-size: 70px;
         font-weight: normal;
         font-style: italic;
         margin-bottom: 10px;
@@ -53,10 +42,8 @@
         background: none;
         -webkit-text-fill-color: initial;
     }
-
     header p { color: #b8b2a5; font-size: 14px; }
     header strong { color: var(--card); font-weight: 600; }
-
     .mensagem {
         text-align: center;
         padding: 14px 18px;
@@ -65,21 +52,9 @@
         font-size: 13px;
         animation: fadeIn 0.4s ease;
     }
-
-    .mensagem.sucesso {
-        background: #E8F5E9;
-        border: 1px solid #c5e5c8;
-        color: var(--success);
-    }
-
-    .mensagem.erro {
-        background: #FDECEC;
-        border: 1px solid #f5c6c6;
-        color: var(--error);
-    }
-
+    .mensagem.sucesso { background: #E8F5E9; border: 1px solid #c5e5c8; color: var(--success); }
+    .mensagem.erro { background: #FDECEC; border: 1px solid #f5c6c6; color: var(--error); }
     .estilo-section { margin-bottom: 45px; }
-
     .estilo-titulo {
         display: flex;
         align-items: center;
@@ -88,14 +63,13 @@
         padding-bottom: 12px;
         border-bottom: 1px solid rgba(241, 237, 219, 0.25);
     }
-
     .estilo-titulo h2 {
         font-family: 'Instrument Serif', serif;
-        font-size: 30px;
+        font-size: 50px;
         font-weight: normal;
+        font-style: italic;
         color: var(--card);
     }
-
     .estilo-badge {
         background: rgba(184, 38, 45, 0.18);
         color: #e58b8e;
@@ -107,14 +81,12 @@
         text-transform: uppercase;
         letter-spacing: 1px;
     }
-
     .estilo-layout {
         display: grid;
         grid-template-columns: minmax(280px, 1fr) minmax(320px, 1.15fr);
         gap: 22px;
-        align-items: stretch;
+        align-items: start;
     }
-
     .panel-label {
         font-size: 11px;
         font-weight: 700;
@@ -123,7 +95,6 @@
         color: #b8b2a5;
         margin-bottom: 10px;
     }
-
     .lista-outras-musicas {
         background: rgba(241, 237, 219, 0.04);
         border: 1px solid rgba(241, 237, 219, 0.16);
@@ -131,41 +102,27 @@
         overflow: hidden;
         display: flex;
         flex-direction: column;
-        min-height: 480px;
+        height: 580px;
+        min-height: 580px;
         max-height: 580px;
     }
-
     .lista-outras-titulo {
         padding: 16px 18px;
         border-bottom: 1px solid rgba(241, 237, 219, 0.16);
         flex-shrink: 0;
     }
-
     .lista-outras-titulo h3 {
         font-family: 'Instrument Serif', serif;
         font-size: 22px;
         font-weight: normal;
         color: var(--card);
     }
-
-    .lista-outras-titulo p {
-        color: #b8b2a5;
-        font-size: 12px;
-        margin-top: 3px;
-    }
-
+    .lista-outras-titulo p { color: #b8b2a5; font-size: 12px; margin-top: 3px; }
     .lista-scroll { overflow-y: auto; flex: 1; }
-
     .lista-scroll::-webkit-scrollbar { width: 7px; }
     .lista-scroll::-webkit-scrollbar-track { background: transparent; }
-    .lista-scroll::-webkit-scrollbar-thumb {
-        background: rgba(241, 237, 219, 0.2);
-        border-radius: 999px;
-    }
-    .lista-scroll::-webkit-scrollbar-thumb:hover {
-        background: rgba(241, 237, 219, 0.35);
-    }
-
+    .lista-scroll::-webkit-scrollbar-thumb { background: rgba(241, 237, 219, 0.2); border-radius: 999px; }
+    .lista-scroll::-webkit-scrollbar-thumb:hover { background: rgba(241, 237, 219, 0.35); }
     .musica-lista-item {
         display: grid;
         grid-template-columns: 40px minmax(0, 1fr) minmax(120px, 180px) auto;
@@ -176,27 +133,12 @@
         transition: background 0.2s;
         cursor: pointer;
     }
-
-    .musica-lista-item .preview-audio {
-        height: 32px;
-        margin: 0;
-        min-width: 0;
-    }
-
-    .musica-lista-item .sem-preview {
-        color: #b8b2a5;
-        font-size: 11px;
-        white-space: nowrap;
-    }
-
     .musica-lista-item:last-child { border-bottom: none; }
     .musica-lista-item:hover { background: rgba(241, 237, 219, 0.07); }
-
     .musica-lista-item.selecionada {
         background: rgba(184, 38, 45, 0.13);
         box-shadow: inset 3px 0 0 var(--accent);
     }
-
     .musica-lista-capa,
     .musica-lista-placeholder {
         width: 40px;
@@ -205,9 +147,7 @@
         background: #332D27;
         flex-shrink: 0;
     }
-
     .musica-lista-capa { display: block; object-fit: cover; }
-
     .musica-lista-placeholder {
         display: flex;
         align-items: center;
@@ -215,28 +155,17 @@
         color: var(--card);
         font-size: 18px;
     }
-
     .musica-lista-info { min-width: 0; }
-
     .musica-lista-nome,
     .musica-lista-artista {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
-
-    .musica-lista-nome {
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--card);
-    }
-
-    .musica-lista-artista {
-        color: #b8b2a5;
-        font-size: 11px;
-        margin-top: 2px;
-    }
-
+    .musica-lista-nome { font-size: 13px; font-weight: 600; color: var(--card); }
+    .musica-lista-artista { color: #b8b2a5; font-size: 11px; margin-top: 2px; }
+    .musica-lista-item .preview-audio { height: 32px; margin: 0; min-width: 0; }
+    .musica-lista-item .sem-preview { color: #b8b2a5; font-size: 11px; white-space: nowrap; }
     .musica-lista-item .voto-label {
         padding: 7px 9px;
         gap: 6px;
@@ -245,57 +174,44 @@
         border-color: rgba(184, 38, 45, 0.3);
         pointer-events: none;
     }
-
     .musica-lista-item .voto-label input[type="radio"] { width: 15px; height: 15px; }
-    .musica-lista-item .voto-texto { font-size: 11px; color: var(--card); }
-
-    .lista-sem-musicas {
-        padding: 18px 20px;
-        color: #b8b2a5;
-        font-size: 12px;
-    }
-
+    .musica-lista-item .voto-texto { font-size: 11px; color: #F1EDDB; }
+    .lista-sem-musicas { padding: 18px 20px; color: #b8b2a5; font-size: 12px; }
     .musicas-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: 1fr 1fr;
         gap: 14px;
+        height: 580px;
+        min-height: 580px;
     }
-
     .musica-card {
-        background: var(--card);
-        border: 1px solid transparent;
+        background: rgba(241, 237, 219, 0.04);
+        border: 1px solid rgba(241, 237, 219, 0.16);
         border-radius: 6px;
         overflow: hidden;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
         position: relative;
         min-width: 0;
+        min-height: 0;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
     }
-
-    .musica-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
-    }
-
+    .musica-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25); }
     .musica-card.selecionada {
         border: 2px solid var(--accent);
         box-shadow: 0 0 0 2px rgba(184, 38, 45, 0.2);
     }
-
     .capa-wrapper {
         position: relative;
         width: 100%;
-        aspect-ratio: 1;
+        flex: 1 1 auto;
+        min-height: 0;
         background: #332D27;
         overflow: hidden;
     }
-
-    .capa-wrapper img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-    }
-
+    .capa-wrapper img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .capa-placeholder {
         width: 100%;
         height: 100%;
@@ -306,7 +222,6 @@
         color: var(--card);
         font-size: 2.4rem;
     }
-
     .votos-badge {
         position: absolute;
         top: 10px;
@@ -318,7 +233,6 @@
         padding: 5px 9px;
         border-radius: 3px;
     }
-
     .rank-badge {
         position: absolute;
         top: 10px;
@@ -334,37 +248,26 @@
         align-items: center;
         justify-content: center;
     }
-
-    .musica-info { padding: 14px; }
-
+    .musica-info { padding: 12px 14px 14px; flex-shrink: 0; }
     .musica-nome {
         font-size: 14px;
         font-weight: 700;
-        color: var(--text);
+        color: #F1EDDB;
         margin-bottom: 3px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
-
     .musica-artista {
-        color: var(--muted);
+        color: #b8b2a5;
         font-size: 12px;
         margin-bottom: 12px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
-
-    .preview-audio {
-        width: 100%;
-        height: 32px;
-        margin-bottom: 12px;
-        border-radius: 4px;
-    }
-
+    .preview-audio { width: 100%; height: 32px; margin-bottom: 12px; border-radius: 4px; }
     .preview-audio::-webkit-media-controls-panel { background: #e8e1cf; }
-
     .voto-label {
         display: flex;
         align-items: center;
@@ -377,12 +280,7 @@
         border-radius: 4px;
         transition: background 0.2s, border-color 0.2s;
     }
-
-    .voto-label:hover {
-        background: rgba(184, 38, 45, 0.12);
-        border-color: var(--accent);
-    }
-
+    .voto-label:hover { background: rgba(184, 38, 45, 0.12); border-color: var(--accent); }
     .voto-label input[type="radio"] {
         appearance: none;
         width: 18px;
@@ -393,12 +291,7 @@
         cursor: pointer;
         flex-shrink: 0;
     }
-
-    .voto-label input[type="radio"]:checked {
-        border-color: var(--accent);
-        background: var(--accent);
-    }
-
+    .voto-label input[type="radio"]:checked { border-color: var(--accent); background: var(--accent); }
     .voto-label input[type="radio"]:checked::after {
         content: "";
         position: absolute;
@@ -410,13 +303,7 @@
         background: white;
         border-radius: 50%;
     }
-
-    .voto-texto {
-        font-size: 12px;
-        font-weight: 600;
-        color: var(--text);
-    }
-
+    .voto-texto { font-size: 12px; font-weight: 600; color: #F1EDDB; }
     .enviar-wrapper {
         position: fixed;
         left: 0;
@@ -430,7 +317,6 @@
         text-align: center;
         box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.35);
     }
-
     .btn-enviar {
         background: var(--accent);
         color: white;
@@ -445,38 +331,19 @@
         cursor: pointer;
         transition: background 0.2s, transform 0.15s;
     }
-
-    .btn-enviar:hover {
-        background: var(--accent-hover);
-        transform: translateY(-2px);
-    }
-
+    .btn-enviar:hover { background: var(--accent-hover); transform: translateY(-2px); }
     .btn-enviar:active { transform: translateY(0); }
-
-    .resultados-info {
-        text-align: center;
-        color: #b8b2a5;
-        margin-top: 10px;
-        font-size: 12px;
-    }
-
-    .sem-musicas {
-        text-align: center;
-        color: #b8b2a5;
-        padding: 3rem 1rem;
-        font-size: 14px;
-    }
-
+    .resultados-info { text-align: center; color: #b8b2a5; margin-top: 10px; font-size: 12px; }
+    .sem-musicas { text-align: center; color: #b8b2a5; padding: 3rem 1rem; font-size: 14px; }
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(-8px); }
         to { opacity: 1; transform: translateY(0); }
     }
-
     @media (max-width: 900px) {
         .estilo-layout { grid-template-columns: 1fr; }
-        .lista-outras-musicas { min-height: 320px; max-height: 380px; }
+        .lista-outras-musicas,
+        .musicas-grid { height: 420px; min-height: 420px; max-height: 420px; }
     }
-
     @media (max-width: 600px) {
         .container { padding: 30px 16px 30px; }
         header h1 { font-size: 40px; }
@@ -485,6 +352,9 @@
         .musica-info { padding: 12px; }
         .musica-nome { font-size: 13px; }
         .musica-artista { font-size: 11px; }
+        .musica-lista-item { grid-template-columns: 40px minmax(0, 1fr) auto; }
+        .musica-lista-item .preview-audio,
+        .musica-lista-item .sem-preview { grid-column: 2 / -1; }
     }
     </style>
 </head>
@@ -496,26 +366,22 @@
             <h1>🎵 Enquete de Músicas</h1>
             <p>Escolha <strong>uma música de cada estilo</strong> e envie seu voto</p>
         </header>
-
         {% if mensagem %}
             <div class="mensagem {% if 'sucesso' in mensagem|lower %}sucesso{% else %}erro{% endif %}">
                 {{ mensagem }}
             </div>
         {% endif %}
-
         {% if enquetes %}
         <form method="POST" action="/" id="form-votacao">
             {% for estilo, musicas in enquetes.items() %}
             {% set musicas_ordenadas = musicas|sort(attribute='votos', reverse=true) %}
             {% set top4 = musicas_ordenadas[:4] %}
             {% set outras_musicas = musicas_ordenadas[4:] %}
-
             <section class="estilo-section">
                 <div class="estilo-titulo">
                     <h2>{{ estilo }}</h2>
                     <span class="estilo-badge">{{ musicas|length }} músicas · 1 voto</span>
                 </div>
-
                 <div class="estilo-layout">
                     <div class="col-lista">
                         <div class="panel-label">Playlist · {{ outras_musicas|length }} faixas</div>
@@ -558,7 +424,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="col-top">
                         <div class="panel-label">Top 4 · mais votadas</div>
                         <div class="musicas-grid">
@@ -597,7 +462,6 @@
                 </div>
             </section>
             {% endfor %}
-
             <div class="enviar-wrapper">
                 <button type="submit" class="btn-enviar">Enviar votos</button>
                 {% if mostrar_resultados %}
@@ -611,7 +475,6 @@
             </div>
         {% endif %}
     </div>
-
     <script>
         document.querySelectorAll('input[type="radio"]').forEach(radio => {
             radio.addEventListener('change', function () {
@@ -623,7 +486,6 @@
                 if (itemSelecionado) itemSelecionado.classList.add('selecionada');
             });
         });
-
         document.querySelectorAll('.musica-lista-item').forEach(row => {
             row.addEventListener('click', function (e) {
                 if (e.target.closest('audio')) return;
@@ -634,7 +496,6 @@
                 }
             });
         });
-
         document.querySelectorAll('audio').forEach(audio => {
             audio.addEventListener('play', function () {
                 document.querySelectorAll('audio').forEach(other => {
