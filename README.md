@@ -31,49 +31,45 @@ Feito em Python/Flask, com banco SQLite compartilhado entre os serviços.
 
 🌐 **Site do evento:** [sinestesiabistro.com.br](https://www.sinestesiabistro.com.br)
 
-<table>
-  <tr>
-    <td align="center">
-      <img src="docs/img/site-inicio.png" alt="Página inicial do site do Bistrô" width="420"><br>
-      <sub>Site do evento</sub>
-    </td>
-    <td align="center">
-      <img src="docs/img/mapa-mesas.png" alt="Mapa de mesas e cadeiras" width="420"><br>
-      <sub>Mapa de mesas e escolha do dia</sub>
-    </td>
-  </tr>
-  <tr>
-    <td align="center">
-      <img src="docs/img/pagamento-pix.png" alt="Tela de pagamento via Pix" width="420"><br>
-      <sub>Pagamento via Pix</sub>
-    </td>
-    <td align="center">
-      <img src="docs/img/qr-code.png" alt="QR code do Pix para pagamento" width="420"><br>
-      <sub>QR code do Pix</sub>
-    </td>
-  </tr>
-  <tr>
-    <td align="center">
-      <img src="docs/img/ingresso-pdf.png" alt="Ingresso em PDF com QR code, dia do evento e lugar" width="420"><br>
-      <sub>Ingresso em PDF com QR code, dia e lugar</sub>
-    </td>
-    <td align="center">
-      <img src="docs/img/musica.png" alt="Tela de votação de músicas" width="420"><br>
-      <sub>Votação de músicas</sub>
-    </td>
-  </tr>
-  <tr>
-    <td align="center">
-      <img src="docs/img/obrigado.png" alt="Página de agradecimento após a votação" width="420"><br>
-      <sub>Página de agradecimento</sub>
-    </td>
-    <td align="center">
-      <img src="docs/img/leitura.png" alt="Leitura do QR code do ingresso na portaria" width="420"><br>
-      <sub>Leitura do QR code na portaria</sub>
-    </td>
+<p align="center">
+  <img src="docs/img/site-inicio.png" alt="Página inicial do site do Bistrô" width="800"><br>
+  <sub><b>1. Site do evento</b></sub>
+</p>
 
-  </tr>
-</table>
+<p align="center">
+  <img src="docs/img/mapa-mesas.png" alt="Mapa de mesas e cadeiras" width="800"><br>
+  <sub><b>2. Mapa de mesas e escolha do dia</b></sub>
+</p>
+
+<p align="center">
+  <img src="docs/img/pagamento-pix.png" alt="Tela de pagamento via Pix" width="800"><br>
+  <sub><b>3. Pagamento via Pix</b></sub>
+</p>
+
+<p align="center">
+  <img src="docs/img/qr-code.png" alt="QR code do Pix para pagamento" width="800"><br>
+  <sub><b>4. QR code do Pix</b></sub>
+</p>
+
+<p align="center">
+  <img src="docs/img/ingresso-pdf.png" alt="Ingresso em PDF com QR code, dia do evento e lugar" width="800"><br>
+  <sub><b>5. Ingresso em PDF com QR code, dia e lugar</b></sub>
+</p>
+
+<p align="center">
+  <img src="docs/img/musica.png" alt="Tela de votação de músicas" width="800"><br>
+  <sub><b>6. Votação de músicas</b></sub>
+</p>
+
+<p align="center">
+  <img src="docs/img/obrigado.png" alt="Página de agradecimento após a votação" width="800"><br>
+  <sub><b>7. Página de agradecimento</b></sub>
+</p>
+
+<p align="center">
+  <img src="docs/img/leitura.png" alt="Leitura do QR code do ingresso na portaria" width="800"><br>
+  <sub><b>8. Leitura do QR code na portaria</b></sub>
+</p>
 
 ---
 
