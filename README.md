@@ -51,6 +51,23 @@ Feito em Python/Flask, com banco SQLite compartilhado entre os serviços.
       <img src="docs/docs/img/ingresso-pdf.png" alt="Ingresso em PDF com QR code, dia do evento e lugar" width="420"><br>
       <sub>Ingresso em PDF com QR code, dia e lugar</sub>
     </td>
+        <td align="center">
+      <img src="docs/img/musica.png" alt="Tela de votação de músicas" width="420"><br>
+      <sub>Votação de músicas</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="docs/img/obrigado.png" alt="Página de agradecimento após a votação" width="420"><br>
+      <sub>Página de agradecimento</sub>
+    </td>
+    <td align="center">
+      <img src="docs/img/leitura.png" alt="Leitura do QR code do ingresso na portaria" width="420"><br>
+      <sub>Leitura do QR code na portaria</sub>
+    </td>
+
+  </tr>
+</table>
   </tr>
 </table>
 
