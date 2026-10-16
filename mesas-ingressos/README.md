@@ -71,6 +71,7 @@ Feito em Python/Flask, com banco SQLite compartilhado entre os serviços.
       <img src="docs/img/leitura.png" alt="Leitura do QR code do ingresso na portaria" width="420"><br>
       <sub>Leitura do QR code na portaria</sub>
     </td>
+
   </tr>
 </table>
 
