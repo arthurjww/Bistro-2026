@@ -34,21 +34,21 @@ Feito em Python/Flask, com banco SQLite compartilhado entre os serviços.
 <table>
   <tr>
     <td align="center">
-      <img src="docs/img/site-inicio.png" alt="Página inicial do site do Bistrô" width="420"><br>
+      <img src="docs/docs/img/site-inicio.png" alt="Página inicial do site do Bistrô" width="420"><br>
       <sub>Site do evento</sub>
     </td>
     <td align="center">
-      <img src="docs/img/mapa-mesas.png" alt="Mapa de mesas e cadeiras" width="420"><br>
+      <img src="docs/docs/img/mapa-mesas.png" alt="Mapa de mesas e cadeiras" width="420"><br>
       <sub>Mapa de mesas e escolha do dia</sub>
     </td>
   </tr>
   <tr>
     <td align="center">
-      <img src="docs/img/pagamento-pix.png" alt="Tela de pagamento com QR code Pix" width="420"><br>
+      <img src="docs/docs/img/pagamento-pix.png" alt="Tela de pagamento com QR code Pix" width="420"><br>
       <sub>Pagamento via Pix</sub>
     </td>
     <td align="center">
-      <img src="docs/img/ingresso-pdf.png" alt="Ingresso em PDF com QR code, dia do evento e lugar" width="420"><br>
+      <img src="docs/docs/img/ingresso-pdf.png" alt="Ingresso em PDF com QR code, dia do evento e lugar" width="420"><br>
       <sub>Ingresso em PDF com QR code, dia e lugar</sub>
     </td>
   </tr>
