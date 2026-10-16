@@ -27,6 +27,35 @@ Feito em Python/Flask, com banco SQLite compartilhado entre os serviços.
 
 ---
 
+## 🖼️ Telas
+
+🌐 **Site do evento:** [sinestesiabistro.com.br](https://www.sinestesiabistro.com.br)
+
+<table>
+  <tr>
+    <td align="center">
+      <img src="docs/img/site-inicio.png" alt="Página inicial do site do Bistrô" width="420"><br>
+      <sub>Site do evento</sub>
+    </td>
+    <td align="center">
+      <img src="docs/img/mapa-mesas.png" alt="Mapa de mesas e cadeiras" width="420"><br>
+      <sub>Mapa de mesas e escolha do dia</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="docs/img/pagamento-pix.png" alt="Tela de pagamento com QR code Pix" width="420"><br>
+      <sub>Pagamento via Pix</sub>
+    </td>
+    <td align="center">
+      <img src="docs/img/ingresso-pdf.png" alt="Ingresso em PDF com QR code, dia do evento e lugar" width="420"><br>
+      <sub>Ingresso em PDF com QR code, dia e lugar</sub>
+    </td>
+  </tr>
+</table>
+
+---
+
 ## 🛠️ Tecnologias
 
 Python · Flask · SQLite · Flask-Login · Flask-WTF/WTForms · SDK do Mercado Pago · xhtml2pdf · qrcode · Gunicorn · HTML, CSS e JavaScript
@@ -45,6 +74,7 @@ Python · Flask · SQLite · Flask-Login · Flask-WTF/WTForms · SDK do Mercado 
 ├── mesas-ingressos/           # backend (ingressos, mapa_mesas) e frontend
 ├── relatorios/                # backend e frontend do painel
 ├── musicas/                   # aplicação da votação
+├── docs/img/                  # capturas de tela usadas neste README
 ├── requirements.txt
 └── .env.example
 ```
