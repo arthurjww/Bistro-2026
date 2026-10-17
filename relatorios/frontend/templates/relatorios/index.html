@@ -414,26 +414,91 @@
       color: #B8262D;
     }
 
-    .observacoes {
+    .lista-alunos {
+      display: grid;
+
+      gap: 16px;
+
       margin-top: 20px;
     }
 
-    .observacoes textarea {
-      width: 100%;
-
-      height: 100px;
-
-      padding: 12px;
-
-      border: 1px solid #ccc;
-
-      border-radius: 5px;
-
-      resize: vertical;
-
-      color: #332D27;
+    .grupo-aluno {
+      overflow: hidden;
 
       background-color: white;
+
+      border: 1px solid #ded6c8;
+
+      border-radius: 6px;
+
+      color: #332D27;
+    }
+
+    .grupo-aluno-cabecalho {
+      display: grid;
+
+      grid-template-columns: repeat(
+        auto-fit,
+        minmax(180px, 1fr)
+      );
+
+      align-items: end;
+
+      gap: 14px;
+
+      padding: 16px;
+
+      background-color: #f7f2e7;
+    }
+
+    .grupo-aluno-dado {
+      display: flex;
+
+      flex-direction: column;
+
+      gap: 5px;
+    }
+
+    .grupo-aluno-dado strong {
+      color: #720C11;
+
+      font-size: 12px;
+
+      text-transform: uppercase;
+    }
+
+    .btn-detalhes {
+      justify-self: end;
+
+      background-color: #332D27;
+
+      color: white;
+
+      border: none;
+
+      padding: 10px 16px;
+
+      border-radius: 3px;
+
+      cursor: pointer;
+
+      font-size: 13px;
+
+      font-weight: 600;
+    }
+
+    .btn-detalhes:hover {
+      background-color: #720C11;
+    }
+
+    .detalhes-aluno {
+      padding: 16px;
+
+      border-top: 1px solid #ded6c8;
+    }
+
+    .detalhes-aluno[hidden] {
+      display: none;
     }
 
     .botoes-acao {
@@ -531,6 +596,12 @@
       .acoes-administrador a {
         text-align: center;
       }
+
+      .btn-detalhes {
+        width: 100%;
+
+        justify-self: stretch;
+      }
     }
 
     @media print {
@@ -579,8 +650,14 @@
       }
 
       .secao-impressao form,
-      .secao-impressao .botoes-acao {
+      .secao-impressao .botoes-acao,
+      .secao-impressao .btn-detalhes {
         display: none !important;
+      }
+
+      .secao-impressao .detalhes-aluno[hidden],
+      .secao-impressao .detalhes-aluno {
+        display: block !important;
       }
 
       .secao-impressao [style*="overflow-x"] {
@@ -603,7 +680,7 @@
 
       .secao-impressao tr,
       .secao-impressao .card,
-      .secao-impressao .observacoes {
+      .secao-impressao .grupo-aluno {
         break-inside: avoid;
         page-break-inside: avoid;
       }
@@ -731,6 +808,8 @@
 
       <h2> Resumo de Participantes</h2>
 
+      {% if lista_resumo %}
+
       <div style="overflow-x: auto;">
 
         <table>
@@ -739,12 +818,12 @@
 
             <tr>
               <th>Técnico</th>
-              <th>Aluno</th>
+              <th>Aluno Responsável</th>
               <th>Participante</th>
               <th>Valor Pago</th>
               <th>Data da Compra</th>
               <th>Dia do Bistro</th>
-              <th>Restrição?</th>
+              <th>Restrição</th>
               <th>Mesa / Lugar</th>
             </tr>
 
@@ -758,7 +837,11 @@
               <td>{{ resumo.tecnico }}</td>
               <td>{{ resumo.aluno }}</td>
               <td>{{ resumo.participante }}</td>
-              <td>{{ resumo.valor_pago }}</td>
+              <td>
+                {{ "R$ %.2f"|format(
+                  resumo.valor_pago
+                )|replace(".", ",") }}
+              </td>
               <td>{{ resumo.data_compra }}</td>
               <td>{{ resumo.dia_bistro }}</td>
               <td>{{ resumo.restricao }}</td>
@@ -772,6 +855,12 @@
         </table>
 
       </div>
+
+      {% else %}
+
+      <p>Nenhum participante encontrado.</p>
+
+      {% endif %}
 
       <div class="botoes-acao">
 
@@ -946,13 +1035,6 @@
         </div>
 
         <div class="card">
-          <strong>Quantidade de Ingressos</strong>
-          <span class="valor">
-            {{ detalhes_participante.qtd_ingressos }}
-          </span>
-        </div>
-
-        <div class="card">
           <strong>Número do Ingresso</strong>
           <span class="valor">
             {{ detalhes_participante.n_ingresso }}
@@ -967,9 +1049,9 @@
         </div>
 
         <div class="card">
-          <strong>Restrições Alimentícias</strong>
+          <strong>Restrições Alimentares</strong>
           <span class="valor">
-            {{ detalhes_participante.restricoes_texto }}
+            {{ detalhes_participante.restricoes_texto or "Nenhuma" }}
           </span>
         </div>
 
@@ -988,20 +1070,11 @@
         </div>
 
         <div class="card">
-          <strong>Status do Pagamento</strong>
+          <strong>Situação do Pagamento</strong>
           <span class="valor">
             {{ detalhes_participante.status_compra }}
           </span>
         </div>
-
-      </div>
-
-
-      <div class="observacoes">
-
-        <h3>Observações</h3>
-
-        <textarea id="observacoes" readonly>Relatório gerado com os dados atualizados no sistema.</textarea>
 
       </div>
 
@@ -1040,6 +1113,10 @@
 
       <h2>Relatório Financeiro</h2>
 
+      <p>
+        Este relatório considera somente ingressos com pagamento confirmado.
+      </p>
+
       <div class="cards-resumo">
 
         <div class="card">
@@ -1057,10 +1134,10 @@
 
         <div class="card">
 
-          <strong>Vendas Confirmadas</strong>
+          <strong>Total de Ingressos Confirmados</strong>
 
           <span class="valor">
-            {{ resumo_financeiro.vendas_confirmadas }}
+            {{ resumo_financeiro.total_ingressos_confirmados }}
           </span>
 
         </div>
@@ -1068,7 +1145,7 @@
 
         <div class="card">
 
-          <strong>Ticket Médio</strong>
+          <strong>Valor Médio por Ingresso Confirmado</strong>
 
           <span class="valor">
             {{ "R$ %.2f"|format(
@@ -1080,68 +1157,102 @@
 
       </div>
 
+      {% if lista_financeiro %}
 
-      <div style="overflow-x: auto;">
+      <div class="lista-alunos">
 
-        <table>
+        {% for grupo in lista_financeiro|groupby("cod_aluno") %}
+        {% set aluno = grupo.list[0] %}
 
-          <thead>
+        <section class="grupo-aluno">
 
-            <tr>
-              <th>Aluno Responsável</th>
-              <th>Quantidade de Ingressos Vinculados</th>
-              <th>Número do Ingresso</th>
-              <th>Nome do Participante</th>
-              <th>Telefone</th>
-              <th>Restrições</th>
-              <th>Data e Horário da Compra</th>
-              <th>Dia do Bistro</th>
-              <th>Valor Pago</th>
-              <th>Status do Pagamento</th>
-            </tr>
+          <div class="grupo-aluno-cabecalho">
 
-          </thead>
+            <div class="grupo-aluno-dado">
+              <strong>Aluno Responsável</strong>
+              <span>{{ aluno.aluno }}</span>
+            </div>
 
-          <tbody>
+            <div class="grupo-aluno-dado">
+              <strong>Quantidade de Ingressos Confirmados</strong>
+              <span>{{ grupo.list|length }}</span>
+            </div>
 
-            {% for item in lista_financeiro %}
+            <button
+              type="button"
+              class="btn-detalhes"
+              data-alvo="financeiro-aluno-{{ loop.index }}"
+              aria-controls="financeiro-aluno-{{ loop.index }}"
+              aria-expanded="false"
+            >
+              Exibir detalhes
+            </button>
 
-            <tr>
+          </div>
 
-              <td>{{ item.aluno }}</td>
-              <td>{{ item.quantidade_ingressos }}</td>
-              <td>{{ item.numero_ingresso }}</td>
-              <td>{{ item.nome_participante }}</td>
-              <td>{{ item.telefone }}</td>
-              <td>{{ item.restricoes }}</td>
-              <td>{{ item.horario_e_dia_compra }}</td>
-              <td>{{ item.dia_bistro }}</td>
+          <div
+            id="financeiro-aluno-{{ loop.index }}"
+            class="detalhes-aluno"
+            hidden
+          >
 
-              <td>
-                {{ "R$ %.2f"|format(
-                  item.valor_pago
-                )|replace(".", ",") }}
-              </td>
+            <div style="overflow-x: auto;">
 
-              <td>
+              <table>
 
-                <span
-                  class="{% if item.status == 'Pago' %}green{% else %}red{% endif %}"
-                >
-                  {{ item.status }}
-                </span>
+                <thead>
 
-              </td>
+                  <tr>
+                    <th>Número do Ingresso</th>
+                    <th>Nome do Participante</th>
+                    <th>Telefone</th>
+                    <th>Data e Horário da Compra</th>
+                    <th>Dia do Bistro</th>
+                    <th>Valor Pago</th>
+                  </tr>
 
-            </tr>
+                </thead>
 
-            {% endfor %}
+                <tbody>
 
-          </tbody>
+                  {% for item in grupo.list %}
 
-        </table>
+                  <tr>
+                    <td>{{ item.numero_ingresso }}</td>
+                    <td>{{ item.nome_participante }}</td>
+                    <td>{{ item.telefone }}</td>
+                    <td>{{ item.horario_e_dia_compra }}</td>
+                    <td>{{ item.dia_bistro }}</td>
+
+                    <td>
+                      {{ "R$ %.2f"|format(
+                        item.valor_pago
+                      )|replace(".", ",") }}
+                    </td>
+
+                  </tr>
+
+                  {% endfor %}
+
+                </tbody>
+
+              </table>
+
+            </div>
+
+          </div>
+
+        </section>
+
+        {% endfor %}
 
       </div>
+
+      {% else %}
+
+      <p>Nenhuma venda confirmada encontrada.</p>
+
+      {% endif %}
 
 
       <div class="botoes-acao">
@@ -1173,13 +1284,6 @@
       <div class="cards-resumo">
 
         <div class="card">
-          <strong>Total de Ingressos</strong>
-          <span class="valor">
-            {{ total_ingressos }}
-          </span>
-        </div>
-
-        <div class="card">
           <strong>Ingressos Pagos</strong>
           <span class="valor">
             {{ ingressos_pagos }}
@@ -1194,7 +1298,7 @@
         </div>
 
         <div class="card">
-          <strong>Ingressos Restantes</strong>
+          <strong>Ingressos Restantes - Geral</strong>
           <span class="valor">
             {{ ingressos_restantes }}
           </span>
@@ -1202,44 +1306,97 @@
 
       </div>
 
+      {% if lista_vendas %}
 
-      <div style="overflow-x: auto;">
+      <div class="lista-alunos">
 
-        <table>
+        {% for grupo in lista_vendas|groupby("cod_aluno") %}
+        {% set aluno = grupo.list[0] %}
 
-          <thead>
+        <section class="grupo-aluno">
 
-            <tr>
-              <th>Aluno Responsável</th>
-              <th>Quantidade de Ingressos por Aluno</th>
-              <th>Número do Ingresso</th>
-              <th>Lugares / Mesas</th>
-              <th>Dia do Bistro</th>
-              <th>Situação do Pagamento</th>
-            </tr>
+          <div class="grupo-aluno-cabecalho">
 
-          </thead>
+            <div class="grupo-aluno-dado">
+              <strong>Aluno Responsável</strong>
+              <span>{{ aluno.nome_aluno }}</span>
+            </div>
 
-          <tbody>
+            <div class="grupo-aluno-dado">
+              <strong>Quantidade de Ingressos Vinculados</strong>
+              <span>{{ aluno.quant_por_aluno }}</span>
+            </div>
 
-            {% for venda in lista_vendas %}
+            <div class="grupo-aluno-dado">
+              <strong>Quantidade de Ingressos Restantes</strong>
+              <span>{{ aluno.ingressos_restantes }}</span>
+            </div>
 
-            <tr>
-              <td>{{ venda.nome_aluno }}</td>
-              <td>{{ venda.quant_por_aluno }}</td>
-              <td>{{ venda.numero_ingresso }}</td>
-              <td>{{ venda.lugar_e_mesa }}</td>
-              <td>{{ venda.dia_bistro }}</td>
-              <td>{{ venda.situacao_pagamento }}</td>
-            </tr>
+            <button
+              type="button"
+              class="btn-detalhes"
+              data-alvo="vendas-aluno-{{ loop.index }}"
+              aria-controls="vendas-aluno-{{ loop.index }}"
+              aria-expanded="false"
+            >
+              Exibir detalhes
+            </button>
 
-            {% endfor %}
+          </div>
 
-          </tbody>
+          <div
+            id="vendas-aluno-{{ loop.index }}"
+            class="detalhes-aluno"
+            hidden
+          >
 
-        </table>
+            <div style="overflow-x: auto;">
+
+              <table>
+
+                <thead>
+
+                  <tr>
+                    <th>Número do Ingresso</th>
+                    <th>Lugares / Mesas</th>
+                    <th>Dia do Bistro</th>
+                    <th>Situação do Pagamento</th>
+                  </tr>
+
+                </thead>
+
+                <tbody>
+
+                  {% for venda in grupo.list %}
+
+                  <tr>
+                    <td>{{ venda.numero_ingresso }}</td>
+                    <td>{{ venda.lugar_e_mesa }}</td>
+                    <td>{{ venda.dia_bistro }}</td>
+                    <td>{{ venda.situacao_pagamento }}</td>
+                  </tr>
+
+                  {% endfor %}
+
+                </tbody>
+
+              </table>
+
+            </div>
+
+          </div>
+
+        </section>
+
+        {% endfor %}
 
       </div>
+
+      {% else %}
+
+      <p>Nenhum ingresso vinculado encontrado.</p>
+
+      {% endif %}
 
 
       <div class="botoes-acao">
@@ -1594,6 +1751,40 @@
       }
 
     }
+
+
+    document
+      .querySelectorAll('.btn-detalhes')
+      .forEach(botao => {
+
+        botao.addEventListener(
+          'click',
+          function() {
+
+            const detalhes =
+              document.getElementById(
+                this.dataset.alvo
+              );
+
+            if (!detalhes) return;
+
+            const exibir = detalhes.hidden;
+
+            detalhes.hidden = !exibir;
+
+            this.setAttribute(
+              'aria-expanded',
+              String(exibir)
+            );
+
+            this.textContent = exibir
+              ? 'Ocultar detalhes'
+              : 'Exibir detalhes';
+
+          }
+        );
+
+      });
 
 
     async function gerarPDF(

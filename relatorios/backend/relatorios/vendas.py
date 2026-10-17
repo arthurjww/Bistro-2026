@@ -1,23 +1,5 @@
 from ..banco_de_dados import get_db
 
-def obter_total_ingressos(dia_bistro=None):
-    db = get_db()
-
-    cursor = db.execute(
-        '''SELECT COUNT(i.id) AS quantidade_total
-           FROM Ingresso AS i
-           INNER JOIN Reserva AS r
-                   ON i.cod_reserva = r.cod_reserva
-           WHERE (? IS NULL OR r.dia_bistro = ?);
-        ''',
-        (dia_bistro, dia_bistro)
-    )
-
-    resultado = cursor.fetchone()
-    quantidade = resultado['quantidade_total']
-
-    return quantidade
-
 def obter_ingressos_pagos(dia_bistro=None):
     db = get_db()
 
@@ -73,29 +55,14 @@ def obter_ingressos_restantes():
 
     return quantidade
 
-def obter_ingressos_restantes_por_aluno():
-    db = get_db()
-
-    cursor = db.execute(
-        '''SELECT cod_aluno,
-                  nome_aluno,
-                  usos_restantes
-           FROM Aluno
-           WHERE usos_restantes > 0
-           ORDER BY usos_restantes DESC, nome_aluno;
-        '''
-    )
-
-    resultado = cursor.fetchall()
-
-    return resultado
-
 def obter_lista_vendas(dia_bistro=None):
     db = get_db()
 
     cursor = db.execute(
         '''SELECT
+            i.cod_aluno,
             a.nome_aluno,
+            a.usos_restantes AS ingressos_restantes,
             COUNT(i.id) OVER (
                 PARTITION BY i.cod_aluno
             ) AS quant_por_aluno,

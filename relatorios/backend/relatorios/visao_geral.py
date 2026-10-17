@@ -91,14 +91,6 @@ def obter_detalhes_participante(numero_ingresso, dia_bistro=None):
 
     cursor = db.execute(
         '''SELECT a.nome_aluno AS nome_aluno,
-                  (
-                    SELECT COUNT(i2.id)
-                    FROM Ingresso AS i2
-                    INNER JOIN Reserva AS r2
-                            ON i2.cod_reserva = r2.cod_reserva
-                    WHERE i2.cod_aluno = i.cod_aluno
-                      AND (? IS NULL OR r2.dia_bistro = ?)
-                  ) AS qtd_ingressos,
                   i.id AS n_ingresso,
                   i.nome AS nome_cliente,
                   i.telefone AS telefone_comprador,
@@ -117,7 +109,7 @@ def obter_detalhes_participante(numero_ingresso, dia_bistro=None):
            WHERE i.id = ?
              AND (? IS NULL OR r.dia_bistro = ?)
         ''',
-        (dia_bistro, dia_bistro, numero_ingresso, dia_bistro, dia_bistro)
+        (numero_ingresso, dia_bistro, dia_bistro)
     )
 
     resultado = cursor.fetchone()

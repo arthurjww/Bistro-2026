@@ -26,6 +26,7 @@ def obter_lista_restricoes(dia_bistro=None):
             ON r.cod_lugar = l.cod_lugar
         WHERE i.observacoes IS NOT NULL
           AND i.observacoes != ''
+          AND i.foi_pago = 1
           AND (? IS NULL OR r.dia_bistro = ?)
         ORDER BY
             r.dia_bistro,

@@ -1,10 +1,8 @@
 from flask import Blueprint, render_template, request
 from flask_login import login_required
-from .vendas import obter_total_ingressos
 from .vendas import obter_ingressos_pagos
 from .vendas import obter_ingressos_nao_pagos
 from .vendas import obter_ingressos_restantes
-from .vendas import obter_ingressos_restantes_por_aluno
 from .vendas import obter_lista_vendas
 from .restricoes import obter_lista_restricoes
 from .financeiro import obter_lista_financeiro
@@ -30,11 +28,9 @@ def painel_relatorios():
     if curso_tecnico == "todos":
         curso_tecnico = None
 
-    total_ingressos = obter_total_ingressos(dia_bistro)
     ingressos_pagos = obter_ingressos_pagos(dia_bistro)
     ingressos_nao_pagos = obter_ingressos_nao_pagos(dia_bistro)
     ingressos_restantes = obter_ingressos_restantes()
-    lista_ingressos_restantes = obter_ingressos_restantes_por_aluno()
     lista_vendas = obter_lista_vendas(dia_bistro)
     lista_restricoes = obter_lista_restricoes(dia_bistro)
     lista_financeiro = obter_lista_financeiro(dia_bistro)
@@ -60,11 +56,9 @@ def painel_relatorios():
 
     return render_template(
         'relatorios/index.html',
-        total_ingressos = total_ingressos,
         ingressos_pagos = ingressos_pagos,
         ingressos_naopagos = ingressos_nao_pagos,
         ingressos_restantes = ingressos_restantes,
-        lista_ingressos_restantes = lista_ingressos_restantes,
         lista_vendas = lista_vendas,
         lista_restricoes = lista_restricoes,
         lista_financeiro = lista_financeiro,

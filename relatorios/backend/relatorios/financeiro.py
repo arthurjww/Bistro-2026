@@ -55,7 +55,7 @@ def obter_resumo_financeiro(dia_bistro=None):
 
     resultado = db.execute(
         '''SELECT COALESCE(SUM(i.valor_pago), 0) AS faturamento_total,
-                  COUNT(i.id) AS vendas_confirmadas,
+                  COUNT(i.id) AS total_ingressos_confirmados,
                   COALESCE(AVG(i.valor_pago), 0) AS ticket_medio
            FROM Ingresso AS i
            INNER JOIN Reserva AS r
@@ -73,18 +73,14 @@ def obter_lista_financeiro(dia_bistro=None):
     db = get_db()
 
     cursor = db.execute(
-        '''SELECT a.nome_aluno AS aluno,
-                  COUNT(i.id) OVER (
-                      PARTITION BY i.cod_aluno
-                  ) AS quantidade_ingressos,
+        '''SELECT i.cod_aluno,
+                  a.nome_aluno AS aluno,
                   i.id AS numero_ingresso,
                   i.nome AS nome_participante,
                   i.telefone,
-                  i.observacoes AS restricoes,
                   strftime('%d/%m/%Y %H:%M', i.data_compra) AS horario_e_dia_compra,
                   strftime('%d/%m/%Y', r.dia_bistro) AS dia_bistro,
-                  i.valor_pago,
-                  'Pago' AS status
+                  i.valor_pago
            FROM Ingresso AS i
            INNER JOIN Aluno AS a
                    ON i.cod_aluno = a.cod_aluno
