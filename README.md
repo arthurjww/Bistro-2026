@@ -21,6 +21,7 @@ Feito em Python/Flask, com banco SQLite compartilhado entre os serviços.
 ### 📊 Painel de relatórios (`relatorios`)
 - Acesso restrito por login de administrador.
 - Visão geral, ingressos vendidos, pagos, não pagos e restantes (inclusive por aluno), resumo financeiro, participantes por curso, restrições e ranking de músicas.
+- [Manual do Usuário - Painel Administrativo de Relatórios](docs/manual-do-usuario-relatorios.md), com instruções de acesso, filtros, relatórios e geração de PDF.
 
 ### 🎵 Votação de músicas (`musicas`)
 - Página para votar nas músicas do evento, com contagem de votos gravada no banco compartilhado.
