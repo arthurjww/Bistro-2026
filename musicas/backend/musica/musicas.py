@@ -152,6 +152,30 @@ lista_musicas_list = remover_duplicatas_por_nome([
     ("Shadows Of Our Evening Tides", "Alex Henry Foster, Allen Ginsberg", "Rock"),
     ("Last Kiss", "Pearl Jam", "Rock"),
     ("Sweet Child O' Mine", "Guns N' Roses", "Rock"),
+    ("American Idiot", "Green Day", "Rock"),
+    ("Killing In The Name", "Rage Against The Machine", "Rock"),
+    ("R U Mine?", "Arctic Monkeys", "Rock"),
+    ("Hard To Explain", "The Strokes", "Rock"),
+    ("Creep", "Radiohead","Rock"),
+    ("Everlong", "Foo Fighters", "Rock"),
+    ("Like a Stone", "Audioslave", "Rock"),
+    ("Man in the Box", "Alice In Chains", "Rock"),
+    ("I'm Not Okay (I Promise)", "My Chemical Romance", "Rock"),
+    ("Basket Case", "Green Day", "Rock"),
+    ("What's My Age Again?", "blink-182", "Rock"),
+    ("Welcome to the Black Parade", "My Chemical Romance","Rock"),
+    ("Nutshell", "Alice In Chains", "Rock"),
+    ("Black Hole Sun", "Soundgarden", "Rock"),
+    ("The Adults Are Talking", "The Strokes", "Rock"),
+    ("505", "Arctic Monkeys", "Rock"),
+    ("What Ever Happened?", "The Strokes", "Rock"),
+    ("Generator", "Foo Fighters", "Rock"),
+    ("You Only Live Once", "The Strokes", "Rock"),
+    ("Decode", "Paramore", "Rock"),
+    ("Under Cover of Darkness", "The Strokes", "Rock"),
+    ("I Write Sins Not Tragedies", "Panic! At The Disco", "Rock"),
+    ("Partners in Crime", "The Strokes", "Rock"),
+    
 
     # ========== POP ==========
     ("Rock Your Body", "Justin Timberlake", "Pop"),
@@ -177,6 +201,22 @@ lista_musicas_list = remover_duplicatas_por_nome([
     ("Toxic", "Britney Spears", "Pop"),
     ("Shape of My Heart", "Backstreet Boys", "Pop"),
     ("The Call", "Backstreet Boys", "Pop"),
+    ("Just the Way You Are", "Bruno Mars", "Pop"),
+    ("Beauty And A Beat", "Justin Bieber", "Pop"),
+    ("When We Were Young", "Adele", "Pop"),
+    ("You'll Always Find Your Way Back Home", "Hannah Montana", "Pop"),
+    ("Better Than Revenge", "Taylor Swift", "Pop"),
+    ("the cure", "Olivia Rodrigo", "Pop"),
+    ("Manchild", "Sabrina Carpenter", "Pop"),
+    ("Welcome To New York", "Taylor Swift", "Pop"),
+    ("Hard Times", "Paramore", "Pop"),
+    ("As It Was", "Harry Styles", "Pop"),
+    ("What Makes You Beautiful", "One Direction", "Pop"),
+    ("Iris", "The Goo Goo Dolls", "Pop"),
+    ("Locked out of Heaven", "Bruno Mars","Pop"),
+    ("I Gotta Feeling", "Black Eyed Peas", "Pop"),
+    
+    
 ])
 
 def lista_musicas():
