@@ -60,7 +60,7 @@ class MapaLugares:
             f"""
             SELECT L.cod_lugar,
                 CASE
-                    WHEN substr(L.cod_lugar, 1, 1) = 'H' THEN 1
+                    WHEN substr(L.cod_lugar, 1, 1) IN ('H', 'N') THEN 1
                     ELSE COALESCE(R.ocupado, 0)
                 END AS ocupado
             FROM Lugares AS L
@@ -86,8 +86,8 @@ class MapaLugares:
 
     def escolher_lugar(self, cod_lugar, cod_aluno, dia_bistro):
         cod_lugar = self.validar_cod_lugar(cod_lugar)
-        if cod_lugar.startswith("H"):
-            return False, "Mesa H indisponível"
+        if cod_lugar.startswith(("H", "N")):
+            return False, f"Mesa {cod_lugar[0]} indisponível"
         db = get_db()
 
         cursor = db.execute(
