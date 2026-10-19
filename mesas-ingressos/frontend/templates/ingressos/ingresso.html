@@ -6,29 +6,31 @@
   <style>
     @page {
       size: A4 portrait;
-      margin: 24px;
+      margin: 20px;
     }
 
     body {
       font-family: Helvetica, Arial, sans-serif;
       background-color: #1c0506;
       color: #FAF2DF;
-      padding: 10px;
+      padding: 5px;
+      margin: 0;
     }
 
     .seal {
       width: 100%;
       text-align: center;
-      margin-bottom: 18px;
+      margin-bottom: 12px;
     }
 
     .seal-pill {
       border: 1px solid #CFA86E;
-      border-radius: 10px;
-      padding: 6px 16px;
-      font-size: 30px;
-      letter-spacing: 2px;
+      border-radius: 6px;
+      padding: 4px 14px;
+      font-size: 13px;
+      letter-spacing: 1.5px;
       color: #CFA86E;
+      text-transform: uppercase;
     }
 
     .ticket {
@@ -40,15 +42,15 @@
     }
 
     .main-info {
-      width: 66%;
-      padding: 26px 24px;
+      width: 65%;
+      padding: 16px 18px;
       vertical-align: top;
       border-right: 2px dashed #CFA86E;
     }
 
     .stub-info {
-      width: 34%;
-      padding: 22px 16px;
+      width: 35%;
+      padding: 14px 12px;
       vertical-align: middle;
       text-align: center;
       background-color: #2b090b;
@@ -59,106 +61,107 @@
     }
 
     .brand-title {
-      font-size: 40px;
+      font-size: 24px;
       font-weight: bold;
-      letter-spacing: 3px;
+      letter-spacing: 2px;
       color: #FAF2DF;
       text-transform: uppercase;
     }
 
     .brand-subtitle {
-      font-size: 25px;
-      letter-spacing: 1.5px;
+      font-size: 13px;
+      letter-spacing: 1px;
       color: #CFA86E;
-      margin-top: 3px;
+      margin-top: 2px;
       font-style: italic;
     }
 
     .headline {
-      margin-top: 18px;
-      font-size: 18px;
-      line-height: 1.4;
+      margin-top: 10px;
+      font-size: 12px;
+      line-height: 1.3;
       color: #FAF2DF;
     }
 
     .divider {
       border-bottom: 1px dashed #CFA86E;
-      margin: 16px 0;
+      margin: 10px 0;
     }
 
     .label {
-      font-size: 30px;
+      font-size: 11px;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.8px;
       color: #CFA86E;
-      margin-top: 10px;
+      margin-top: 6px;
       margin-bottom: 2px;
     }
 
     .value {
-      font-size: 20px;
+      font-size: 13px;
       font-weight: bold;
       color: #FAF2DF;
     }
 
     .footer-note {
-      margin-top: 16px;
-      font-size: 15.5px;
+      margin-top: 12px;
+      font-size: 11px;
       color: #CFA86E;
-      line-height: 1.4;
+      line-height: 1.3;
     }
 
     .stub-label {
-      font-size: 20px;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      color: #CFA86E;
-      margin-bottom: 10px;
-    }
-
-    .qr-code-img {
-      width: 220px;
-      height: 220px;
-      border: 4px solid #CFA86E;
-      border-radius: 6px;
-      background-color: #FFFFFF;
-      padding: 8px;
-      margin-bottom: 8px;
-    }
-
-    .token-label {
-      font-size: 15px;
+      font-size: 13px;
       text-transform: uppercase;
       letter-spacing: 1px;
       color: #CFA86E;
-      margin-top: 8px;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+
+    .qr-code-img {
+      width: 130px;
+      height: 130px;
+      border: 2px solid #CFA86E;
+      border-radius: 6px;
+      background-color: #FFFFFF;
+      padding: 4px;
+      margin-bottom: 4px;
+    }
+
+    .token-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #CFA86E;
+      margin-top: 6px;
     }
 
     .token-text {
       font-family: Courier, monospace;
-      font-size: 20px;
+      font-size: 13px;
       font-weight: bold;
       color: #FAF2DF;
       word-wrap: break-word;
-      margin-top: 4px;
+      margin-top: 2px;
     }
 
     .stub-note {
-      margin-top: 12px;
-      font-size: 15px;
+      margin-top: 8px;
+      font-size: 10px;
       color: #CFA86E;
-      line-height: 1.4;
+      line-height: 1.3;
     }
 
     .contact {
       width: 100%;
       text-align: center;
       margin-top: 12px;
-      padding-top: 10px;
+      padding-top: 8px;
       border-top: 1px dashed #CFA86E;
-      font-size: 20px;
+      font-size: 12px;
       color: #CFA86E;
-      line-height: 1.5;
+      line-height: 1.4;
     }
 
     .contact a {
@@ -167,14 +170,14 @@
     }
 
     .contact strong {
-      font-size: 20px;
+      font-size: 12px;
     }
 
     .page-footer {
       width: 100%;
       text-align: center;
-      margin-top: 10px;
-      font-size: 15px;
+      margin-top: 8px;
+      font-size: 10px;
       color: #CFA86E;
     }
   </style>
@@ -238,7 +241,7 @@
           </tr>
             
           <tr>
-              <td width="55%">
+            <td width="55%">
               <div class="label">Dia do Bistrô</div>
               <div class="value">{{ dia_bistro[8:10] }}/{{ dia_bistro[5:7] }}/{{ dia_bistro[0:4] }}</div>
             </td>
@@ -247,7 +250,7 @@
               <div class="label">Lugar</div>
               <div class="value">Mesa {{ lugar[0] }} · Cadeira {{ lugar[1:] }}</div>
             </td>
-        </tr>
+          </tr>
 
         </table>
 
