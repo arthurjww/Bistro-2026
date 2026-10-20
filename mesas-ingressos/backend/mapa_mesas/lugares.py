@@ -3,6 +3,12 @@ from backend.banco_de_dados import get_db
 LIVRE = 0
 OCUPADO = 1
 EM_PAGAMENTO = 2
+MESA_BLOQUEADA = "H"
+MESA_PROFESSORES = "N"
+NOME_PROFESSOR = "professor"
+
+def nome_professor(nome):
+    return (nome or "").strip().lower() == NOME_PROFESSOR
 
 LAYOUT_MESAS = {
     letra: 6 for letra in "ABCDEFGHIJKLMN"
@@ -41,6 +47,12 @@ class MapaLugares:
             for cadeira in range(1, 7)
         ]
 
+    def professor(self, cod_aluno):
+        linha = get_db.execute(
+            "SELECT nome_aluno FROM Aluno WHERE cod_aluno = ?",(cod_aluno,)
+        ).fetchone()
+        return bool(linha and nome_professor(linha["nome_aluno"]))
+
     def seed_lugares(self):
         db = get_db()
         lugares = [(codigo, 1) for codigo in self.codigos_validos()]
@@ -60,7 +72,7 @@ class MapaLugares:
             f"""
             SELECT L.cod_lugar,
                 CASE
-                    WHEN substr(L.cod_lugar, 1, 1) IN ('H', 'N') THEN 1
+                    WHEN substr(L.cod_lugar, 1, 1) = 'H' THEN 1
                     ELSE COALESCE(R.ocupado, 0)
                 END AS ocupado
             FROM Lugares AS L
@@ -86,7 +98,7 @@ class MapaLugares:
 
     def escolher_lugar(self, cod_lugar, cod_aluno, dia_bistro):
         cod_lugar = self.validar_cod_lugar(cod_lugar)
-        if cod_lugar.startswith(("H", "N")):
+        if cod_lugar.startswith(("H")):
             return False, f"Mesa {cod_lugar[0]} indisponível"
         db = get_db()
 

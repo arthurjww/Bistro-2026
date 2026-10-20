@@ -112,10 +112,21 @@
             return `${table.label.replace('Mesa ', '')}${seatNumber}`;
         }
 
+        const MESA_PROFESSORES = 'N';
+        let ehProfessor = false;
+
         const seatIdByLugarCode = new Map(allSeatIds.map(id => [getLugarCode(id), id]));
-        const lugaresIndisponiveisPorRegra = new Set(
-            allSeatIds.filter(id => getLugarCode(id).startsWith('H'))
-        );
+
+        function seatBloqueadoPorRegra(id) {
+            const mesa = getLugarCode(id)[0];
+            if (mesa === 'H') return true;
+            if (ehProfessor) return mesa !== MESA_PROFESSORES;
+            return mesa === MESA_PROFESSORES;
+        }
+
+        function idsBloqueadosPorRegra() {
+            return allSeatIds.filter(seatBloqueadoPorRegra);
+        }
 
         /* ---------- Planta fixa: paredes, portas, bar, banheiros, etc. ---------- */
 
@@ -316,7 +327,7 @@
 
         /* ---------- Estado ---------- */
 
-        let reservedSet = new Set(lugaresIndisponiveisPorRegra);
+        let reservedSet = new Set(idsBloqueadosPorRegra());
         let pendingSet = new Set();
         let codigoConfirmado = false;
         let usosRestantes = Number(document.body.dataset.usosRestantes || 0);
@@ -353,7 +364,14 @@
         function onSeatClick(id) {
 
             if (reservedSet.has(id)) {
-                showToast('Esse lugar está indisponível.');
+                const mesa = getLugarCode(id)[0];
+                if (mesa === MESA_PROFESSORES && !ehProfessor) {
+                    showToast('A mesa N é exclusiva para professores.');
+                } else if (ehProfessor && mesa !== MESA_PROFESSORES) {
+                    showToast('Com código de professor, só é possível escolher lugares na mesa N.');
+                } else {
+                    showToast('Esse lugar está indisponível.');
+                }
                 return;
             }
 
@@ -416,12 +434,20 @@
 
                 codigoConfirmado = true;
                 usosRestantes = dados.usos_restantes
+                ehProfessor = Boolean(dados.professor);
+                await atualizarMapa({ silencioso: true });
+                setCodeStatus(
+                    ehProfessor
+                        ? `Código de professor confirmado. Apenas a mesa N está disponível. ${dados.usos_restantes} uso(s) restante(s).`
+                        : `${dados.usos_restantes} uso(s) restante(s).`,
+                    'success'
+                );
                 codeInput.disabled = true;
                 document.getElementById('confirmCodeBtn').disabled = true;
-                setCodeStatus(`${dados.usos_restantes} uso(s) restante(s).`, 'success');
             } catch (error) {
                 codigoConfirmado = false;
                 usosRestantes = 0;
+                ehProfessor = false;
                 setCodeStatus(error.message, 'error');
             }
         });
@@ -517,7 +543,7 @@
                         .map(lugar => seatIdByLugarCode.get(lugar.cod_lugar))
                         .filter(Boolean)
                 );
-                lugaresIndisponiveisPorRegra.forEach(id => novasReservas.add(id));
+                idsBloqueadosPorRegra().forEach(id => novasReservas.add(id));
                 const selecoesIndisponiveis = [...pendingSet].filter(id => novasReservas.has(id));
 
                 selecoesIndisponiveis.forEach(id => pendingSet.delete(id));

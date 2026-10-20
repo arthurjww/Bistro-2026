@@ -158,7 +158,8 @@ def confirmar_codigo():
 
             return jsonify({
                 'sucesso': 'Código confirmado',
-                'usos_restantes': aluno["usos_restantes"]
+                'usos_restantes': aluno["usos_restantes"],
+                'professor': nome_professor(aluno["nome_aluno"])
             }), 200
 
         return jsonify({
